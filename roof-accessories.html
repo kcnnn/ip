@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roof Accessories - Inspection Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="elevation-styles.css">
+    <link rel="stylesheet" href="roof-edge-styles.css">
+    <link rel="stylesheet" href="ridge-styles.css">
+    <link rel="stylesheet" href="overview-styles.css">
+    <link rel="stylesheet" href="accessories-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with progress -->
+        <header class="header">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">Step 5 of 5</span>
+            </div>
+            <h1 class="page-title">Roof Accessories</h1>
+            <p class="page-subtitle">Document all roof accessories and fixtures</p>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Current photo section -->
+            <div class="photo-section" id="photoSection">
+                <div class="photo-card">
+                    <div class="photo-header">
+                        <div class="photo-icon" id="photoIcon">📸</div>
+                        <h2 class="photo-title" id="photoTitle">Roof Accessory Photo</h2>
+                        <div class="photo-status" id="photoStatus">
+                            <span class="status-badge pending">Pending</span>
+                        </div>
+                    </div>
+                    
+                    <div class="photo-instructions">
+                        <p id="photoInstructions">
+                            Take a clear photo of a roof accessory. This could be a pipe, vent, rain cap, rain diverter, satellite dish, chimney, or any other roof fixture.
+                        </p>
+                        <div class="accessory-tips">
+                            <h4>📸 Accessory Photo Tips:</h4>
+                            <ul>
+                                <li>Get close enough to see details clearly</li>
+                                <li>Capture the entire accessory if possible</li>
+                                <li>Look for damage, wear, or deterioration</li>
+                                <li>Ensure good lighting for clear visibility</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Accessory type selection -->
+                    <div class="accessory-type-selection">
+                        <h4>Select Accessory Type:</h4>
+                        <div class="accessory-buttons">
+                            <button class="accessory-btn" data-type="pipe" onclick="selectAccessoryType('pipe')">
+                                <span class="btn-icon">🔧</span>
+                                Pipe
+                            </button>
+                            <button class="accessory-btn" data-type="vent" onclick="selectAccessoryType('vent')">
+                                <span class="btn-icon">🌪️</span>
+                                Vent
+                            </button>
+                            <button class="accessory-btn" data-type="rain-cap" onclick="selectAccessoryType('rain-cap')">
+                                <span class="btn-icon">🌧️</span>
+                                Rain Cap
+                            </button>
+                            <button class="accessory-btn" data-type="rain-diverter" onclick="selectAccessoryType('rain-diverter')">
+                                <span class="btn-icon">💧</span>
+                                Rain Diverter
+                            </button>
+                            <button class="accessory-btn" data-type="satellite-dish" onclick="selectAccessoryType('satellite-dish')">
+                                <span class="btn-icon">📡</span>
+                                Satellite Dish
+                            </button>
+                            <button class="accessory-btn" data-type="chimney" onclick="selectAccessoryType('chimney')">
+                                <span class="btn-icon">🏠</span>
+                                Chimney
+                            </button>
+                            <button class="accessory-btn" data-type="other" onclick="selectAccessoryType('other')">
+                                <span class="btn-icon">🔧</span>
+                                Other
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Camera interface -->
+                    <div class="camera-container">
+                        <div class="camera-preview" id="cameraPreview">
+                            <div class="camera-placeholder">
+                                <div class="camera-icon">📷</div>
+                                <p>Camera will appear here</p>
+                            </div>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button class="camera-btn secondary" id="switchCameraBtn">
+                                <span class="btn-icon">🔄</span>
+                                Switch Camera
+                            </button>
+                            <button class="camera-btn primary" id="captureBtn">
+                                <span class="btn-icon">📸</span>
+                                Capture Photo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Photo preview and actions -->
+                    <div class="photo-actions" id="photoActions" style="display: none;">
+                        <div class="photo-preview" id="photoPreview"></div>
+                        <div class="photo-buttons">
+                            <button class="action-btn secondary" id="retakeBtn">
+                                <span class="btn-icon">🔄</span>
+                                Retake
+                            </button>
+                            <button class="action-btn primary" id="confirmBtn">
+                                <span class="btn-icon">✅</span>
+                                Confirm Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accessories checklist -->
+            <div class="accessories-checklist">
+                <div class="checklist-header">
+                    <h3>Documented Accessories</h3>
+                    <button class="add-accessory-btn" onclick="addNewAccessory()">
+                        <span class="btn-icon">➕</span>
+                        Add Another Accessory
+                    </button>
+                </div>
+                <div class="checklist-items" id="checklistItems">
+                    <!-- Dynamic checklist items will be added here -->
+                </div>
+            </div>
+
+            <!-- AI Analysis Section -->
+            <div class="ai-analysis" id="aiAnalysis" style="display: none;">
+                <div class="ai-header">
+                    <div class="ai-icon">🤖</div>
+                    <h3>AI Photo Analysis</h3>
+                </div>
+                <div class="ai-content">
+                    <div class="ai-loading" id="aiLoading">
+                        <div class="spinner"></div>
+                        <p>Analyzing accessory condition and installation...</p>
+                    </div>
+                    <div class="ai-results" id="aiResults" style="display: none;">
+                        <!-- AI analysis results will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="navigation-buttons">
+                <button class="nav-btn secondary" id="backBtn" onclick="goBack()">
+                    <span class="btn-icon">←</span>
+                    Back
+                </button>
+                <button class="nav-btn primary" id="nextBtn" onclick="proceedToNext()" disabled>
+                    <span class="btn-text">Complete Inspection</span>
+                    <span class="btn-icon">✅</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden file input for photo capture -->
+    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
+
+    <script src="script.js"></script>
+    <script src="api-config.js"></script>
+    <script src="accessories-photos.js"></script>
+</body>
+</html>

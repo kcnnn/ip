@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ridge Inspection - Inspection Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="elevation-styles.css">
+    <link rel="stylesheet" href="roof-edge-styles.css">
+    <link rel="stylesheet" href="ridge-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with progress -->
+        <header class="header">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">Step 3 of 5</span>
+            </div>
+            <h1 class="page-title">Ridge Inspection</h1>
+            <p class="page-subtitle">Document ridge condition and under-ridge inspection</p>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Current inspection section -->
+            <div class="inspection-section" id="inspectionSection">
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <div class="inspection-icon" id="inspectionIcon">🏠</div>
+                        <h2 class="inspection-title" id="inspectionTitle">Ridge Closeup</h2>
+                        <div class="inspection-status" id="inspectionStatus">
+                            <span class="status-badge pending">Pending</span>
+                        </div>
+                    </div>
+                    
+                    <div class="inspection-instructions">
+                        <p id="inspectionInstructions">
+                            Take a closeup photo of the ridge showing the ridge shingles and their condition. 
+                            Ensure the photo captures the ridge line clearly and shows any visible damage or wear.
+                        </p>
+                        <div class="inspection-tips">
+                            <h4>📸 Ridge Photo Tips:</h4>
+                            <ul>
+                                <li>Get close enough to see shingle details</li>
+                                <li>Capture the entire ridge line if possible</li>
+                                <li>Look for cracks, lifting, or damage</li>
+                                <li>Ensure good lighting for clear visibility</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Camera interface -->
+                    <div class="camera-container">
+                        <div class="camera-preview" id="cameraPreview">
+                            <div class="camera-placeholder">
+                                <div class="camera-icon">📷</div>
+                                <p>Camera will appear here</p>
+                            </div>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button class="camera-btn secondary" id="switchCameraBtn">
+                                <span class="btn-icon">🔄</span>
+                                Switch Camera
+                            </button>
+                            <button class="camera-btn primary" id="captureBtn">
+                                <span class="btn-icon">📸</span>
+                                Capture Photo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Photo preview and actions -->
+                    <div class="photo-actions" id="photoActions" style="display: none;">
+                        <div class="photo-preview" id="photoPreview"></div>
+                        <div class="photo-buttons">
+                            <button class="action-btn secondary" id="retakeBtn">
+                                <span class="btn-icon">🔄</span>
+                                Retake
+                            </button>
+                            <button class="action-btn primary" id="confirmBtn">
+                                <span class="btn-icon">✅</span>
+                                Confirm Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspection checklist -->
+            <div class="inspection-checklist">
+                <h3>Ridge Documentation</h3>
+                <div class="checklist-items">
+                    <div class="checklist-item" data-inspection="ridge-closeup">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">Ridge Closeup Photo</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-inspection="under-ridge">
+                        <div class="checklist-icon">🔍</div>
+                        <span class="checklist-text">Under-Ridge Inspection</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Section -->
+            <div class="ai-analysis" id="aiAnalysis" style="display: none;">
+                <div class="ai-header">
+                    <div class="ai-icon">🤖</div>
+                    <h3>AI Photo Analysis</h3>
+                </div>
+                <div class="ai-content">
+                    <div class="ai-loading" id="aiLoading">
+                        <div class="spinner"></div>
+                        <p>Analyzing ridge condition and inspection quality...</p>
+                    </div>
+                    <div class="ai-results" id="aiResults" style="display: none;">
+                        <!-- AI analysis results will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="navigation-buttons">
+                <button class="nav-btn secondary" id="backBtn" onclick="goBack()">
+                    <span class="btn-icon">←</span>
+                    Back
+                </button>
+                <button class="nav-btn primary" id="nextBtn" onclick="proceedToNext()" disabled>
+                    <span class="btn-text">Next Step</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden file input for photo capture -->
+    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
+
+    <script src="script.js"></script>
+    <script src="api-config.js"></script>
+    <script src="ridge-inspection.js"></script>
+</body>
+</html>

@@ -1,0 +1,704 @@
+/* Roof Overview Photos Specific Styles */
+
+/* Progress bar */
+.progress-container {
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    width: 80%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    color: white;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.page-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Photo section */
+.photo-section {
+    margin-bottom: 2rem;
+}
+
+.photo-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.photo-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.photo-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f0;
+    border-radius: 50%;
+}
+
+.photo-title {
+    font-size: 1.4rem;
+    color: #2c3e50;
+    flex: 1;
+    margin: 0;
+}
+
+.photo-status {
+    margin-left: auto;
+}
+
+.status-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.analyzing {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.photo-instructions {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #667eea;
+}
+
+.photo-instructions p {
+    margin: 0 0 1rem 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.photo-tips {
+    background: #e3f2fd;
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #2196F3;
+}
+
+.photo-tips h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1565c0;
+    font-size: 1rem;
+}
+
+.photo-tips ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.photo-tips li {
+    margin-bottom: 0.3rem;
+    color: #1565c0;
+    font-size: 0.9rem;
+}
+
+/* Camera interface */
+.camera-container {
+    margin-bottom: 1.5rem;
+}
+
+.camera-preview {
+    width: 100%;
+    height: 300px;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.camera-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.camera-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.camera-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.camera-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.camera-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.camera-btn.secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e9ecef;
+}
+
+.camera-btn:hover {
+    transform: translateY(-2px);
+}
+
+.camera-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Photo actions */
+.photo-actions {
+    margin-top: 1rem;
+}
+
+.photo-preview {
+    width: 100%;
+    height: 200px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 3px solid #4CAF50;
+}
+
+.photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.action-btn.primary {
+    background: #4CAF50;
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.action-btn.secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e9ecef;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Photo checklist with compass */
+.photo-checklist {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.photo-checklist h3 {
+    margin: 0 0 1.5rem 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.compass-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.compass {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border: 3px solid #667eea;
+    border-radius: 50%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compass-center {
+    font-size: 2rem;
+    z-index: 2;
+}
+
+.compass-points {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.compass-point {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: #e9ecef;
+    border: 2px solid #667eea;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.compass-point:hover {
+    background: #667eea;
+    color: white;
+    transform: scale(1.1);
+}
+
+.compass-point.current {
+    background: #2196F3;
+    color: white;
+    border-color: #1976D2;
+    transform: scale(1.2);
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+.compass-point.completed {
+    background: #4CAF50;
+    color: white;
+    border-color: #388E3C;
+}
+
+/* Compass point positions */
+.compass-point.north {
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.compass-point.northeast {
+    top: 25px;
+    right: 25px;
+}
+
+.compass-point.east {
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.compass-point.southeast {
+    bottom: 25px;
+    right: 25px;
+}
+
+.compass-point.south {
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.compass-point.southwest {
+    bottom: 25px;
+    left: 25px;
+}
+
+.compass-point.west {
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.compass-point.northwest {
+    top: 25px;
+    left: 25px;
+}
+
+.checklist-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.8rem;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.checklist-item.pending {
+    background: #f8f9fa;
+}
+
+.checklist-item.current {
+    background: #e3f2fd;
+    border: 2px solid #2196F3;
+}
+
+.checklist-item.completed {
+    background: #e8f5e8;
+    border: 2px solid #4CAF50;
+}
+
+.checklist-icon {
+    font-size: 1.2rem;
+    width: 30px;
+    text-align: center;
+}
+
+.checklist-text {
+    flex: 1;
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.checklist-status {
+    font-size: 1.2rem;
+}
+
+/* AI Analysis */
+.ai-analysis {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.ai-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ai-icon {
+    font-size: 1.5rem;
+}
+
+.ai-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.ai-loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.ai-results {
+    /* Results styling will be added dynamically */
+}
+
+/* Navigation buttons */
+.navigation-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.nav-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.nav-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.nav-btn.secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e9ecef;
+}
+
+.nav-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.nav-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-icon {
+    font-size: 1.1rem;
+}
+
+/* Special styling for overview analysis */
+.overview-analysis {
+    background: #fff3e0;
+    border: 2px solid #ff9800;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.overview-analysis h4 {
+    margin: 0 0 0.5rem 0;
+    color: #e65100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.overview-good {
+    background: #e8f5e8;
+    border-color: #4CAF50;
+    color: #2e7d32;
+}
+
+.overview-damaged {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.damage-summary {
+    background: #e3f2fd;
+    border: 2px solid #2196F3;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.damage-summary h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1565c0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.damage-found {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.no-damage {
+    background: #e8f5e8;
+    border-color: #4CAF50;
+    color: #2e7d32;
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+    .photo-card {
+        padding: 1rem;
+        margin: 0 0.5rem;
+    }
+    
+    .photo-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .photo-status {
+        margin-left: 0;
+        align-self: flex-start;
+    }
+    
+    .camera-preview {
+        height: 250px;
+    }
+    
+    .camera-controls {
+        flex-direction: column;
+    }
+    
+    .camera-btn {
+        width: 100%;
+    }
+    
+    .photo-buttons {
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+    }
+    
+    .navigation-buttons {
+        flex-direction: column;
+    }
+    
+    .nav-btn {
+        width: 100%;
+    }
+    
+    .checklist-item {
+        padding: 0.6rem;
+    }
+    
+    .compass {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .compass-point {
+        width: 25px;
+        height: 25px;
+        font-size: 0.7rem;
+    }
+    
+    .checklist-items {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .camera-controls {
+        justify-content: space-around;
+    }
+    
+    .photo-buttons {
+        justify-content: space-around;
+    }
+    
+    .checklist-items {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 769px) {
+    .checklist-items {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

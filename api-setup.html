@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Setup - Inspection Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="elevation-styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">API Configuration</h1>
+            <p class="subtitle">Set up ChatGPT API for AI photo analysis</p>
+        </header>
+        
+        <main class="main-content">
+            <div class="setup-section">
+                <div class="setup-card">
+                    <div class="setup-header">
+                        <div class="setup-icon">🔑</div>
+                        <h2>ChatGPT API Key Setup</h2>
+                    </div>
+                    
+                    <div class="setup-content">
+                        <p class="setup-description">
+                            To enable AI-powered photo analysis, you need to provide your ChatGPT API key. 
+                            This key will be stored locally in your browser and used to analyze photos for quality issues.
+                        </p>
+                        
+                        <div class="api-form">
+                            <div class="form-group">
+                                <label for="apiKey">OpenAI API Key:</label>
+                                <input type="password" id="apiKey" placeholder="sk-..." class="api-input">
+                                <small class="form-help">
+                                    Your API key is stored locally and never sent to our servers.
+                                </small>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button class="action-btn secondary" onclick="skipSetup()">
+                                    <span class="btn-icon">⏭️</span>
+                                    Skip for Now
+                                </button>
+                                <button class="action-btn primary" onclick="saveAPIKey()">
+                                    <span class="btn-icon">💾</span>
+                                    Save API Key
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="setup-info">
+                            <h3>How to get your API key:</h3>
+                            <ol>
+                                <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a></li>
+                                <li>Sign in to your OpenAI account</li>
+                                <li>Click "Create new secret key"</li>
+                                <li>Copy the key and paste it above</li>
+                            </ol>
+                            
+                            <div class="security-note">
+                                <strong>🔒 Security Note:</strong> Your API key is stored locally in your browser's storage. 
+                                It's never transmitted to our servers and is only used to communicate directly with OpenAI's API.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="features-preview">
+                    <h3>With AI Analysis, you'll get:</h3>
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <span class="feature-icon">🔍</span>
+                            <span>Automatic photo quality assessment</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">⚠️</span>
+                            <span>Detection of blur, lighting, and composition issues</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">💡</span>
+                            <span>Smart recommendations for better photos</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📊</span>
+                            <span>Confidence scoring for each analysis</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="api-config.js"></script>
+    <script>
+        // Check if API key is already configured
+        document.addEventListener('DOMContentLoaded', function() {
+            if (isAPIKeyConfigured()) {
+                // API key already exists, show success message
+                showAPIKeyStatus('configured');
+            }
+        });
+        
+        function saveAPIKey() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!apiKey) {
+                showError('Please enter your API key');
+                return;
+            }
+            
+            if (!apiKey.startsWith('sk-')) {
+                showError('API key should start with "sk-"');
+                return;
+            }
+            
+            try {
+                setAPIKey(apiKey);
+                showAPIKeyStatus('saved');
+                
+                // Redirect to elevation photos after a short delay
+                setTimeout(() => {
+                    window.location.href = 'elevation-photos.html';
+                }, 2000);
+            } catch (error) {
+                showError('Failed to save API key: ' + error.message);
+            }
+        }
+        
+        function skipSetup() {
+            // Redirect to elevation photos without API key
+            window.location.href = 'elevation-photos.html';
+        }
+        
+        function showAPIKeyStatus(status) {
+            const formGroup = document.querySelector('.form-group');
+            const apiInput = document.getElementById('apiKey');
+            
+            if (status === 'saved') {
+                apiInput.value = 'API key saved successfully!';
+                apiInput.style.background = '#e8f5e8';
+                apiInput.style.color = '#2e7d32';
+                apiInput.disabled = true;
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'success-message';
+                successMsg.innerHTML = '✅ API key saved! Redirecting to inspection...';
+                formGroup.appendChild(successMsg);
+            } else if (status === 'configured') {
+                apiInput.value = 'API key already configured';
+                apiInput.style.background = '#e3f2fd';
+                apiInput.style.color = '#1565c0';
+                apiInput.disabled = true;
+                
+                // Show configured message
+                const configuredMsg = document.createElement('div');
+                configuredMsg.className = 'success-message';
+                configuredMsg.innerHTML = '✅ API key already configured. You can proceed to inspection.';
+                formGroup.appendChild(configuredMsg);
+            }
+        }
+        
+        function showError(message) {
+            // Remove existing error messages
+            const existingError = document.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message';
+            errorMsg.innerHTML = '❌ ' + message;
+            errorMsg.style.color = '#d32f2f';
+            errorMsg.style.marginTop = '0.5rem';
+            errorMsg.style.fontSize = '0.9rem';
+            
+            const formGroup = document.querySelector('.form-group');
+            formGroup.appendChild(errorMsg);
+        }
+    </script>
+    
+    <style>
+        .setup-section {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .setup-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .setup-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .setup-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border-radius: 50%;
+        }
+        
+        .setup-header h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+        
+        .setup-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .api-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .api-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-help {
+            display: block;
+            margin-top: 0.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .setup-info {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .setup-info h3 {
+            margin: 0 0 1rem 0;
+            color: #2c3e50;
+        }
+        
+        .setup-info ol {
+            margin: 0 0 1rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        .setup-info li {
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+        
+        .setup-info a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .setup-info a:hover {
+            text-decoration: underline;
+        }
+        
+        .security-note {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #2196F3;
+            margin-top: 1rem;
+        }
+        
+        .features-preview {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .features-preview h3 {
+            margin: 0 0 1.5rem 0;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .feature-list {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .feature-icon {
+            font-size: 1.2rem;
+            width: 30px;
+            text-align: center;
+        }
+        
+        .success-message {
+            color: #2e7d32;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            .setup-card, .features-preview {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

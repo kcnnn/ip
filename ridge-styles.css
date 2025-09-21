@@ -1,0 +1,593 @@
+/* Ridge Inspection Specific Styles */
+
+/* Progress bar */
+.progress-container {
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    width: 60%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    color: white;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.page-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Inspection section */
+.inspection-section {
+    margin-bottom: 2rem;
+}
+
+.inspection-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.inspection-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.inspection-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f0;
+    border-radius: 50%;
+}
+
+.inspection-title {
+    font-size: 1.4rem;
+    color: #2c3e50;
+    flex: 1;
+    margin: 0;
+}
+
+.inspection-status {
+    margin-left: auto;
+}
+
+.status-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.analyzing {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.inspection-instructions {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #667eea;
+}
+
+.inspection-instructions p {
+    margin: 0 0 1rem 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.inspection-tips {
+    background: #e3f2fd;
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #2196F3;
+}
+
+.inspection-tips h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1565c0;
+    font-size: 1rem;
+}
+
+.inspection-tips ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.inspection-tips li {
+    margin-bottom: 0.3rem;
+    color: #1565c0;
+    font-size: 0.9rem;
+}
+
+/* Camera interface */
+.camera-container {
+    margin-bottom: 1.5rem;
+}
+
+.camera-preview {
+    width: 100%;
+    height: 300px;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.camera-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.camera-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.camera-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.camera-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.camera-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.camera-btn.secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e9ecef;
+}
+
+.camera-btn:hover {
+    transform: translateY(-2px);
+}
+
+.camera-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Photo actions */
+.photo-actions {
+    margin-top: 1rem;
+}
+
+.photo-preview {
+    width: 100%;
+    height: 200px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 3px solid #4CAF50;
+}
+
+.photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.action-btn.primary {
+    background: #4CAF50;
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.action-btn.secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e9ecef;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Inspection checklist */
+.inspection-checklist {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.inspection-checklist h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.checklist-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.checklist-item.pending {
+    background: #f8f9fa;
+}
+
+.checklist-item.current {
+    background: #e3f2fd;
+    border: 2px solid #2196F3;
+}
+
+.checklist-item.completed {
+    background: #e8f5e8;
+    border: 2px solid #4CAF50;
+}
+
+.checklist-icon {
+    font-size: 1.2rem;
+    width: 30px;
+    text-align: center;
+}
+
+.checklist-text {
+    flex: 1;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.checklist-status {
+    font-size: 1.2rem;
+}
+
+/* AI Analysis */
+.ai-analysis {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.ai-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ai-icon {
+    font-size: 1.5rem;
+}
+
+.ai-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.ai-loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.ai-results {
+    /* Results styling will be added dynamically */
+}
+
+/* Navigation buttons */
+.navigation-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.nav-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.nav-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.nav-btn.secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #e9ecef;
+}
+
+.nav-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.nav-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-icon {
+    font-size: 1.1rem;
+}
+
+/* Special styling for ridge analysis */
+.ridge-condition-analysis {
+    background: #fff3e0;
+    border: 2px solid #ff9800;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.ridge-condition-analysis h4 {
+    margin: 0 0 0.5rem 0;
+    color: #e65100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ridge-good {
+    background: #e8f5e8;
+    border-color: #4CAF50;
+    color: #2e7d32;
+}
+
+.ridge-damaged {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.under-ridge-analysis {
+    background: #e3f2fd;
+    border: 2px solid #2196F3;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.under-ridge-analysis h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1565c0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.under-ridge-visible {
+    background: #e8f5e8;
+    border-color: #4CAF50;
+    color: #2e7d32;
+}
+
+.under-ridge-not-visible {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.damage-detection {
+    background: #fff8e1;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.damage-detection h4 {
+    margin: 0 0 0.5rem 0;
+    color: #f57c00;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.damage-found {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.no-damage {
+    background: #e8f5e8;
+    border-color: #4CAF50;
+    color: #2e7d32;
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+    .inspection-card {
+        padding: 1rem;
+        margin: 0 0.5rem;
+    }
+    
+    .inspection-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .inspection-status {
+        margin-left: 0;
+        align-self: flex-start;
+    }
+    
+    .camera-preview {
+        height: 250px;
+    }
+    
+    .camera-controls {
+        flex-direction: column;
+    }
+    
+    .camera-btn {
+        width: 100%;
+    }
+    
+    .photo-buttons {
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+    }
+    
+    .navigation-buttons {
+        flex-direction: column;
+    }
+    
+    .nav-btn {
+        width: 100%;
+    }
+    
+    .checklist-item {
+        padding: 0.6rem;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .camera-controls {
+        justify-content: space-around;
+    }
+    
+    .photo-buttons {
+        justify-content: space-around;
+    }
+}

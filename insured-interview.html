@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insured Interview - Inspection Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="elevation-styles.css">
+    <link rel="stylesheet" href="roof-edge-styles.css">
+    <link rel="stylesheet" href="ridge-styles.css">
+    <link rel="stylesheet" href="overview-styles.css">
+    <link rel="stylesheet" href="accessories-styles.css">
+    <link rel="stylesheet" href="hail-test-styles.css">
+    <link rel="stylesheet" href="interview-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with progress -->
+        <header class="header">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">Final Step</span>
+            </div>
+            <h1 class="page-title">Insured Interview</h1>
+            <p class="page-subtitle">Discuss damage findings and payment options with the insured</p>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Safety reminder -->
+            <div class="safety-reminder">
+                <div class="safety-icon">⚠️</div>
+                <div class="safety-content">
+                    <h3>Safety First</h3>
+                    <p>Please ensure you have safely descended from the roof before proceeding with this interview.</p>
+                </div>
+            </div>
+
+            <!-- Damage discussion section -->
+            <div class="interview-section">
+                <div class="interview-card">
+                    <div class="section-header">
+                        <div class="section-icon">💬</div>
+                        <h2>Damage Discussion</h2>
+                    </div>
+                    
+                    <div class="section-content">
+                        <div class="discussion-points">
+                            <h3>Key Discussion Points:</h3>
+                            <ul>
+                                <li>Review the damage findings from the roof inspection</li>
+                                <li>Explain the extent and severity of any hail damage</li>
+                                <li>Discuss the test square results and hail hit count</li>
+                                <li>Answer any questions the insured may have</li>
+                                <li>Provide professional assessment and recommendations</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="notes-section">
+                            <label for="damageNotes" class="form-label">Additional Notes:</label>
+                            <textarea id="damageNotes" class="form-textarea" placeholder="Record any additional information discussed with the insured about the damage findings..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Satellite dish section (conditional) -->
+            <div class="interview-section" id="satelliteSection" style="display: none;">
+                <div class="interview-card">
+                    <div class="section-header">
+                        <div class="section-icon">📡</div>
+                        <h2>Satellite Dish Verification</h2>
+                    </div>
+                    
+                    <div class="section-content">
+                        <div class="satellite-info">
+                            <p>A satellite dish was documented during the roof inspection. Please verify with the insured if this satellite dish is currently in use.</p>
+                        </div>
+                        
+                        <div class="satellite-question">
+                            <h3>Is the satellite dish currently in use?</h3>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="satelliteInUse" value="yes" id="satelliteYes">
+                                    <span class="radio-custom"></span>
+                                    <span class="radio-label">Yes, currently in use</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="satelliteInUse" value="no" id="satelliteNo">
+                                    <span class="radio-custom"></span>
+                                    <span class="radio-label">No, not in use</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="satellite-notes">
+                            <label for="satelliteNotes" class="form-label">Additional Notes:</label>
+                            <textarea id="satelliteNotes" class="form-textarea" placeholder="Any additional information about the satellite dish..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zelle payment section -->
+            <div class="interview-section">
+                <div class="interview-card">
+                    <div class="section-header">
+                        <div class="section-icon">💰</div>
+                        <h2>Zelle Payment Discussion</h2>
+                    </div>
+                    
+                    <div class="section-content">
+                        <div class="zelle-info">
+                            <p>Discuss Zelle payment options with the insured. If they have a Zelle account, collect their phone number for payment processing.</p>
+                        </div>
+                        
+                        <div class="zelle-question">
+                            <h3>Does the insured have a Zelle account?</h3>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="hasZelle" value="yes" id="zelleYes" onchange="toggleZellePhone()">
+                                    <span class="radio-custom"></span>
+                                    <span class="radio-label">Yes, has Zelle account</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="hasZelle" value="no" id="zelleNo" onchange="toggleZellePhone()">
+                                    <span class="radio-custom"></span>
+                                    <span class="radio-label">No, does not have Zelle</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="zelle-phone-section" id="zellePhoneSection" style="display: none;">
+                            <div class="phone-input-group">
+                                <label for="zellePhone" class="form-label">Zelle Phone Number:</label>
+                                <input type="tel" id="zellePhone" class="form-input" placeholder="(555) 123-4567" maxlength="15">
+                                <div class="input-help">Enter the phone number associated with their Zelle account</div>
+                            </div>
+                        </div>
+                        
+                        <div class="zelle-notes">
+                            <label for="zelleNotes" class="form-label">Payment Discussion Notes:</label>
+                            <textarea id="zelleNotes" class="form-textarea" placeholder="Record any additional information about payment options discussed..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspection summary -->
+            <div class="interview-section">
+                <div class="interview-card">
+                    <div class="section-header">
+                        <div class="section-icon">📋</div>
+                        <h2>Inspection Summary</h2>
+                    </div>
+                    
+                    <div class="section-content">
+                        <div class="summary-stats">
+                            <div class="stat-item">
+                                <div class="stat-number" id="elevationCount">4</div>
+                                <div class="stat-label">Elevation Photos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="roofEdgeCount">2</div>
+                                <div class="stat-label">Roof Edge Photos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="ridgeCount">2</div>
+                                <div class="stat-label">Ridge Photos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="overviewCount">8</div>
+                                <div class="stat-label">Overview Photos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="accessoryCount">0</div>
+                                <div class="stat-label">Accessory Photos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="hailTestCount">4</div>
+                                <div class="stat-label">Hail Test Photos</div>
+                            </div>
+                        </div>
+                        
+                        <div class="total-photos">
+                            <div class="total-number" id="totalPhotos">20</div>
+                            <div class="total-label">Total Photos Documented</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completion checklist -->
+            <div class="completion-checklist">
+                <h3>Interview Completion Checklist</h3>
+                <div class="checklist-items">
+                    <div class="checklist-item" data-item="damage-discussion">
+                        <div class="checklist-icon">💬</div>
+                        <span class="checklist-text">Damage Discussion Completed</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-item="satellite-verification" id="satelliteChecklistItem" style="display: none;">
+                        <div class="checklist-icon">📡</div>
+                        <span class="checklist-text">Satellite Dish Verification</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-item="zelle-discussion">
+                        <div class="checklist-icon">💰</div>
+                        <span class="checklist-text">Zelle Payment Discussion</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-item="phone-collection" id="phoneChecklistItem" style="display: none;">
+                        <div class="checklist-icon">📱</div>
+                        <span class="checklist-text">Zelle Phone Number Collected</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="navigation-buttons">
+                <button class="nav-btn secondary" id="backBtn" onclick="goBack()">
+                    <span class="btn-icon">←</span>
+                    Back to Hail Test
+                </button>
+                <button class="nav-btn primary" id="nextBtn" onclick="completeInspection()" disabled>
+                    <span class="btn-text">Complete</span>
+                    <span class="btn-icon">✅</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="api-config.js"></script>
+    <script src="insured-interview.js"></script>
+</body>
+</html>

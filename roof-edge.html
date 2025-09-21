@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roof Edge Inspection - Inspection Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="elevation-styles.css">
+    <link rel="stylesheet" href="roof-edge-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with progress -->
+        <header class="header">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">Step 2 of 5</span>
+            </div>
+            <h1 class="page-title">Roof Edge Inspection</h1>
+            <p class="page-subtitle">Document gutter measurements and roof underlayment</p>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Current inspection section -->
+            <div class="inspection-section" id="inspectionSection">
+                <div class="inspection-card">
+                    <div class="inspection-header">
+                        <div class="inspection-icon" id="inspectionIcon">🏠</div>
+                        <h2 class="inspection-title" id="inspectionTitle">Gutter Measurement</h2>
+                        <div class="inspection-status" id="inspectionStatus">
+                            <span class="status-badge pending">Pending</span>
+                        </div>
+                    </div>
+                    
+                    <div class="inspection-instructions">
+                        <p id="inspectionInstructions">
+                            Take a clear photo of the gutter with a tape measure showing the gutter size. 
+                            Ensure the measurement is clearly visible and readable in the photo.
+                        </p>
+                        <div class="measurement-tips">
+                            <h4>📏 Measurement Tips:</h4>
+                            <ul>
+                                <li>Use a tape measure or ruler</li>
+                                <li>Ensure numbers are clearly visible</li>
+                                <li>Include the entire gutter section</li>
+                                <li>Good lighting is essential</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Camera interface -->
+                    <div class="camera-container">
+                        <div class="camera-preview" id="cameraPreview">
+                            <div class="camera-placeholder">
+                                <div class="camera-icon">📷</div>
+                                <p>Camera will appear here</p>
+                            </div>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button class="camera-btn secondary" id="switchCameraBtn">
+                                <span class="btn-icon">🔄</span>
+                                Switch Camera
+                            </button>
+                            <button class="camera-btn primary" id="captureBtn">
+                                <span class="btn-icon">📸</span>
+                                Capture Photo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Photo preview and actions -->
+                    <div class="photo-actions" id="photoActions" style="display: none;">
+                        <div class="photo-preview" id="photoPreview"></div>
+                        <div class="photo-buttons">
+                            <button class="action-btn secondary" id="retakeBtn">
+                                <span class="btn-icon">🔄</span>
+                                Retake
+                            </button>
+                            <button class="action-btn primary" id="confirmBtn">
+                                <span class="btn-icon">✅</span>
+                                Confirm Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspection checklist -->
+            <div class="inspection-checklist">
+                <h3>Roof Edge Documentation</h3>
+                <div class="checklist-items">
+                    <div class="checklist-item" data-inspection="gutter">
+                        <div class="checklist-icon">📏</div>
+                        <span class="checklist-text">Gutter Measurement Photo</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-inspection="underlayment">
+                        <div class="checklist-icon">🏠</div>
+                        <span class="checklist-text">Underlayment Inspection</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Section -->
+            <div class="ai-analysis" id="aiAnalysis" style="display: none;">
+                <div class="ai-header">
+                    <div class="ai-icon">🤖</div>
+                    <h3>AI Photo Analysis</h3>
+                </div>
+                <div class="ai-content">
+                    <div class="ai-loading" id="aiLoading">
+                        <div class="spinner"></div>
+                        <p>Analyzing photo quality and measurements...</p>
+                    </div>
+                    <div class="ai-results" id="aiResults" style="display: none;">
+                        <!-- AI analysis results will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="navigation-buttons">
+                <button class="nav-btn secondary" id="backBtn" onclick="goBack()">
+                    <span class="btn-icon">←</span>
+                    Back
+                </button>
+                <button class="nav-btn primary" id="nextBtn" onclick="proceedToNext()" disabled>
+                    <span class="btn-text">Next Step</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden file input for photo capture -->
+    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
+
+    <script src="script.js"></script>
+    <script src="api-config.js"></script>
+    <script src="roof-edge.js"></script>
+</body>
+</html>

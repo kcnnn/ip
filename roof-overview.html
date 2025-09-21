@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roof Overview - Inspection Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="elevation-styles.css">
+    <link rel="stylesheet" href="roof-edge-styles.css">
+    <link rel="stylesheet" href="ridge-styles.css">
+    <link rel="stylesheet" href="overview-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with progress -->
+        <header class="header">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">Step 4 of 5</span>
+            </div>
+            <h1 class="page-title">Roof Overview Photos</h1>
+            <p class="page-subtitle">Capture 8 overview photos from the top of the roof</p>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Current photo section -->
+            <div class="photo-section" id="photoSection">
+                <div class="photo-card">
+                    <div class="photo-header">
+                        <div class="photo-icon" id="photoIcon">📸</div>
+                        <h2 class="photo-title" id="photoTitle">Front Overview</h2>
+                        <div class="photo-status" id="photoStatus">
+                            <span class="status-badge pending">Pending</span>
+                        </div>
+                    </div>
+                    
+                    <div class="photo-instructions">
+                        <p id="photoInstructions">
+                            Take an overview photo from the front of the roof. Position yourself at the front edge and capture a wide view of the roof surface.
+                        </p>
+                        <div class="photo-tips">
+                            <h4>📸 Overview Photo Tips:</h4>
+                            <ul>
+                                <li>Stand at the roof edge for best perspective</li>
+                                <li>Capture as much of the roof surface as possible</li>
+                                <li>Ensure good lighting and clear visibility</li>
+                                <li>Look for any visible damage or issues</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Camera interface -->
+                    <div class="camera-container">
+                        <div class="camera-preview" id="cameraPreview">
+                            <div class="camera-placeholder">
+                                <div class="camera-icon">📷</div>
+                                <p>Camera will appear here</p>
+                            </div>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button class="camera-btn secondary" id="switchCameraBtn">
+                                <span class="btn-icon">🔄</span>
+                                Switch Camera
+                            </button>
+                            <button class="camera-btn primary" id="captureBtn">
+                                <span class="btn-icon">📸</span>
+                                Capture Photo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Photo preview and actions -->
+                    <div class="photo-actions" id="photoActions" style="display: none;">
+                        <div class="photo-preview" id="photoPreview"></div>
+                        <div class="photo-buttons">
+                            <button class="action-btn secondary" id="retakeBtn">
+                                <span class="btn-icon">🔄</span>
+                                Retake
+                            </button>
+                            <button class="action-btn primary" id="confirmBtn">
+                                <span class="btn-icon">✅</span>
+                                Confirm Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo checklist with compass -->
+            <div class="photo-checklist">
+                <h3>Overview Photo Checklist</h3>
+                <div class="compass-container">
+                    <div class="compass">
+                        <div class="compass-center">🏠</div>
+                        <div class="compass-points">
+                            <div class="compass-point north" data-direction="north">N</div>
+                            <div class="compass-point northeast" data-direction="northeast">NE</div>
+                            <div class="compass-point east" data-direction="east">E</div>
+                            <div class="compass-point southeast" data-direction="southeast">SE</div>
+                            <div class="compass-point south" data-direction="south">S</div>
+                            <div class="compass-point southwest" data-direction="southwest">SW</div>
+                            <div class="compass-point west" data-direction="west">W</div>
+                            <div class="compass-point northwest" data-direction="northwest">NW</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="checklist-items">
+                    <div class="checklist-item" data-photo="front">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">Front Overview</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="northeast">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">Northeast Overview</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="east">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">East Overview</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="southeast">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">Southeast Overview</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="south">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">South Overview</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="southwest">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">Southwest Overview</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="west">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">West Overview</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="northwest">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">Northwest Overview</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Section -->
+            <div class="ai-analysis" id="aiAnalysis" style="display: none;">
+                <div class="ai-header">
+                    <div class="ai-icon">🤖</div>
+                    <h3>AI Photo Analysis</h3>
+                </div>
+                <div class="ai-content">
+                    <div class="ai-loading" id="aiLoading">
+                        <div class="spinner"></div>
+                        <p>Analyzing roof overview and condition...</p>
+                    </div>
+                    <div class="ai-results" id="aiResults" style="display: none;">
+                        <!-- AI analysis results will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="navigation-buttons">
+                <button class="nav-btn secondary" id="backBtn" onclick="goBack()">
+                    <span class="btn-icon">←</span>
+                    Back
+                </button>
+                <button class="nav-btn primary" id="nextBtn" onclick="proceedToNext()" disabled>
+                    <span class="btn-text">Next Step</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden file input for photo capture -->
+    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
+
+    <script src="script.js"></script>
+    <script src="api-config.js"></script>
+    <script src="overview-photos.js"></script>
+</body>
+</html>

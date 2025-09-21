@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hail Test Square - Inspection Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="elevation-styles.css">
+    <link rel="stylesheet" href="roof-edge-styles.css">
+    <link rel="stylesheet" href="ridge-styles.css">
+    <link rel="stylesheet" href="overview-styles.css">
+    <link rel="stylesheet" href="accessories-styles.css">
+    <link rel="stylesheet" href="hail-test-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with progress -->
+        <header class="header">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">Step 6 of 6</span>
+            </div>
+            <h1 class="page-title">Hail Damage Test Square</h1>
+            <p class="page-subtitle">Perform 10'x10' test square for hail damage assessment</p>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Current photo section -->
+            <div class="photo-section" id="photoSection">
+                <div class="photo-card">
+                    <div class="photo-header">
+                        <div class="photo-icon" id="photoIcon">📸</div>
+                        <h2 class="photo-title" id="photoTitle">Test Square Full View</h2>
+                        <div class="photo-status" id="photoStatus">
+                            <span class="status-badge pending">Pending</span>
+                        </div>
+                    </div>
+                    
+                    <div class="photo-instructions">
+                        <p id="photoInstructions">
+                            Take a full view photo of the 10'x10' test square. Ensure the entire test area is visible and clearly marked.
+                        </p>
+                        <div class="test-square-tips">
+                            <h4>📏 Test Square Setup Tips:</h4>
+                            <ul>
+                                <li>Mark a 10'x10' square on the roof</li>
+                                <li>Use chalk or tape to clearly define the area</li>
+                                <li>Ensure good lighting and clear visibility</li>
+                                <li>Capture the entire test square in the photo</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Camera interface -->
+                    <div class="camera-container">
+                        <div class="camera-preview" id="cameraPreview">
+                            <div class="camera-placeholder">
+                                <div class="camera-icon">📷</div>
+                                <p>Camera will appear here</p>
+                            </div>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button class="camera-btn secondary" id="switchCameraBtn">
+                                <span class="btn-icon">🔄</span>
+                                Switch Camera
+                            </button>
+                            <button class="camera-btn primary" id="captureBtn">
+                                <span class="btn-icon">📸</span>
+                                Capture Photo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Photo preview and actions -->
+                    <div class="photo-actions" id="photoActions" style="display: none;">
+                        <div class="photo-preview" id="photoPreview"></div>
+                        <div class="photo-buttons">
+                            <button class="action-btn secondary" id="retakeBtn">
+                                <span class="btn-icon">🔄</span>
+                                Retake
+                            </button>
+                            <button class="action-btn primary" id="confirmBtn">
+                                <span class="btn-icon">✅</span>
+                                Confirm Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hail hits tracking -->
+            <div class="hail-hits-section" id="hailHitsSection" style="display: none;">
+                <div class="hail-hits-card">
+                    <div class="hail-hits-header">
+                        <h3>Hail Hits Documentation</h3>
+                        <div class="hail-count">
+                            <span class="count-label">Hail Hits Found:</span>
+                            <span class="count-number" id="hailCount">0</span>
+                            <span class="count-requirement">(Minimum: 8)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hail-instructions">
+                        <p>Circle at least 8 hail hits within the test square. Use chalk or tape to mark each hail hit clearly.</p>
+                        <div class="hail-tips">
+                            <h4>🎯 Hail Hit Identification Tips:</h4>
+                            <ul>
+                                <li>Look for circular or oval indentations</li>
+                                <li>Check for granule loss around impact points</li>
+                                <li>Look for bruising or soft spots</li>
+                                <li>Mark each hit with a clear circle</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="hail-actions">
+                        <button class="hail-btn" id="addHailHitBtn" onclick="addHailHit()">
+                            <span class="btn-icon">➕</span>
+                            Add Hail Hit
+                        </button>
+                        <button class="hail-btn" id="removeHailHitBtn" onclick="removeHailHit()" disabled>
+                            <span class="btn-icon">➖</span>
+                            Remove Last Hit
+                        </button>
+                    </div>
+                    
+                    <div class="hail-hits-list" id="hailHitsList">
+                        <!-- Dynamic hail hits will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Closeup photos section -->
+            <div class="closeup-section" id="closeupSection" style="display: none;">
+                <div class="closeup-card">
+                    <div class="closeup-header">
+                        <h3>Hail Hit Closeup Photos</h3>
+                        <p>Take closeup photos of 3 circled hail hits</p>
+                    </div>
+                    
+                    <div class="closeup-instructions">
+                        <p id="closeupInstructions">
+                            Select 3 hail hits to photograph up close. Choose the most representative or severe damage.
+                        </p>
+                    </div>
+                    
+                    <div class="closeup-selection" id="closeupSelection">
+                        <!-- Closeup selection interface will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo checklist -->
+            <div class="photo-checklist">
+                <h3>Hail Test Square Documentation</h3>
+                <div class="checklist-items">
+                    <div class="checklist-item" data-photo="test-square">
+                        <div class="checklist-icon">📸</div>
+                        <span class="checklist-text">Test Square Full View</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="hail-hits">
+                        <div class="checklist-icon">🎯</div>
+                        <span class="checklist-text">Hail Hits Circled (8+)</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="closeup-1">
+                        <div class="checklist-icon">🔍</div>
+                        <span class="checklist-text">Closeup Photo 1</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="closeup-2">
+                        <div class="checklist-icon">🔍</div>
+                        <span class="checklist-text">Closeup Photo 2</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                    <div class="checklist-item" data-photo="closeup-3">
+                        <div class="checklist-icon">🔍</div>
+                        <span class="checklist-text">Closeup Photo 3</span>
+                        <div class="checklist-status">⏳</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Section -->
+            <div class="ai-analysis" id="aiAnalysis" style="display: none;">
+                <div class="ai-header">
+                    <div class="ai-icon">🤖</div>
+                    <h3>AI Hail Damage Analysis</h3>
+                </div>
+                <div class="ai-content">
+                    <div class="ai-loading" id="aiLoading">
+                        <div class="spinner"></div>
+                        <p>Analyzing hail damage and test square quality...</p>
+                    </div>
+                    <div class="ai-results" id="aiResults" style="display: none;">
+                        <!-- AI analysis results will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="navigation-buttons">
+                <button class="nav-btn secondary" id="backBtn" onclick="goBack()">
+                    <span class="btn-icon">←</span>
+                    Back
+                </button>
+                <button class="nav-btn primary" id="nextBtn" onclick="proceedToNext()" disabled>
+                    <span class="btn-text">Complete Inspection</span>
+                    <span class="btn-icon">✅</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden file input for photo capture -->
+    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
+
+    <script src="script.js"></script>
+    <script src="api-config.js"></script>
+    <script src="hail-test-square.js"></script>
+</body>
+</html>
