@@ -746,9 +746,19 @@
 
 /* Mobile optimizations */
 @media (max-width: 480px) {
+    /* Fix container overflow issues */
+    .container {
+        padding: 0;
+        margin: 0;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
     .photo-card, .hail-hits-card, .closeup-card {
-        padding: 1rem;
+        padding: 0.8rem;
         margin: 0 0.5rem;
+        max-width: calc(100vw - 1rem);
+        box-sizing: border-box;
     }
     
     .photo-header {
@@ -764,59 +774,100 @@
     
     .camera-preview {
         height: 250px;
+        max-width: 100%;
     }
     
     .camera-controls {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
     .camera-btn {
         width: 100%;
+        min-width: auto;
     }
     
     .photo-buttons {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
     .action-btn {
         width: 100%;
+        min-width: auto;
     }
     
     .navigation-buttons {
         flex-direction: column;
+        gap: 0.5rem;
+        padding: 0 0.5rem;
     }
     
     .nav-btn {
         width: 100%;
+        min-width: auto;
     }
     
     .checklist-item {
         padding: 0.6rem;
+        margin: 0 0.5rem;
+        max-width: calc(100vw - 1rem);
+        box-sizing: border-box;
     }
     
     .hail-actions {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
     .hail-btn {
         width: 100%;
+        min-width: auto;
     }
     
     .hail-hits-list {
         grid-template-columns: 1fr;
+        gap: 0.5rem;
     }
     
     .closeup-selection {
         grid-template-columns: 1fr;
+        gap: 0.5rem;
     }
     
     .hail-hits-header {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.5rem;
     }
     
     .hail-count {
         justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    /* Fix text overflow */
+    .hail-tips ul, .test-square-tips ul {
+        padding-left: 1rem;
+    }
+    
+    .hail-tips li, .test-square-tips li {
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+    
+    /* Ensure all content fits within viewport */
+    .main-content {
+        padding: 0 0.5rem;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix button text wrapping */
+    .btn-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 

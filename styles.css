@@ -17,12 +17,14 @@ body {
 
 /* Mobile-first approach */
 .container {
-    max-width: 100%;
+    max-width: 100vw;
     margin: 0;
     padding: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 /* Remove duplicate container rule - using mobile-first approach above */
@@ -242,5 +244,77 @@ body {
     
     .features {
         grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Mobile overflow fixes */
+@media (max-width: 480px) {
+    /* Prevent horizontal scrolling */
+    * {
+        box-sizing: border-box;
+    }
+    
+    html, body {
+        overflow-x: hidden;
+        max-width: 100vw;
+    }
+    
+    .container {
+        padding: 0;
+        margin: 0;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .header {
+        padding: 1rem 0.5rem;
+    }
+    
+    .title {
+        font-size: 2rem;
+        padding: 0 0.5rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .main-content {
+        padding: 1rem 0.5rem;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .hero-section {
+        padding: 1.5rem;
+        margin: 0 0.5rem;
+        max-width: calc(100vw - 1rem);
+    }
+    
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    
+    .hero-description {
+        font-size: 1rem;
+    }
+    
+    .start-btn {
+        width: 100%;
+        max-width: calc(100vw - 2rem);
+        margin: 0 auto;
+    }
+    
+    .features {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .feature {
+        padding: 1rem;
+        margin: 0;
+        max-width: 100%;
     }
 }
