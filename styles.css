@@ -5,6 +5,18 @@
     box-sizing: border-box;
 }
 
+/* Global mobile fixes */
+html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* Ensure all containers respect viewport width */
+.container, .main-content, .header {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
