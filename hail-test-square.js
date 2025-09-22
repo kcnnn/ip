@@ -1,11 +1,9 @@
 // Hail Test Square JavaScript
 
 // Current state
-let currentStep = 'test-square'; // 'test-square', 'hail-hits', 'closeup-1', 'closeup-2', 'closeup-3'
+let currentStep = 'test-square'; // 'test-square', 'closeup-1', 'closeup-2', 'closeup-3'
 let testSquarePhoto = null;
-let hailHits = [];
 let closeupPhotos = [];
-let selectedCloseupHits = [];
 let stream = null;
 let isAnalyzing = false;
 
@@ -28,10 +26,7 @@ const aiResults = document.getElementById('aiResults');
 const nextBtn = document.getElementById('nextBtn');
 const progressFill = document.getElementById('progressFill');
 const progressText = document.getElementById('progressText');
-const hailHitsSection = document.getElementById('hailHitsSection');
 const closeupSection = document.getElementById('closeupSection');
-const hailCount = document.getElementById('hailCount');
-const hailHitsList = document.getElementById('hailHitsList');
 const closeupSelection = document.getElementById('closeupSelection');
 const closeupInstructions = document.getElementById('closeupInstructions');
 
@@ -57,14 +52,6 @@ function updateStepDisplay() {
             photoTitle.textContent = 'Test Square Full View';
             photoIcon.textContent = '📸';
             photoInstructions.textContent = 'Take a full view photo of the 10\'x10\' test square. Ensure the entire test area is visible and clearly marked.';
-            hailHitsSection.style.display = 'none';
-            closeupSection.style.display = 'none';
-            break;
-        case 'hail-hits':
-            photoTitle.textContent = 'Hail Hits Documentation';
-            photoIcon.textContent = '🎯';
-            photoInstructions.textContent = 'Circle at least 8 hail hits within the test square. Use chalk or tape to mark each hail hit clearly.';
-            hailHitsSection.style.display = 'block';
             closeupSection.style.display = 'none';
             break;
         case 'closeup-1':
@@ -73,8 +60,7 @@ function updateStepDisplay() {
             const closeupNumber = currentStep.split('-')[1];
             photoTitle.textContent = `Hail Hit Closeup ${closeupNumber}`;
             photoIcon.textContent = '🔍';
-            photoInstructions.textContent = `Take a closeup photo of hail hit ${closeupNumber}. Ensure the circled hail hit is clearly visible and in focus.`;
-            hailHitsSection.style.display = 'block';
+            photoInstructions.textContent = `Take a closeup photo of a hail hit within the test square. Choose the most representative or severe damage.`;
             closeupSection.style.display = 'block';
             break;
     }
@@ -94,8 +80,6 @@ function isStepCompleted(step) {
     switch (step) {
         case 'test-square':
             return testSquarePhoto !== null;
-        case 'hail-hits':
-            return hailHits.length >= 8;
         case 'closeup-1':
         case 'closeup-2':
         case 'closeup-3':
@@ -107,24 +91,21 @@ function isStepCompleted(step) {
 }
 
 function updateProgress() {
-    const totalSteps = 5; // test-square, hail-hits, closeup-1, closeup-2, closeup-3
+    const totalSteps = 4; // test-square, closeup-1, closeup-2, closeup-3
     let currentStepNumber = 1;
     
     switch (currentStep) {
         case 'test-square':
             currentStepNumber = 1;
             break;
-        case 'hail-hits':
+        case 'closeup-1':
             currentStepNumber = 2;
             break;
-        case 'closeup-1':
+        case 'closeup-2':
             currentStepNumber = 3;
             break;
-        case 'closeup-2':
-            currentStepNumber = 4;
-            break;
         case 'closeup-3':
-            currentStepNumber = 5;
+            currentStepNumber = 4;
             break;
     }
     
@@ -154,80 +135,8 @@ function updateChecklist() {
     });
 }
 
-function addHailHit() {
-    hailHits.push({
-        id: Date.now(),
-        number: hailHits.length + 1,
-        status: 'circled'
-    });
-    
-    updateHailHitsDisplay();
-    updateChecklist();
-    
-    // Check if we have enough hail hits
-    if (hailHits.length >= 8) {
-        // Enable closeup selection
-        updateCloseupSelection();
-    }
-}
-
-function removeHailHit() {
-    if (hailHits.length > 0) {
-        hailHits.pop();
-        updateHailHitsDisplay();
-        updateChecklist();
-        updateCloseupSelection();
-    }
-}
-
-function updateHailHitsDisplay() {
-    hailCount.textContent = hailHits.length;
-    
-    hailHitsList.innerHTML = '';
-    hailHits.forEach((hit, index) => {
-        const item = document.createElement('div');
-        item.className = 'hail-hit-item';
-        item.innerHTML = `
-            <div class="hail-hit-number">${hit.number}</div>
-            <div class="hail-hit-status">Circled</div>
-        `;
-        hailHitsList.appendChild(item);
-    });
-    
-    // Update remove button state
-    const removeBtn = document.getElementById('removeHailHitBtn');
-    removeBtn.disabled = hailHits.length === 0;
-}
-
 function updateCloseupSelection() {
-    if (hailHits.length < 8) {
-        closeupSelection.innerHTML = '<p style="text-align: center; color: #666;">Please circle at least 8 hail hits first.</p>';
-        return;
-    }
-    
-    closeupSelection.innerHTML = '';
-    
-    // Show hail hits for selection
-    hailHits.forEach((hit, index) => {
-        const option = document.createElement('div');
-        option.className = 'closeup-option';
-        option.innerHTML = `
-            <div class="closeup-option-number">Hail Hit ${hit.number}</div>
-            <div class="closeup-option-status">Available</div>
-        `;
-        
-        option.addEventListener('click', () => {
-            selectCloseupHit(index);
-        });
-        
-        closeupSelection.appendChild(option);
-    });
-}
-
-function selectCloseupHit(hitIndex) {
-    // This would be implemented to select which hail hits to photograph
-    // For now, just show a message
-    alert(`Hail hit ${hitIndex + 1} selected for closeup photography.`);
+    closeupSelection.innerHTML = '<p style="text-align: center; color: #666;">Take closeup photos of the most representative hail hits within the test square.</p>';
 }
 
 function openCamera() {
@@ -791,15 +700,7 @@ function proceedToNextStep() {
     // Move to next step
     switch (currentStep) {
         case 'test-square':
-            currentStep = 'hail-hits';
-            break;
-        case 'hail-hits':
-            if (hailHits.length >= 8) {
-                currentStep = 'closeup-1';
-            } else {
-                alert('Please circle at least 8 hail hits before proceeding.');
-                return;
-            }
+            currentStep = 'closeup-1';
             break;
         case 'closeup-1':
             currentStep = 'closeup-2';
@@ -847,11 +748,8 @@ function goBack() {
             // Go back to roof accessories
             window.location.href = 'roof-accessories.html';
             return;
-        case 'hail-hits':
-            currentStep = 'test-square';
-            break;
         case 'closeup-1':
-            currentStep = 'hail-hits';
+            currentStep = 'test-square';
             break;
         case 'closeup-2':
             currentStep = 'closeup-1';

@@ -92,47 +92,6 @@
                 </div>
             </div>
 
-            <!-- Hail hits tracking -->
-            <div class="hail-hits-section" id="hailHitsSection" style="display: none;">
-                <div class="hail-hits-card">
-                    <div class="hail-hits-header">
-                        <h3>Hail Hits Documentation</h3>
-                        <div class="hail-count">
-                            <span class="count-label">Hail Hits Found:</span>
-                            <span class="count-number" id="hailCount">0</span>
-                            <span class="count-requirement">(Minimum: 8)</span>
-                        </div>
-                    </div>
-                    
-                    <div class="hail-instructions">
-                        <p>Circle at least 8 hail hits within the test square. Use chalk or tape to mark each hail hit clearly.</p>
-                        <div class="hail-tips">
-                            <h4>🎯 Hail Hit Identification Tips:</h4>
-                            <ul>
-                                <li>Look for circular or oval indentations</li>
-                                <li>Check for granule loss around impact points</li>
-                                <li>Look for bruising or soft spots</li>
-                                <li>Mark each hit with a clear circle</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="hail-actions">
-                        <button class="hail-btn" id="addHailHitBtn" onclick="addHailHit()">
-                            <span class="btn-icon">➕</span>
-                            Add Hail Hit
-                        </button>
-                        <button class="hail-btn" id="removeHailHitBtn" onclick="removeHailHit()" disabled>
-                            <span class="btn-icon">➖</span>
-                            Remove Last Hit
-                        </button>
-                    </div>
-                    
-                    <div class="hail-hits-list" id="hailHitsList">
-                        <!-- Dynamic hail hits will be added here -->
-                    </div>
-                </div>
-            </div>
 
             <!-- Closeup photos section -->
             <div class="closeup-section" id="closeupSection" style="display: none;">
@@ -161,11 +120,6 @@
                     <div class="checklist-item" data-photo="test-square">
                         <div class="checklist-icon">📸</div>
                         <span class="checklist-text">Test Square Full View</span>
-                        <div class="checklist-status">⏳</div>
-                    </div>
-                    <div class="checklist-item" data-photo="hail-hits">
-                        <div class="checklist-icon">🎯</div>
-                        <span class="checklist-text">Hail Hits Circled (8+)</span>
                         <div class="checklist-status">⏳</div>
                     </div>
                     <div class="checklist-item" data-photo="closeup-1">
