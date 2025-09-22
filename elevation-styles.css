@@ -424,99 +424,147 @@
 
 /* Mobile optimizations */
 @media (max-width: 480px) {
-    /* Fix container overflow issues */
+    /* Force single column layout and prevent overflow */
+    * {
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
+    }
+    
     .container {
-        padding: 0;
-        margin: 0;
-        max-width: 100vw;
-        overflow-x: hidden;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        width: 100vw !important;
+    }
+    
+    .main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        width: 100vw !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .elevation-section {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        padding: 0 0.5rem !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
     }
     
     .elevation-card {
-        padding: 0.8rem;
-        margin: 0 0.5rem;
-        max-width: calc(100vw - 1rem);
-        box-sizing: border-box;
+        padding: 0.8rem !important;
+        margin: 0 !important;
+        max-width: calc(100vw - 1rem) !important;
+        width: calc(100vw - 1rem) !important;
+        box-sizing: border-box !important;
     }
     
     .elevation-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
     }
     
     .elevation-status {
-        margin-left: 0;
-        align-self: flex-start;
+        margin-left: 0 !important;
+        align-self: flex-start !important;
     }
     
     .camera-preview {
-        height: 250px;
-        max-width: 100%;
+        height: 250px !important;
+        max-width: 100% !important;
+        width: 100% !important;
     }
     
     .camera-controls {
-        flex-direction: column;
-        gap: 0.5rem;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
     }
     
     .camera-btn {
-        width: 100%;
-        min-width: auto;
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: 100% !important;
     }
     
     .photo-buttons {
-        flex-direction: column;
-        gap: 0.5rem;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
     }
     
     .action-btn {
-        width: 100%;
-        min-width: auto;
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: 100% !important;
     }
     
     .navigation-buttons {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0 0.5rem;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        padding: 0 0.5rem !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
     }
     
     .nav-btn {
-        width: 100%;
-        min-width: auto;
+        width: calc(100vw - 1rem) !important;
+        min-width: auto !important;
+        max-width: calc(100vw - 1rem) !important;
+    }
+    
+    .photo-checklist {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        padding: 0.8rem !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
     }
     
     .checklist-item {
-        padding: 0.6rem;
-        margin: 0 0.5rem;
-        max-width: calc(100vw - 1rem);
-        box-sizing: border-box;
+        padding: 0.6rem !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
     
-    /* Ensure all content fits within viewport */
-    .main-content {
-        padding: 0 0.5rem;
-        max-width: 100vw;
-        overflow-x: hidden;
+    /* Force single column for all grid layouts */
+    .elevation-grid,
+    .features-grid,
+    .checklist-items {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
     
-    /* Fix button text wrapping */
+    .elevation-item,
+    .feature,
+    .checklist-item {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Fix text overflow */
     .btn-text {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal !important;
+        word-wrap: break-word !important;
     }
     
-    /* Fix elevation grid layout */
-    .elevation-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .elevation-item {
-        width: 100%;
-        max-width: 100%;
+    /* Ensure no horizontal scrolling */
+    body, html {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
     }
 }
 
