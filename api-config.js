@@ -5,7 +5,7 @@ const API_CONFIG = {
     // API key will be set by user through the setup page
     API_KEY: '', // Will be populated from localStorage or user input
     BASE_URL: 'https://api.openai.com/v1/chat/completions',
-    MODEL: 'gpt-4-vision-preview', // GPT-4 with vision capabilities
+    MODEL: 'gpt-4o', // GPT-4 with vision capabilities
     MAX_TOKENS: 1000,
     TEMPERATURE: 0.3
 };
