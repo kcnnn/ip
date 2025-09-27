@@ -584,7 +584,7 @@ Format the report professionally with clear sections, bullet points, and actiona
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'gpt-4',
+                model: API_CONFIG.MODEL,
                 messages: [
                     {
                         role: 'user',
