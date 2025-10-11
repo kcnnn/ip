@@ -117,12 +117,12 @@ function updateSummary() {
     elevationCount.textContent = '4';
     roofEdgeCount.textContent = '2';
     ridgeCount.textContent = '2';
-    overviewCount.textContent = '8';
+    overviewCount.textContent = '4';
     accessoryCount.textContent = '5'; // Simulated count
     hailTestCount.textContent = '4';
     
     // Calculate total
-    const total = 4 + 2 + 2 + 8 + 5 + 4;
+    const total = 4 + 2 + 2 + 4 + 5 + 4;
     totalPhotos.textContent = total;
 }
 
@@ -490,7 +490,7 @@ async function generateDetailedReport(interviewData) {
         elevationPhotos: 4,
         roofEdgePhotos: 2,
         ridgePhotos: 2,
-        overviewPhotos: 8,
+        overviewPhotos: 4,
         accessoryPhotos: 5, // This would come from stored data
         hailTestPhotos: 4,
         totalPhotos: interviewData.totalPhotos,

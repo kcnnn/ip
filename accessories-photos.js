@@ -548,23 +548,7 @@ function displayAIResults(results) {
         <p>Confidence: ${results.confidence}%</p>
     </div>`;
     
-    // Accessory condition analysis
-    const accessoryClass = results.accessoryCondition === 'excellent' || results.accessoryCondition === 'good' ? 'accessory-good' : 'accessory-damaged';
-    html += `<div class="accessory-analysis ${accessoryClass}">
-        <h4>🔧 Accessory Condition Analysis</h4>
-        <p>Accessory Condition: ${results.accessoryCondition.charAt(0).toUpperCase() + results.accessoryCondition.slice(1)}</p>
-        <p>Damage Detected: ${results.damageDetected ? 'Yes' : 'No'}</p>
-        <p>Installation Quality: ${results.installationQuality.charAt(0).toUpperCase() + results.installationQuality.slice(1)}</p>
-        ${results.damageTypes && results.damageTypes.length > 0 ? 
-            `<p>Damage Types: ${results.damageTypes.join(', ')}</p>` : ''}
-    </div>`;
     
-    // Installation analysis
-    const installationClass = results.installationQuality === 'excellent' || results.installationQuality === 'good' ? 'installation-good' : 'installation-poor';
-    html += `<div class="installation-analysis ${installationClass}">
-        <h4>🔧 Installation Analysis</h4>
-        <p>Installation Quality: ${results.installationQuality.charAt(0).toUpperCase() + results.installationQuality.slice(1)}</p>
-    </div>`;
     
     // Issues
     if (results.issues && results.issues.length > 0) {
