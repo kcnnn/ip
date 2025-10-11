@@ -27,14 +27,16 @@ function startInspection() {
 document.addEventListener('DOMContentLoaded', function() {
     // Add fade-in animation to hero content
     const heroContent = document.querySelector('.hero-content');
-    heroContent.style.opacity = '0';
-    heroContent.style.transform = 'translateY(30px)';
-    
-    setTimeout(() => {
-        heroContent.style.transition = 'all 0.8s ease';
-        heroContent.style.opacity = '1';
-        heroContent.style.transform = 'translateY(0)';
-    }, 100);
+    if (heroContent) {
+        heroContent.style.opacity = '0';
+        heroContent.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            heroContent.style.transition = 'all 0.8s ease';
+            heroContent.style.opacity = '1';
+            heroContent.style.transform = 'translateY(0)';
+        }, 100);
+    }
     
     // Add hover effects to features
     const features = document.querySelectorAll('.feature');
