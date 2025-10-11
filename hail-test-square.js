@@ -283,10 +283,21 @@ async function analyzePhotoWithAI() {
     } catch (error) {
         console.error('AI Analysis Error:', error);
         
-        // Fallback to simulated analysis if API fails
-        const fallbackResults = simulateHailAnalysis();
-        fallbackResults.apiError = error.message;
-        displayAIResults(fallbackResults);
+        // Show error message instead of fake data
+        const errorMessage = `
+            <div class="ai-error">
+                <h4>⚠️ AI Analysis Error</h4>
+                <p>Unable to analyze photo: ${error.message}</p>
+                <p>Please check your API key configuration and try again.</p>
+                <div class="ai-actions">
+                    <button class="action-btn secondary" onclick="retakePhoto()">Retake Photo</button>
+                    <button class="action-btn primary" onclick="proceedToNextStep()">Continue</button>
+                </div>
+            </div>
+        `;
+        
+        aiResults.innerHTML = errorMessage;
+        aiAnalysis.style.display = 'block';
     }
 }
 
@@ -773,7 +784,6 @@ function showAPISetupPrompt() {
             <h3>🔑 API Key Required</h3>
             <p>To enable AI photo analysis, you need to configure your ChatGPT API key.</p>
             <div class="prompt-actions">
-                <button class="action-btn secondary" onclick="proceedWithoutAPI()">Continue Without AI</button>
                 <button class="action-btn primary" onclick="goToAPISetup()">Setup API Key</button>
             </div>
         </div>
@@ -847,9 +857,20 @@ function proceedWithoutAPI() {
         prompt.remove();
     }
     
-    // Continue with fallback analysis
-    const fallbackResults = simulateHailAnalysis();
-    displayAIResults(fallbackResults);
+    // Show error message instead of fake data
+    const errorMessage = `
+        <div class="ai-error">
+            <h4>⚠️ AI Analysis Required</h4>
+            <p>Real AI analysis is required for accurate hail damage assessment.</p>
+            <p>Please configure your ChatGPT API key to continue.</p>
+            <div class="ai-actions">
+                <button class="action-btn primary" onclick="goToAPISetup()">Setup API Key</button>
+            </div>
+        </div>
+    `;
+    
+    aiResults.innerHTML = errorMessage;
+    aiAnalysis.style.display = 'block';
 }
 
 // Add CSS for AI analysis results
