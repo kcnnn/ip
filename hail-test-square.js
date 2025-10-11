@@ -622,27 +622,12 @@ function displayAIResults(results) {
         html += `<div class="test-square-analysis ${testSquareClass}">
             <h4>📏 Test Square Analysis</h4>
             <p>Test Square Quality: ${results.testSquareQuality.charAt(0).toUpperCase() + results.testSquareQuality.slice(1)}</p>
-            <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
             ${results.hailHitCount ? `<p>Hail Hits Count: ${results.hailHitCount}</p>` : ''}
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
     }
     
-    // Hail hit analysis
-    if (results.hailHitVisible !== undefined) {
-        const hailClass = results.hailHitVisible && results.hailHitGenuine ? 'hail-damage-detected' : 'hail-no-damage';
-        html += `<div class="hail-analysis ${hailClass}">
-            <h4>🎯 Hail Hit Analysis</h4>
-            <p>Hail Hit Visible: ${results.hailHitVisible ? 'Yes' : 'No'}</p>
-            <p>Genuine Hail Hit: ${results.hailHitGenuine ? 'Yes' : 'No'}</p>
-            <p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>
-            ${results.damageCharacteristics ? `
-                <p>Characteristics: ${results.damageCharacteristics.circular ? 'Circular' : 'Irregular'}, 
-                ${results.damageCharacteristics.granuleLoss ? 'Granule Loss' : 'No Granule Loss'}, 
-                ${results.damageCharacteristics.bruising ? 'Bruising' : 'No Bruising'}</p>
-            ` : ''}
-        </div>`;
-    }
+    
     
     // Issues
     if (results.issues && results.issues.length > 0) {
