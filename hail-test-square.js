@@ -639,6 +639,7 @@ function displayAIResults(results) {
         html += `<div class="test-square-analysis ${testSquareClass}">
             <h4>📏 Test Square Analysis</h4>
             <p>Test Square Quality: ${results.testSquareQuality.charAt(0).toUpperCase() + results.testSquareQuality.slice(1)}</p>
+            ${results.hailDamageDetected ? `<p>✅ Hail Damage Detected: Yes</p>` : ''}
             ${results.hailHitCount ? `<p>Hail Hits Count: ${results.hailHitCount}</p>` : ''}
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
