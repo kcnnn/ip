@@ -566,7 +566,7 @@ function displayAIResults(results) {
     } else {
         html += '<div class="ai-actions">';
         html += '<button class="action-btn secondary" onclick="retakePhoto()">Retake Photo</button>';
-        html += '<button class="action-btn primary" onclick="proceedToNextInspection()">Continue Anyway</button>';
+        html += '<button class="action-btn primary" onclick="proceedToNextInspection()">Continue</button>';
         html += '</div>';
     }
     

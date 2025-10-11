@@ -554,17 +554,7 @@ function displayAIResults(results) {
         <p>Confidence: ${results.confidence}%</p>
     </div>`;
     
-    // Ridge condition analysis for closeup photos
-    if (results.ridgeCondition !== undefined) {
-        const ridgeClass = results.ridgeCondition === 'good' ? 'ridge-good' : 'ridge-damaged';
-        html += `<div class="ridge-condition-analysis ${ridgeClass}">
-            <h4>🏠 Ridge Condition Analysis</h4>
-            <p>Ridge Condition: ${results.ridgeCondition.charAt(0).toUpperCase() + results.ridgeCondition.slice(1)}</p>
-            <p>Damage Detected: ${results.damageDetected ? 'Yes' : 'No'}</p>
-            ${results.damageTypes && results.damageTypes.length > 0 ? 
-                `<p>Damage Types: ${results.damageTypes.join(', ')}</p>` : ''}
-        </div>`;
-    }
+    
     
     // Under-ridge analysis for under-ridge photos
     if (results.underRidgeVisible !== undefined) {
@@ -580,16 +570,7 @@ function displayAIResults(results) {
         </div>`;
     }
     
-    // Damage detection summary
-    if (results.damageDetected) {
-        const damageClass = results.damageDetected ? 'damage-found' : 'no-damage';
-        html += `<div class="damage-detection ${damageClass}">
-            <h4>⚠️ Damage Detection</h4>
-            <p>Damage Found: ${results.damageDetected ? 'Yes' : 'No'}</p>
-            ${results.damageTypes && results.damageTypes.length > 0 ? 
-                `<p>Types: ${results.damageTypes.join(', ')}</p>` : ''}
-        </div>`;
-    }
+    
     
     // Issues
     if (results.issues && results.issues.length > 0) {
@@ -621,7 +602,7 @@ function displayAIResults(results) {
     } else {
         html += '<div class="ai-actions">';
         html += '<button class="action-btn secondary" onclick="retakePhoto()">Retake Photo</button>';
-        html += '<button class="action-btn primary" onclick="proceedToNextInspection()">Continue Anyway</button>';
+        html += '<button class="action-btn primary" onclick="proceedToNextInspection()">Continue</button>';
         html += '</div>';
     }
     
