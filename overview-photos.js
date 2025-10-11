@@ -497,27 +497,7 @@ function displayAIResults(results) {
         <p>Confidence: ${results.confidence}%</p>
     </div>`;
     
-    // Roof condition analysis
-    const roofClass = results.roofCondition === 'excellent' || results.roofCondition === 'good' ? 'overview-good' : 'overview-damaged';
-    html += `<div class="overview-analysis ${roofClass}">
-        <h4>🏠 Roof Condition Analysis</h4>
-        <p>Roof Condition: ${results.roofCondition.charAt(0).toUpperCase() + results.roofCondition.slice(1)}</p>
-        <p>Damage Detected: ${results.damageDetected ? 'Yes' : 'No'}</p>
-        <p>Coverage Quality: ${results.coverageQuality.charAt(0).toUpperCase() + results.coverageQuality.slice(1)}</p>
-        ${results.damageTypes && results.damageTypes.length > 0 ? 
-            `<p>Damage Types: ${results.damageTypes.join(', ')}</p>` : ''}
-    </div>`;
     
-    // Damage summary
-    if (results.damageDetected) {
-        const damageClass = results.damageDetected ? 'damage-found' : 'no-damage';
-        html += `<div class="damage-summary ${damageClass}">
-            <h4>⚠️ Damage Summary</h4>
-            <p>Damage Found: ${results.damageDetected ? 'Yes' : 'No'}</p>
-            ${results.damageTypes && results.damageTypes.length > 0 ? 
-                `<p>Types: ${results.damageTypes.join(', ')}</p>` : ''}
-        </div>`;
-    }
     
     // Issues
     if (results.issues && results.issues.length > 0) {

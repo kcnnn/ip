@@ -294,6 +294,8 @@
     padding: 1.5rem;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .photo-checklist h3 {
@@ -396,8 +398,10 @@
 
 .checklist-items {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 0.8rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .checklist-item {
@@ -602,6 +606,8 @@
     .photo-card {
         padding: 1rem;
         margin: 0 0.5rem;
+        max-width: calc(100vw - 1rem);
+        box-sizing: border-box;
     }
     
     .photo-header {
@@ -617,34 +623,44 @@
     
     .camera-preview {
         height: 250px;
+        max-width: 100%;
     }
     
     .camera-controls {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
     .camera-btn {
         width: 100%;
+        max-width: 100%;
     }
     
     .photo-buttons {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
     .action-btn {
         width: 100%;
+        max-width: 100%;
     }
     
     .navigation-buttons {
         flex-direction: column;
+        gap: 0.5rem;
+        padding: 0 0.5rem;
     }
     
     .nav-btn {
         width: 100%;
+        max-width: calc(100vw - 1rem);
     }
     
     .checklist-item {
         padding: 0.6rem;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     
     .compass {
@@ -660,6 +676,14 @@
     
     .checklist-items {
         grid-template-columns: 1fr;
+        gap: 0.8rem;
+        max-width: 100%;
+    }
+    
+    .photo-checklist {
+        padding: 1rem;
+        margin: 0 0.5rem 2rem 0.5rem;
+        max-width: calc(100vw - 1rem);
     }
 }
 
@@ -680,5 +704,16 @@
 @media (min-width: 769px) {
     .checklist-items {
         grid-template-columns: repeat(2, 1fr);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .photo-checklist {
+        max-width: 900px;
+        margin: 0 auto 2rem auto;
+    }
+    
+    .compass-container {
+        margin-bottom: 2rem;
     }
 }
