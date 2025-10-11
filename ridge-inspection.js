@@ -562,7 +562,6 @@ function displayAIResults(results) {
         html += `<div class="under-ridge-analysis ${underRidgeClass}">
             <h4>🔍 Under-Ridge Analysis</h4>
             <p>Under-Ridge Visible: ${results.underRidgeVisible ? 'Yes' : 'No'}</p>
-            <p>Damage Detected: ${results.damageDetected ? 'Yes' : 'No'}</p>
             ${results.installationQuality ? 
                 `<p>Installation Quality: ${results.installationQuality.charAt(0).toUpperCase() + results.installationQuality.slice(1)}</p>` : ''}
             ${results.damageTypes && results.damageTypes.length > 0 ? 
