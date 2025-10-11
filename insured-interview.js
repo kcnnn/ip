@@ -519,6 +519,8 @@ INSPECTION DATA:
 DAMAGE DISCUSSION:
 ${inspectionData.damageNotes || 'No additional damage notes provided'}
 
+IMPORTANT: This inspection included hail test square documentation with closeup photos. The inspector documented hail hits during the inspection process. Please ensure the report reflects any hail damage findings based on the comprehensive photo documentation process.
+
 SATELLITE DISH VERIFICATION:
 ${inspectionData.hasSatelliteDish ? 
     `Satellite dish found: ${inspectionData.satelliteInUse === 'yes' ? 'Currently in use' : 'Not in use'}
@@ -553,10 +555,11 @@ Please generate a professional, detailed roof inspection report that includes:
    - Hail damage assessment
 
 4. DAMAGE ASSESSMENT
-   - Hail damage evaluation
-   - Test square results
-   - Damage severity and extent
+   - Hail damage evaluation based on test square documentation
+   - Test square results and hail hit documentation
+   - Damage severity and extent assessment
    - Impact on roof integrity
+   - Specific hail damage findings from closeup photos
 
 5. RECOMMENDATIONS
    - Immediate actions required
