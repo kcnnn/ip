@@ -1,6 +1,6 @@
 // Roof Overview Photos JavaScript
 
-// Photo data - 8 photos starting from front, moving clockwise
+// Photo data - 4 photos: front, right, rear, left
 const overviewPhotos = [
     {
         name: 'Front Overview',
@@ -11,60 +11,28 @@ const overviewPhotos = [
         compassPosition: 'north'
     },
     {
-        name: 'Northeast Overview',
+        name: 'Right Overview',
         icon: '📸',
-        instructions: 'Move to the northeast corner and take an overview photo. Capture the roof surface from this angle.',
-        key: 'northeast',
-        direction: 'northeast',
-        compassPosition: 'northeast'
-    },
-    {
-        name: 'East Overview',
-        icon: '📸',
-        instructions: 'Position yourself at the east side of the roof and take an overview photo. Ensure good coverage of the roof surface.',
-        key: 'east',
+        instructions: 'Position yourself at the right side of the roof and take an overview photo. Ensure good coverage of the roof surface.',
+        key: 'right',
         direction: 'east',
         compassPosition: 'east'
     },
     {
-        name: 'Southeast Overview',
+        name: 'Rear Overview',
         icon: '📸',
-        instructions: 'Move to the southeast corner and take an overview photo. Capture the roof surface from this perspective.',
-        key: 'southeast',
-        direction: 'southeast',
-        compassPosition: 'southeast'
-    },
-    {
-        name: 'South Overview',
-        icon: '📸',
-        instructions: 'Position yourself at the south side of the roof and take an overview photo. Ensure comprehensive coverage.',
-        key: 'south',
+        instructions: 'Position yourself at the rear of the roof and take an overview photo. Ensure comprehensive coverage.',
+        key: 'rear',
         direction: 'south',
         compassPosition: 'south'
     },
     {
-        name: 'Southwest Overview',
+        name: 'Left Overview',
         icon: '📸',
-        instructions: 'Move to the southwest corner and take an overview photo. Capture the roof surface from this angle.',
-        key: 'southwest',
-        direction: 'southwest',
-        compassPosition: 'southwest'
-    },
-    {
-        name: 'West Overview',
-        icon: '📸',
-        instructions: 'Position yourself at the west side of the roof and take an overview photo. Ensure good visibility of the roof surface.',
-        key: 'west',
+        instructions: 'Position yourself at the left side of the roof and take an overview photo. Capture the roof surface from this angle.',
+        key: 'left',
         direction: 'west',
         compassPosition: 'west'
-    },
-    {
-        name: 'Northwest Overview',
-        icon: '📸',
-        instructions: 'Move to the northwest corner and take an overview photo. Complete the 360-degree coverage of the roof.',
-        key: 'northwest',
-        direction: 'northwest',
-        compassPosition: 'northwest'
     }
 ];
 

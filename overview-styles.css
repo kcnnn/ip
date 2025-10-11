@@ -376,20 +376,10 @@
     transform: translateX(-50%);
 }
 
-.compass-point.northeast {
-    top: 25px;
-    right: 25px;
-}
-
 .compass-point.east {
     right: 5px;
     top: 50%;
     transform: translateY(-50%);
-}
-
-.compass-point.southeast {
-    bottom: 25px;
-    right: 25px;
 }
 
 .compass-point.south {
@@ -398,20 +388,10 @@
     transform: translateX(-50%);
 }
 
-.compass-point.southwest {
-    bottom: 25px;
-    left: 25px;
-}
-
 .compass-point.west {
     left: 5px;
     top: 50%;
     transform: translateY(-50%);
-}
-
-.compass-point.northwest {
-    top: 25px;
-    left: 25px;
 }
 
 .checklist-items {
@@ -699,6 +679,6 @@
 
 @media (min-width: 769px) {
     .checklist-items {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(2, 1fr);
     }
 }
