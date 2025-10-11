@@ -417,6 +417,10 @@ Please respond in JSON format with the following structure:
     }
 
     try {
+        console.log('API_CONFIG.MODEL:', API_CONFIG.MODEL);
+        console.log('API Key configured:', isAPIKeyConfigured());
+        console.log('API Key length:', apiKey ? apiKey.length : 'No key');
+        
         const response = await fetch(API_CONFIG.BASE_URL, {
             method: 'POST',
             headers: {
@@ -453,7 +457,9 @@ Please respond in JSON format with the following structure:
         }
 
         const data = await response.json();
+        console.log('API Response:', data);
         const analysisText = data.choices[0].message.content;
+        console.log('Analysis Text:', analysisText);
         
         // Parse the JSON response
         try {
