@@ -277,33 +277,75 @@ async function initZKPassport() {
         });
 
         console.log('Query builder created, requesting nationality...');
-        // Request nationality (country) disclosure
-        const { url, onResult } = queryBuilder
+        // Request nationality (country) disclosure - following ZKPassport docs pattern
+        const {
+            url,
+            requestId,
+            onRequestReceived,
+            onGeneratingProof,
+            onProofGenerated,
+            onResult,
+            onReject,
+            onError,
+        } = queryBuilder
             .disclose("nationality")
             .done();
 
         console.log('Verification URL generated:', url);
+        console.log('Request ID:', requestId);
         
         // Store these globally for later use
         currentVerificationUrl = url;
         currentQueryBuilder = queryBuilder;
         window.currentVerificationUrl = url;
         window.currentQueryBuilder = queryBuilder;
+        window.zkPassportRequestId = requestId;
 
-        // Set up result handler
-        console.log('Setting up onResult callback...');
-        const resultHandler = ({ verified, result }) => {
+        // Set up all event handlers as per ZKPassport docs
+        console.log('Setting up ZKPassport event handlers...');
+        
+        // Request received - user scanned QR code
+        onRequestReceived(() => {
+            console.log('=== Request received - user scanned QR code ===');
+            statusDiv.textContent = 'Request received! Please approve in the ZKPassport app...';
+            statusDiv.className = 'status-message info';
+        });
+
+        // Proof generation started
+        onGeneratingProof(() => {
+            console.log('=== Generating proof ===');
+            statusDiv.textContent = 'Generating proof... This may take up to 10 seconds.';
+            statusDiv.className = 'status-message info';
+        });
+
+        // Individual proof generated (optional, for UI updates)
+        onProofGenerated(({ proof, vkeyHash, version, name }) => {
+            console.log('=== Proof generated ===', { name, version, vkeyHash });
+        });
+
+        // Final result callback - this is the most important one
+        const resultHandler = ({ uniqueIdentifier, verified, result }) => {
             console.log('=== Verification result received via callback ===');
+            console.log('Unique identifier:', uniqueIdentifier);
             console.log('Verified:', verified);
             console.log('Result:', result);
-            console.log('Result type:', typeof result);
             console.log('Result stringified:', JSON.stringify(result, null, 2));
+            
+            if (!verified) {
+                console.warn('Verification failed! Do not trust the results.');
+                statusDiv.textContent = 'Verification failed. Please try again.';
+                statusDiv.className = 'status-message error';
+                return;
+            }
             
             // Store result in localStorage in case page reloads
             if (result) {
                 localStorage.setItem('zkpassport_last_result', JSON.stringify(result));
                 localStorage.setItem('zkpassport_last_verified', verified.toString());
                 localStorage.setItem('zkpassport_result_timestamp', Date.now().toString());
+                if (uniqueIdentifier) {
+                    localStorage.setItem('zkpassport_unique_identifier', uniqueIdentifier);
+                }
             }
             
             processVerificationResult(verified, result);
@@ -312,9 +354,23 @@ async function initZKPassport() {
         onResult(resultHandler);
         console.log('onResult callback registered');
         
+        // Handle rejection
+        onReject(() => {
+            console.log('=== User rejected the request ===');
+            statusDiv.textContent = 'Verification was rejected.';
+            statusDiv.className = 'status-message error';
+        });
+
+        // Handle errors
+        onError((error) => {
+            console.error('=== ZKPassport error ===', error);
+            statusDiv.textContent = 'Error: ' + (error.message || 'An error occurred during verification');
+            statusDiv.className = 'status-message error';
+        });
+        
         // Store handler globally so we can test it
         window.zkPassportResultHandler = resultHandler;
-        console.log('Result handler stored globally. Test function should work now.');
+        console.log('All ZKPassport event handlers registered');
         
         // Test: Try to manually trigger result check after a delay
         // Sometimes ZKPassport needs time to process
@@ -422,7 +478,8 @@ function processVerificationResult(verified, result) {
             // Try multiple possible result structures
             let countryCode = null;
             
-            // Structure 1: result.nationality.disclose.result
+            // According to ZKPassport docs: result.nationality.disclose.result
+            // This is the correct structure for disclosed nationality
             if (result?.nationality?.disclose?.result) {
                 countryCode = result.nationality.disclose.result;
                 console.log('Found country code in result.nationality.disclose.result:', countryCode);
