@@ -1,0 +1,17 @@
+{
+  "name": "zkpassport-country-map",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@zkpassport/sdk": "latest",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
