@@ -107,7 +107,6 @@ Respond with ONLY the raw JSON object above and nothing else - no explanation, n
             body: JSON.stringify({
                 model: API_CONFIG.MODEL,
                 max_tokens: API_CONFIG.MAX_TOKENS,
-                temperature: API_CONFIG.TEMPERATURE,
                 messages: [
                     {
                         role: 'user',

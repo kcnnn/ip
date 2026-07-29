@@ -348,7 +348,6 @@ Please respond in JSON format with the following structure:
             body: JSON.stringify({
                 model: API_CONFIG.MODEL,
                 max_tokens: API_CONFIG.MAX_TOKENS,
-                temperature: API_CONFIG.TEMPERATURE,
                 messages: [
                     {
                         role: 'user',

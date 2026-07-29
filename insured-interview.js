@@ -591,7 +591,6 @@ Format the report professionally with clear sections, bullet points, and actiona
             body: JSON.stringify({
                 model: API_CONFIG.MODEL,
                 max_tokens: 2000,
-                temperature: 0.3,
                 messages: [
                     {
                         role: 'user',
