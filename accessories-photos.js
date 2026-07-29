@@ -326,6 +326,7 @@ async function analyzeAccessoryWithChatGPT(imageData, accessoryType) {
     }
 
     const apiKey = getAPIKey();
+    const { mediaType, base64Data } = parseDataUrl(imageData);
     
     const prompt = `Analyze this ${accessoryType.name} photo for roof inspection purposes. Please evaluate:
 
@@ -387,30 +388,34 @@ Please respond in JSON format with the following structure:
         const response = await fetch(API_CONFIG.BASE_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'x-api-key': apiKey,
+                'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
+                'anthropic-dangerous-direct-browser-access': 'true',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 model: API_CONFIG.MODEL,
+                max_tokens: API_CONFIG.MAX_TOKENS,
+                temperature: API_CONFIG.TEMPERATURE,
                 messages: [
                     {
                         role: 'user',
                         content: [
                             {
-                                type: 'text',
-                                text: prompt
+                                type: 'image',
+                                source: {
+                                    type: 'base64',
+                                    media_type: mediaType,
+                                    data: base64Data
+                                }
                             },
                             {
-                                type: 'image_url',
-                                image_url: {
-                                    url: imageData
-                                }
+                                type: 'text',
+                                text: prompt
                             }
                         ]
                     }
-                ],
-                max_tokens: API_CONFIG.MAX_TOKENS,
-                temperature: API_CONFIG.TEMPERATURE
+                ]
             })
         });
 
@@ -420,8 +425,8 @@ Please respond in JSON format with the following structure:
         }
 
         const data = await response.json();
-        const analysisText = data.choices[0].message.content;
-        
+        const analysisText = data.content?.[0]?.text || '';
+
         // Parse the JSON response
         try {
             const analysis = JSON.parse(analysisText);
@@ -432,7 +437,7 @@ Please respond in JSON format with the following structure:
         }
 
     } catch (error) {
-        console.error('ChatGPT API Error:', error);
+        console.error('Claude API Error:', error);
         throw error;
     }
 }

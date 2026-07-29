@@ -11,7 +11,7 @@
     <div class="container">
         <header class="header">
             <h1 class="title">API Configuration</h1>
-            <p class="subtitle">Set up ChatGPT API for AI photo analysis</p>
+            <p class="subtitle">Set up Claude API for AI photo analysis</p>
         </header>
         
         <main class="main-content">
@@ -19,19 +19,19 @@
                 <div class="setup-card">
                     <div class="setup-header">
                         <div class="setup-icon">🔑</div>
-                        <h2>ChatGPT API Key Setup</h2>
+                        <h2>Claude API Key Setup</h2>
                     </div>
                     
                     <div class="setup-content">
                         <p class="setup-description">
-                            To enable AI-powered photo analysis, you need to provide your ChatGPT API key. 
+                            To enable AI-powered photo analysis, you need to provide your Claude API key. 
                             This key will be stored locally in your browser and used to analyze photos for quality issues.
                         </p>
                         
                         <div class="api-form">
                             <div class="form-group">
-                                <label for="apiKey">OpenAI API Key:</label>
-                                <input type="password" id="apiKey" placeholder="sk-..." class="api-input">
+                                <label for="apiKey">Claude (Anthropic) API Key:</label>
+                                <input type="password" id="apiKey" placeholder="sk-ant-..." class="api-input">
                                 <small class="form-help">
                                     Your API key is stored locally and never sent to our servers.
                                 </small>
@@ -52,15 +52,15 @@
                         <div class="setup-info">
                             <h3>How to get your API key:</h3>
                             <ol>
-                                <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a></li>
-                                <li>Sign in to your OpenAI account</li>
-                                <li>Click "Create new secret key"</li>
+                                <li>Visit <a href="https://console.anthropic.com/settings/keys" target="_blank">Anthropic Console API Keys</a></li>
+                                <li>Sign in to your Anthropic account</li>
+                                <li>Click "Create Key"</li>
                                 <li>Copy the key and paste it above</li>
                             </ol>
                             
                             <div class="security-note">
                                 <strong>🔒 Security Note:</strong> Your API key is stored locally in your browser's storage. 
-                                It's never transmitted to our servers and is only used to communicate directly with OpenAI's API.
+                                It's never transmitted to our servers and is only used to communicate directly with Anthropic's API.
                             </div>
                         </div>
                     </div>

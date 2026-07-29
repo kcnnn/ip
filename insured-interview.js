@@ -583,19 +583,21 @@ Format the report professionally with clear sections, bullet points, and actiona
         const response = await fetch(API_CONFIG.BASE_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'x-api-key': apiKey,
+                'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
+                'anthropic-dangerous-direct-browser-access': 'true',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 model: API_CONFIG.MODEL,
+                max_tokens: 2000,
+                temperature: 0.3,
                 messages: [
                     {
                         role: 'user',
                         content: prompt
                     }
-                ],
-                max_tokens: 2000,
-                temperature: 0.3
+                ]
             })
         });
 
@@ -605,10 +607,10 @@ Format the report professionally with clear sections, bullet points, and actiona
         }
 
         const data = await response.json();
-        return data.choices[0].message.content;
+        return data.content?.[0]?.text || '';
 
     } catch (error) {
-        console.error('AI Report Generation Error:', error);
+        console.error('Claude API Error:', error);
         throw error;
     }
 }

@@ -1,31 +1,32 @@
-// API Configuration for ChatGPT Integration
+// API Configuration for Claude (Anthropic) Integration
 
 // API Configuration
 const API_CONFIG = {
     // API key will be set by user through the setup page
     API_KEY: '', // Will be populated from localStorage or user input
-    BASE_URL: 'https://api.openai.com/v1/chat/completions',
-    MODEL: 'gpt-4o-2024-11-20', // GPT-4 with vision capabilities
+    BASE_URL: 'https://api.anthropic.com/v1/messages',
+    MODEL: 'claude-sonnet-5', // Claude model with vision capabilities
     MAX_TOKENS: 1000,
-    TEMPERATURE: 0.3
+    TEMPERATURE: 0.3,
+    ANTHROPIC_VERSION: '2023-06-01'
 };
 
 // Function to set API key (called when user provides it)
 function setAPIKey(apiKey) {
     API_CONFIG.API_KEY = apiKey;
-    localStorage.setItem('chatgpt_api_key', apiKey);
+    localStorage.setItem('claude_api_key', apiKey);
 }
 
 // Function to get API key from localStorage
 function getAPIKey() {
-    return localStorage.getItem('chatgpt_api_key') || API_CONFIG.API_KEY;
+    return localStorage.getItem('claude_api_key') || localStorage.getItem('chatgpt_api_key') || API_CONFIG.API_KEY;
 }
 
 // Initialize API key on load
 document.addEventListener('DOMContentLoaded', function() {
     // Set the API key in localStorage if not already set
-    if (!localStorage.getItem('chatgpt_api_key')) {
-        localStorage.setItem('chatgpt_api_key', API_CONFIG.API_KEY);
+    if (!localStorage.getItem('claude_api_key')) {
+        localStorage.setItem('claude_api_key', API_CONFIG.API_KEY);
     }
 });
 
@@ -35,13 +36,23 @@ function isAPIKeyConfigured() {
     return key && key.length > 0;
 }
 
-// Function to make API call to ChatGPT
+// Helper to split a base64 data URL into media type + raw base64 data
+function parseDataUrl(dataUrl) {
+    const match = dataUrl.match(/^data:(image\/[a-zA-Z]+);base64,(.*)$/);
+    if (!match) {
+        throw new Error('Image data is not a valid base64 data URL');
+    }
+    return { mediaType: match[1], base64Data: match[2] };
+}
+
+// Function to make API call to Claude
 async function analyzePhotoWithChatGPT(imageData, elevationType) {
     if (!isAPIKeyConfigured()) {
-        throw new Error('API key not configured. Please provide your ChatGPT API key.');
+        throw new Error('API key not configured. Please provide your Claude API key.');
     }
 
     const apiKey = getAPIKey();
+    const { mediaType, base64Data } = parseDataUrl(imageData);
     
     // Prepare the prompt for photo analysis
     const prompt = `Analyze this ${elevationType} elevation photo of a property for inspection purposes. Please evaluate:
@@ -80,36 +91,42 @@ Please respond in JSON format with the following structure:
     "Specific recommendation text"
   ],
   "shouldRetake": boolean
-}`;
+}
+
+Respond with ONLY the raw JSON object above and nothing else - no explanation, no markdown code fences, no additional text before or after it.`;
 
     try {
         const response = await fetch(API_CONFIG.BASE_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'x-api-key': apiKey,
+                'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
+                'anthropic-dangerous-direct-browser-access': 'true',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 model: API_CONFIG.MODEL,
+                max_tokens: API_CONFIG.MAX_TOKENS,
+                temperature: API_CONFIG.TEMPERATURE,
                 messages: [
                     {
                         role: 'user',
                         content: [
                             {
-                                type: 'text',
-                                text: prompt
+                                type: 'image',
+                                source: {
+                                    type: 'base64',
+                                    media_type: mediaType,
+                                    data: base64Data
+                                }
                             },
                             {
-                                type: 'image_url',
-                                image_url: {
-                                    url: imageData
-                                }
+                                type: 'text',
+                                text: prompt
                             }
                         ]
                     }
-                ],
-                max_tokens: API_CONFIG.MAX_TOKENS,
-                temperature: API_CONFIG.TEMPERATURE
+                ]
             })
         });
 
@@ -119,8 +136,8 @@ Please respond in JSON format with the following structure:
         }
 
         const data = await response.json();
-        const analysisText = data.choices[0].message.content;
-        
+        const analysisText = data.content?.[0]?.text || '';
+
         // Parse the JSON response
         try {
             const analysis = JSON.parse(analysisText);
@@ -131,7 +148,7 @@ Please respond in JSON format with the following structure:
         }
 
     } catch (error) {
-        console.error('ChatGPT API Error:', error);
+        console.error('Claude API Error:', error);
         throw error;
     }
 }
