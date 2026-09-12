@@ -370,7 +370,9 @@ Please respond in JSON format with the following structure:
     "Specific recommendation text"
   ],
   "shouldRetake": boolean
-}`;
+}
+
+Respond with ONLY the raw JSON object. Do not use a markdown code fence or include any explanatory text before or after the JSON.`;
     } else {
         // Closeup photo analysis
         prompt = `Analyze this hail hit closeup photo for roof inspection purposes. Please evaluate:
@@ -539,6 +541,19 @@ function validateHailAnalysis(analysis, step) {
     analysis.damageSeverity = String(analysis.damageSeverity || '').toLowerCase();
     analysis.testSquareQuality = String(analysis.testSquareQuality || '').toLowerCase();
 
+    // Newer prompts ask for an audit trail, but a valid older model response
+    // should still be shown as provisional rather than discarded wholesale.
+    if (!analysis.countBasis) {
+        analysis.countBasis = /^h\s*=?\s*\d+\s*\+$/i.test(analysis.inspectorHailNotation || '')
+            ? 'inspector_notation'
+            : 'counted_circles';
+        analysis.countAuditIncomplete = true;
+    }
+    if (!analysis.countConfidence) {
+        analysis.countConfidence = 'low';
+        analysis.countAuditIncomplete = true;
+    }
+
     const validDetection = typeof analysis.hailDamageDetected === 'boolean';
     const validCount = Number.isInteger(analysis.circledHailHitCount) && analysis.circledHailHitCount >= 0;
     const validCountBasis = ['counted_circles', 'inspector_notation'].includes(analysis.countBasis);
@@ -547,7 +562,7 @@ function validateHailAnalysis(analysis, step) {
     const validCountConfidence = ['high', 'medium', 'low'].includes(analysis.countConfidence);
     const validCountLocations = analysis.countBasis === 'inspector_notation'
         ? true
-        : analysis.countedMarkLocations.length === analysis.circledHailHitCount;
+        : analysis.countedMarkLocations.length === 0 || analysis.countedMarkLocations.length === analysis.circledHailHitCount;
     const validSeverity = ['none', 'light', 'moderate', 'severe'].includes(analysis.damageSeverity);
     const contradictoryFinding = analysis.hailDamageDetected === true &&
         (analysis.circledHailHitCount === 0 || analysis.damageSeverity === 'none');
@@ -556,6 +571,10 @@ function validateHailAnalysis(analysis, step) {
 
     if (!validDetection || !validCount || !validCountBasis || !validInspectorNotation || !validCountConfidence || !validCountLocations || !validSeverity || contradictoryFinding || contradictoryNegative) {
         return unverifiedHailAnalysis();
+    }
+
+    if (analysis.countBasis === 'counted_circles' && analysis.countedMarkLocations.length === 0) {
+        analysis.countAuditIncomplete = true;
     }
 
     return analysis;
@@ -664,6 +683,7 @@ function displayAIResults(results) {
                 ? `Inspector hail notation: ${results.inspectorHailNotation} (at least ${results.circledHailHitCount} hits)`
                 : `Circled hail hits in test square: ${results.circledHailHitCount}`}</p>
             <p>Count confidence: ${results.countConfidence.charAt(0).toUpperCase() + results.countConfidence.slice(1)} — verify against the photo.</p>
+            ${results.countAuditIncomplete ? '<p>Count audit is incomplete; this automated observation must be checked by the inspector before it is recorded.</p>' : ''}
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
     } else if (results.hailHitVisible !== undefined) {
