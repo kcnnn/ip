@@ -331,6 +331,8 @@ async function analyzeHailDamageWithChatGPT(imageData, step) {
    - Are there signs of granule loss around impact points?
    - Any bruising or soft spots visible?
 
+For this documentation workflow, do not infer hail damage from ordinary shingle texture, shadows, or granule variation. Only set "hailDamageDetected" to true when clear, reviewable impact evidence is visible within a marked test square. If the test square or marked/circled candidate hits are not clearly visible, return false, a hit count of 0, and severity "none".
+
 4. Test Square Setup:
    - Is the test square properly positioned?
    - Are the boundaries clearly marked?
@@ -468,7 +470,7 @@ Please respond in JSON format with the following structure:
         // Parse the JSON response
         try {
             const analysis = JSON.parse(analysisText);
-            return analysis;
+            return validateHailAnalysis(analysis, step);
         } catch (parseError) {
             // If JSON parsing fails, try to extract information from text
             return parseTextResponse(analysisText, step);
@@ -480,136 +482,44 @@ Please respond in JSON format with the following structure:
     }
 }
 
-// Fallback function to parse text response if JSON parsing fails
-function parseTextResponse(text, step) {
-    const analysis = {
-        overallQuality: 'needs_improvement',
-        confidence: 70,
-        issues: [],
-        recommendations: [],
-        shouldRetake: false
-    };
+function validateHailAnalysis(analysis, step) {
+    if (step !== 'test-square') return analysis;
 
-    // Add step-specific properties
-    if (step === 'test-square') {
-        analysis.testSquareQuality = 'fair';
-        analysis.hailDamageDetected = false;
-        analysis.hailHitCount = 0;
-        analysis.damageSeverity = 'none';
-    } else {
-        analysis.hailHitVisible = false;
-        analysis.hailHitGenuine = false;
-        analysis.damageSeverity = 'none';
-        analysis.damageCharacteristics = {
-            circular: false,
-            granuleLoss: false,
-            bruising: false,
-            size: 'small'
-        };
-    }
+    const validDetection = typeof analysis.hailDamageDetected === 'boolean';
+    const validCount = Number.isInteger(analysis.hailHitCount) && analysis.hailHitCount >= 0;
+    const validSeverity = ['none', 'light', 'moderate', 'severe'].includes(analysis.damageSeverity);
+    const contradictoryFinding = analysis.hailDamageDetected === true &&
+        (analysis.hailHitCount === 0 || analysis.damageSeverity === 'none');
 
-    // Simple text parsing to extract key information
-    const lowerText = text.toLowerCase();
-    
-    if (lowerText.includes('good') || lowerText.includes('excellent') || lowerText.includes('clear')) {
-        analysis.overallQuality = 'good';
-        analysis.confidence = 85;
-    } else if (lowerText.includes('poor') || lowerText.includes('bad') || lowerText.includes('unclear')) {
-        analysis.overallQuality = 'poor';
-        analysis.confidence = 60;
-    }
-
-    if (lowerText.includes('hail') && (lowerText.includes('damage') || lowerText.includes('hit'))) {
-        if (step === 'test-square') {
-            analysis.hailDamageDetected = true;
-        } else {
-            analysis.hailHitVisible = true;
-            analysis.hailHitGenuine = true;
-        }
-    }
-
-    if (lowerText.includes('blur') || lowerText.includes('unclear')) {
-        analysis.issues.push({
-            type: 'clarity',
-            message: 'Photo appears blurry or unclear',
-            severity: 'high'
-        });
-        analysis.shouldRetake = true;
-    }
-
-    if (lowerText.includes('retake') || lowerText.includes('take again')) {
-        analysis.shouldRetake = true;
+    if (!validDetection || !validCount || !validSeverity || contradictoryFinding) {
+        return unverifiedHailAnalysis();
     }
 
     return analysis;
 }
 
-function simulateHailAnalysis() {
-    const issues = [];
-    const recommendations = [];
-    
-    // Simulate hail analysis based on step
-    if (currentStep === 'test-square') {
-        const hailDamageDetected = Math.random() > 0.6;
-        const testSquareQuality = Math.random() > 0.4 ? 'good' : 'fair';
-        
-        if (hailDamageDetected) {
-            issues.push({
-                type: 'hail_damage',
-                message: 'Hail damage detected in test square',
-                severity: 'high'
-            });
-        }
-        
-        if (Math.random() > 0.6) {
-            recommendations.push('Ensure test square boundaries are clearly marked');
-        }
-        
-        return {
-            overallQuality: Math.random() > 0.3 ? 'good' : 'needs_improvement',
-            confidence: Math.floor(Math.random() * 30) + 70,
-            testSquareQuality: testSquareQuality,
-            hailDamageDetected: hailDamageDetected,
-            hailHitCount: hailDamageDetected ? Math.floor(Math.random() * 10) + 5 : 0,
-            damageSeverity: hailDamageDetected ? 'moderate' : 'none',
-            issues: issues,
-            recommendations: recommendations,
-            shouldRetake: Math.random() > 0.8
-        };
-    } else {
-        // Closeup photo analysis
-        const hailHitVisible = Math.random() > 0.3;
-        const hailHitGenuine = Math.random() > 0.4;
-        
-        if (hailHitVisible && hailHitGenuine) {
-            issues.push({
-                type: 'hail_hit',
-                message: 'Genuine hail hit identified',
-                severity: 'medium'
-            });
-        }
-        
-        if (Math.random() > 0.6) {
-            recommendations.push('Ensure hail hit is clearly circled and visible');
-        }
-        
-        return {
-            overallQuality: Math.random() > 0.3 ? 'good' : 'needs_improvement',
-            confidence: Math.floor(Math.random() * 30) + 70,
-            hailHitVisible: hailHitVisible,
-            hailHitGenuine: hailHitGenuine,
-            damageSeverity: hailHitGenuine ? 'moderate' : 'none',
-            damageCharacteristics: {
-                circular: hailHitGenuine,
-                granuleLoss: hailHitGenuine && Math.random() > 0.5,
-                bruising: hailHitGenuine && Math.random() > 0.6,
-                size: 'medium'
-            },
-            issues: issues,
-            recommendations: recommendations,
-            shouldRetake: Math.random() > 0.8
-        };
+// Never guess a hail finding from unstructured model text.
+function parseTextResponse(text, step) {
+    if (step === 'test-square') {
+        return unverifiedHailAnalysis();
     }
+
+    return { analysisUnavailable: true, overallQuality: 'needs_improvement', confidence: null, issues: [], recommendations: [], shouldRetake: false };
+}
+
+function unverifiedHailAnalysis() {
+    return {
+        analysisUnavailable: true,
+        overallQuality: 'needs_improvement',
+        confidence: null,
+        testSquareQuality: 'unverified',
+        hailDamageDetected: null,
+        hailHitCount: null,
+        damageSeverity: null,
+        issues: [],
+        recommendations: ['Retake the photo with the test square boundary and any candidate hits clearly marked for human review.'],
+        shouldRetake: false
+    };
 }
 
 function displayAIResults(results) {
@@ -623,28 +533,42 @@ function displayAIResults(results) {
         html += `<div class="api-error">
             <h4>⚠️ API Error</h4>
             <p>${results.apiError}</p>
-            <p><small>Using fallback analysis instead.</small></p>
+            <p><small>No hail determination was recorded.</small></p>
         </div>`;
     }
     
-    // Overall quality
-    const qualityClass = results.overallQuality === 'good' ? 'quality-good' : 'quality-warning';
-    const qualityText = results.overallQuality === 'good' ? 'Good' : 
-                       results.overallQuality === 'poor' ? 'Poor' : 'Needs Improvement';
-    
-    html += `<div class="quality-indicator ${qualityClass}">
-        <h4>Photo Quality: ${qualityText}</h4>
-        <p>Confidence: ${results.confidence}%</p>
-    </div>`;
+    if (results.analysisUnavailable) {
+        html += `<div class="quality-indicator quality-warning">
+            <h4>Hail assessment needs human review</h4>
+            <p>No hail finding was recorded because the response could not be verified.</p>
+        </div>`;
+    } else {
+        // This is an automated observation, not a final claim determination.
+        const qualityClass = results.overallQuality === 'good' ? 'quality-good' : 'quality-warning';
+        const qualityText = results.overallQuality === 'good' ? 'Good' :
+                           results.overallQuality === 'poor' ? 'Poor' : 'Needs Improvement';
+
+        html += `<div class="quality-indicator ${qualityClass}">
+            <h4>Photo Quality: ${qualityText}</h4>
+            <p>Automated observation confidence: ${results.confidence}%</p>
+        </div>`;
+    }
     
     // Test square analysis
-    if (results.testSquareQuality !== undefined) {
+    if (results.analysisUnavailable && results.testSquareQuality !== undefined) {
+        html += `<div class="test-square-analysis test-square-poor">
+            <h4>Test Square Review</h4>
+            <p>Unable to verify a hail-damage assessment from this upload.</p>
+            <p>Human review is required before recording a hail finding.</p>
+        </div>`;
+    } else if (results.testSquareQuality !== undefined) {
         const testSquareClass = results.testSquareQuality === 'excellent' || results.testSquareQuality === 'good' ? 'test-square-good' : 'test-square-poor';
         html += `<div class="test-square-analysis ${testSquareClass}">
             <h4>📏 Test Square Analysis</h4>
             <p>Test Square Quality: ${results.testSquareQuality.charAt(0).toUpperCase() + results.testSquareQuality.slice(1)}</p>
-            ${results.hailDamageDetected ? `<p>✅ Hail Damage Detected: Yes</p>` : ''}
-            ${results.hailHitCount ? `<p>Hail Hits Count: ${results.hailHitCount}</p>` : ''}
+            <p>Automated observation — human verification required</p>
+            <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
+            <p>Hail Hits Count: ${results.hailHitCount}</p>
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
     }
