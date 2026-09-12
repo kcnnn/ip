@@ -274,7 +274,8 @@ async function analyzePhotoWithAI() {
         }
         
         // Resize image for API efficiency
-        const resizedImageData = await resizeImageForAPI(photoData);
+        // Preserve fine chalk detail in closeup photographs.
+        const resizedImageData = await resizeImageForAPI(photoData, 1600, 1600);
         
         // Call ChatGPT API with specialized prompts
         const analysisResults = await analyzeHailDamageWithChatGPT(resizedImageData, currentStep);
@@ -367,7 +368,7 @@ Please respond in JSON format with the following structure:
         prompt = `Analyze this hail hit closeup photo for roof inspection purposes. Please evaluate:
 
 1. Hail Hit Visibility:
-   - Is the circled hail hit clearly visible?
+   - Is a chalk-marked candidate hit visible?
    - Can you see the impact damage clearly?
    - Is the hail hit properly marked/circled?
 
@@ -382,7 +383,7 @@ Please respond in JSON format with the following structure:
    - Are there signs of granule loss?
    - Any bruising or soft spots visible?
 
-Only report a visible or genuine hail hit when a distinct candidate impact is clearly marked/circled in chalk and the mark points to reviewable impact evidence. An unmarked shingle surface, ordinary granule variation, seams, shadows, or texture is not enough. If no chalk circle or marked candidate hit is visible, set "hailHitVisible" and "hailHitGenuine" to false and "damageSeverity" to "none".
+First inspect specifically for chalk. On gray shingles, white chalk can be faint, powdery, partial, or an incomplete arc—not necessarily a bright, fully closed circle. A clearly intentional partial white chalk loop or arc around a localized candidate impact counts as a visible marking. Do not confuse ordinary granule variation, seams, shadows, or texture with a chalk mark. Only report a visible or genuine hail hit when a distinct candidate impact is marked in chalk and the mark points to reviewable impact evidence. If no chalk mark or candidate hit is visible, set "chalkMarkingVisible", "hailHitVisible", and "hailHitGenuine" to false and "damageSeverity" to "none".
 
 4. Damage Characteristics:
    - Circular or oval indentation?
@@ -398,6 +399,7 @@ Please respond in JSON format with the following structure:
 {
   "overallQuality": "good" | "needs_improvement" | "poor",
   "confidence": number (0-100),
+  "chalkMarkingVisible": boolean,
   "hailHitVisible": boolean,
   "hailHitGenuine": boolean,
   "damageSeverity": "none" | "light" | "moderate" | "severe",
@@ -500,15 +502,17 @@ function parseStructuredAnalysis(text) {
 function validateHailAnalysis(analysis, step) {
     if (step !== 'test-square') {
         analysis.damageSeverity = String(analysis.damageSeverity || '').toLowerCase();
+        analysis.chalkMarkingVisible = normalizeBoolean(analysis.chalkMarkingVisible);
         analysis.hailHitVisible = normalizeBoolean(analysis.hailHitVisible);
         analysis.hailHitGenuine = normalizeBoolean(analysis.hailHitGenuine);
+        const validChalkMarking = typeof analysis.chalkMarkingVisible === 'boolean';
         const validVisibility = typeof analysis.hailHitVisible === 'boolean';
         const validGenuine = typeof analysis.hailHitGenuine === 'boolean';
         const validSeverity = ['none', 'light', 'moderate', 'severe'].includes(analysis.damageSeverity);
         const contradictoryFinding = analysis.hailHitGenuine === true &&
-            (analysis.hailHitVisible === false || analysis.damageSeverity === 'none');
+            (analysis.chalkMarkingVisible === false || analysis.hailHitVisible === false || analysis.damageSeverity === 'none');
 
-        return !validVisibility || !validGenuine || !validSeverity || contradictoryFinding
+        return !validChalkMarking || !validVisibility || !validGenuine || !validSeverity || contradictoryFinding
             ? unverifiedCloseupAnalysis()
             : analysis;
     }
@@ -571,6 +575,7 @@ function unverifiedCloseupAnalysis() {
         analysisUnavailable: true,
         overallQuality: 'needs_improvement',
         confidence: null,
+        chalkMarkingVisible: null,
         hailHitVisible: null,
         hailHitGenuine: null,
         damageSeverity: null,
@@ -636,10 +641,11 @@ function displayAIResults(results) {
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
     } else if (results.hailHitVisible !== undefined) {
-        const markedHailHit = results.hailHitVisible && results.hailHitGenuine;
+        const markedHailHit = results.chalkMarkingVisible && results.hailHitVisible && results.hailHitGenuine;
         html += `<div class="test-square-analysis ${markedHailHit ? 'test-square-good' : 'test-square-poor'}">
             <h4>Closeup Damage Review</h4>
             <p>Automated observation — human verification required</p>
+            <p>Chalk marking visible: ${results.chalkMarkingVisible ? 'Yes' : 'No'}</p>
             <p>Marked hail hit visible: ${markedHailHit ? 'Yes' : 'No'}</p>
             <p>${markedHailHit ? 'A marked candidate hit is visible for review.' : 'No circled hail hit or confirmed hail damage is visible in this photo.'}</p>
             <p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>
