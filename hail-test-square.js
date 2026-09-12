@@ -382,6 +382,8 @@ Please respond in JSON format with the following structure:
    - Are there signs of granule loss?
    - Any bruising or soft spots visible?
 
+Only report a visible or genuine hail hit when a distinct candidate impact is clearly marked/circled in chalk and the mark points to reviewable impact evidence. An unmarked shingle surface, ordinary granule variation, seams, shadows, or texture is not enough. If no chalk circle or marked candidate hit is visible, set "hailHitVisible" and "hailHitGenuine" to false and "damageSeverity" to "none".
+
 4. Damage Characteristics:
    - Circular or oval indentation?
    - Size of the impact?
@@ -483,7 +485,17 @@ Please respond in JSON format with the following structure:
 }
 
 function validateHailAnalysis(analysis, step) {
-    if (step !== 'test-square') return analysis;
+    if (step !== 'test-square') {
+        const validVisibility = typeof analysis.hailHitVisible === 'boolean';
+        const validGenuine = typeof analysis.hailHitGenuine === 'boolean';
+        const validSeverity = ['none', 'light', 'moderate', 'severe'].includes(analysis.damageSeverity);
+        const contradictoryFinding = analysis.hailHitGenuine === true &&
+            (analysis.hailHitVisible === false || analysis.damageSeverity === 'none');
+
+        return !validVisibility || !validGenuine || !validSeverity || contradictoryFinding
+            ? unverifiedCloseupAnalysis()
+            : analysis;
+    }
 
     const validDetection = typeof analysis.hailDamageDetected === 'boolean';
     const validCount = Number.isInteger(analysis.hailHitCount) && analysis.hailHitCount >= 0;
@@ -504,7 +516,7 @@ function parseTextResponse(text, step) {
         return unverifiedHailAnalysis();
     }
 
-    return { analysisUnavailable: true, overallQuality: 'needs_improvement', confidence: null, issues: [], recommendations: [], shouldRetake: false };
+    return unverifiedCloseupAnalysis();
 }
 
 function unverifiedHailAnalysis() {
@@ -518,6 +530,20 @@ function unverifiedHailAnalysis() {
         damageSeverity: null,
         issues: [],
         recommendations: ['Retake the photo with the test square boundary and any candidate hits clearly marked for human review.'],
+        shouldRetake: false
+    };
+}
+
+function unverifiedCloseupAnalysis() {
+    return {
+        analysisUnavailable: true,
+        overallQuality: 'needs_improvement',
+        confidence: null,
+        hailHitVisible: null,
+        hailHitGenuine: null,
+        damageSeverity: null,
+        issues: [],
+        recommendations: ['Retake the closeup with the candidate hit clearly circled in chalk for human review.'],
         shouldRetake: false
     };
 }
@@ -561,6 +587,12 @@ function displayAIResults(results) {
             <p>Unable to verify a hail-damage assessment from this upload.</p>
             <p>Human review is required before recording a hail finding.</p>
         </div>`;
+    } else if (results.analysisUnavailable && results.hailHitVisible !== undefined) {
+        html += `<div class="test-square-analysis test-square-poor">
+            <h4>Closeup Damage Review</h4>
+            <p>Unable to verify a marked hail hit from this upload.</p>
+            <p>Retake the photo with the candidate hit circled in chalk for human review.</p>
+        </div>`;
     } else if (results.testSquareQuality !== undefined) {
         const testSquareClass = results.testSquareQuality === 'excellent' || results.testSquareQuality === 'good' ? 'test-square-good' : 'test-square-poor';
         html += `<div class="test-square-analysis ${testSquareClass}">
@@ -570,6 +602,15 @@ function displayAIResults(results) {
             <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
             <p>Hail Hits Count: ${results.hailHitCount}</p>
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
+        </div>`;
+    } else if (results.hailHitVisible !== undefined) {
+        const markedHailHit = results.hailHitVisible && results.hailHitGenuine;
+        html += `<div class="test-square-analysis ${markedHailHit ? 'test-square-good' : 'test-square-poor'}">
+            <h4>Closeup Damage Review</h4>
+            <p>Automated observation — human verification required</p>
+            <p>Marked hail hit visible: ${markedHailHit ? 'Yes' : 'No'}</p>
+            <p>${markedHailHit ? 'A marked candidate hit is visible for review.' : 'No circled hail hit or confirmed hail damage is visible in this photo.'}</p>
+            <p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>
         </div>`;
     }
     
