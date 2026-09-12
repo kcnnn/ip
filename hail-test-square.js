@@ -619,6 +619,15 @@ function normalizeBoolean(value) {
     return value;
 }
 
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // Never guess a hail finding from unstructured model text.
 function parseTextResponse(text, step) {
     if (step === 'test-square') {
@@ -630,7 +639,6 @@ function parseTextResponse(text, step) {
 
 function unverifiedHailAnalysis(source) {
     const sourceText = typeof source === 'string' ? source : JSON.stringify(source || {});
-    const normalizedText = sourceText.toLowerCase();
     const visualObservations = [];
 
     if (/(full|entire|complete).{0,40}(test square|square)|(test square|square).{0,40}(full|entire|complete)/i.test(sourceText)) {
@@ -652,6 +660,7 @@ function unverifiedHailAnalysis(source) {
         circledHailHitCount: null,
         damageSeverity: null,
         visualObservations,
+        responseDetail: sourceText.trim().slice(0, 1200),
         issues: [],
         recommendations: ['Review the captured chalk markings before recording a hail finding.'],
         shouldRetake: false
@@ -711,6 +720,7 @@ function displayAIResults(results) {
             <h4>Test Square Review</h4>
             <p>Unable to verify a hail-damage assessment from this upload.</p>
             ${results.visualObservations?.length ? `<div class="visual-observations"><strong>Automated visual observations</strong><ul>${results.visualObservations.map(observation => `<li>${observation}</li>`).join('')}</ul></div>` : ''}
+            ${results.responseDetail ? `<details class="analysis-response-detail"><summary>Analysis response details</summary><pre>${escapeHtml(results.responseDetail)}</pre></details>` : ''}
         </div>`;
     } else if (results.analysisUnavailable && results.hailHitVisible !== undefined) {
         html += `<div class="test-square-analysis test-square-poor">
