@@ -484,6 +484,7 @@ function sleep(ms) {
 
 async function generateDetailedReport(interviewData) {
     const apiKey = getAPIKey();
+    const workspaceId = getWorkspaceId();
     
     // Collect all inspection data
     const inspectionData = {
@@ -586,6 +587,7 @@ Format the report professionally with clear sections, bullet points, and actiona
                 'x-api-key': apiKey,
                 'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
                 'anthropic-dangerous-direct-browser-access': 'true',
+                ...(workspaceId ? { 'anthropic-workspace-id': workspaceId } : {}),
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -606,7 +608,11 @@ Format the report professionally with clear sections, bullet points, and actiona
         }
 
         const data = await response.json();
-        return data.content?.[0]?.text || '';
+        const report = data.content?.[0]?.text?.trim();
+        if (!report) {
+            throw new Error('The AI returned an empty report.');
+        }
+        return report;
 
     } catch (error) {
         console.error('Claude API Error:', error);
@@ -621,6 +627,11 @@ function showAIReport(report, interviewData) {
         generationModal.remove();
     }
     
+    // Never show or download an empty report if an API response is incomplete.
+    const reportContent = typeof report === 'string' && report.trim()
+        ? report.trim()
+        : generateFallbackReport(interviewData);
+
     // Create report display modal
     const modal = document.createElement('div');
     modal.className = 'report-display-modal';
@@ -633,16 +644,22 @@ function showAIReport(report, interviewData) {
             </div>
             
             <div class="report-content">
-                <div class="report-text" id="reportText">${formatReportText(report)}</div>
+                <div class="report-text" id="reportText"></div>
             </div>
             
             <div class="report-actions">
-                <button class="action-btn secondary" onclick="closeReportModal()">Close</button>
-                <button class="action-btn primary" onclick="downloadReport('${btoa(report)}')">Download Report</button>
-                <button class="action-btn primary" onclick="emailReport('${btoa(report)}')">Email Report</button>
+                <button class="action-btn secondary" id="closeReportButton">Close</button>
+                <button class="action-btn primary" id="downloadReportButton">Download Report</button>
+                <button class="action-btn primary" id="emailReportButton">Email Report</button>
             </div>
         </div>
     `;
+
+    // Treat AI output as text, never as HTML. This also preserves special characters in downloads.
+    modal.querySelector('#reportText').textContent = formatReportText(reportContent);
+    modal.querySelector('#closeReportButton').addEventListener('click', closeReportModal);
+    modal.querySelector('#downloadReportButton').addEventListener('click', () => downloadReport(reportContent));
+    modal.querySelector('#emailReportButton').addEventListener('click', () => emailReport(reportContent));
     
     // Add to page
     document.body.appendChild(modal);
@@ -897,8 +914,7 @@ function closeReportModal() {
     }
 }
 
-function downloadReport(encodedReport) {
-    const report = atob(encodedReport);
+function downloadReport(report) {
     const blob = new Blob([report], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -910,8 +926,7 @@ function downloadReport(encodedReport) {
     URL.revokeObjectURL(url);
 }
 
-function emailReport(encodedReport) {
-    const report = atob(encodedReport);
+function emailReport(report) {
     const subject = encodeURIComponent('Roof Inspection Report');
     const body = encodeURIComponent(report);
     const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
