@@ -529,8 +529,12 @@ function validateHailAnalysis(analysis, step) {
 
     analysis.hailDamageDetected = normalizeBoolean(analysis.hailDamageDetected);
     // Accept the previous field name too, but store one authoritative count.
-    analysis.circledHailHitCount = Number(analysis.circledHailHitCount ?? analysis.hailHitCount);
-    analysis.countBasis = String(analysis.countBasis || '').toLowerCase();
+    const rawCount = analysis.circledHailHitCount ?? analysis.hailHitCount;
+    const countText = String(rawCount ?? '').trim();
+    analysis.circledHailHitCount = /^\d+\s*\+$/.test(countText)
+        ? Number.parseInt(countText, 10)
+        : Number(rawCount);
+    analysis.countBasis = String(analysis.countBasis || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
     analysis.inspectorHailNotation = typeof analysis.inspectorHailNotation === 'string'
         ? analysis.inspectorHailNotation.trim()
         : null;
@@ -540,6 +544,17 @@ function validateHailAnalysis(analysis, step) {
         : [];
     analysis.damageSeverity = String(analysis.damageSeverity || '').toLowerCase();
     analysis.testSquareQuality = String(analysis.testSquareQuality || '').toLowerCase();
+
+    // Normalize common model wording without turning prose into a hail finding.
+    if (analysis.damageSeverity === 'minor') analysis.damageSeverity = 'light';
+    if (analysis.damageSeverity === 'medium') analysis.damageSeverity = 'moderate';
+    if (analysis.damageSeverity === 'major') analysis.damageSeverity = 'severe';
+
+    const notationLowerBound = (analysis.inspectorHailNotation || '').match(/(\d+)\s*\+/);
+    if (notationLowerBound) {
+        analysis.countBasis = 'inspector_notation';
+        analysis.circledHailHitCount = Number.parseInt(notationLowerBound[1], 10);
+    }
 
     // Newer prompts ask for an audit trail, but a valid older model response
     // should still be shown as provisional rather than discarded wholesale.
@@ -558,7 +573,7 @@ function validateHailAnalysis(analysis, step) {
     const validCount = Number.isInteger(analysis.circledHailHitCount) && analysis.circledHailHitCount >= 0;
     const validCountBasis = ['counted_circles', 'inspector_notation'].includes(analysis.countBasis);
     const validInspectorNotation = analysis.countBasis !== 'inspector_notation' ||
-        /^h\s*=?\s*\d+\s*\+$/i.test(analysis.inspectorHailNotation || '');
+        /\d+\s*\+/.test(analysis.inspectorHailNotation || '');
     const validCountConfidence = ['high', 'medium', 'low'].includes(analysis.countConfidence);
     const validCountLocations = analysis.countBasis === 'inspector_notation'
         ? true
@@ -582,8 +597,10 @@ function validateHailAnalysis(analysis, step) {
 
 function normalizeBoolean(value) {
     if (value === true || value === false) return value;
-    if (typeof value === 'string' && /^(true|false)$/i.test(value.trim())) {
-        return value.trim().toLowerCase() === 'true';
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (/^(true|yes|detected)$/i.test(normalized)) return true;
+        if (/^(false|no|not detected)$/i.test(normalized)) return false;
     }
     return value;
 }
