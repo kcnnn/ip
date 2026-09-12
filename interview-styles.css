@@ -71,7 +71,18 @@
 }
 
 /* Interview sections */
+.main-content {
+    /* The shared site shell is flex-based; this form must flow vertically. */
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
+}
+
 .interview-section {
+    width: 100%;
     margin-bottom: 2rem;
 }
 
@@ -364,6 +375,7 @@
 
 /* Completion checklist */
 .completion-checklist {
+    width: 100%;
     background: white;
     border-radius: 15px;
     padding: 1.5rem;
@@ -426,6 +438,7 @@
 
 /* Navigation buttons */
 .navigation-buttons {
+    width: 100%;
     display: flex;
     gap: 1rem;
     justify-content: space-between;
