@@ -1,0 +1,138 @@
+/* Shared visual system: calm, practical, field-friendly. */
+:root {
+    --ink: #202b36;
+    --muted: #66727f;
+    --canvas: #f6f5f1;
+    --surface: #ffffff;
+    --line: #dce2e7;
+    --brand: #2f6b4f;
+    --brand-strong: #24533c;
+    --brand-soft: #edf5ee;
+    --shadow: 0 10px 30px rgba(25, 38, 48, 0.08);
+    --shadow-hover: 0 16px 36px rgba(25, 38, 48, 0.13);
+}
+
+body {
+    background: var(--canvas);
+    color: var(--ink);
+    letter-spacing: -0.01em;
+}
+
+.header {
+    background: #293241;
+    padding: 2rem max(1.25rem, calc((100vw - 1120px) / 2));
+    box-shadow: none;
+}
+
+.page-title, .title { letter-spacing: -0.035em; }
+.page-subtitle, .subtitle { max-width: 42rem; margin-inline: auto; }
+
+.main-content {
+    display: block;
+    width: min(100%, 1120px);
+    margin: 0 auto;
+    padding: 2rem 1.25rem 3rem;
+}
+
+.main-content:has(.hero-section) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-section,
+.elevation-card, .inspection-card, .photo-card, .hail-hits-card, .closeup-card,
+.interview-card, .completion-checklist, .setup-card {
+    border: 1px solid rgba(220, 226, 231, 0.9);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+}
+
+.hero-section { max-width: 880px; }
+.elevation-section, .inspection-section, .photo-section, .closeup-section, .interview-section { width: 100%; }
+
+.elevation-card, .inspection-card, .photo-card, .hail-hits-card, .closeup-card,
+.interview-card, .completion-checklist, .setup-card {
+    max-width: 920px;
+    margin-inline: auto;
+}
+
+.section-header, .elevation-header, .inspection-header, .photo-header {
+    border-bottom-color: var(--line);
+}
+
+.section-icon, .elevation-icon, .inspection-icon, .photo-icon {
+    background: var(--brand-soft);
+}
+
+.section-header h2, .elevation-header h2, .inspection-header h2, .photo-header h2,
+.hero-title { color: var(--ink); }
+
+.progress-bar { background: rgba(255, 255, 255, 0.24); }
+.progress-fill { background: #72b58c; }
+
+.action-btn, .nav-btn.primary, .start-button, .capture-btn, .confirm-btn,
+.continue-btn, .next-btn, button.primary {
+    background: var(--brand) !important;
+    border-color: var(--brand) !important;
+    box-shadow: 0 6px 14px rgba(47, 107, 79, 0.2) !important;
+}
+
+.action-btn:hover, .nav-btn.primary:hover, .start-button:hover, .capture-btn:hover,
+.confirm-btn:hover, .continue-btn:hover, .next-btn:hover, button.primary:hover {
+    background: var(--brand-strong) !important;
+    box-shadow: 0 9px 18px rgba(47, 107, 79, 0.27) !important;
+    transform: translateY(-1px);
+}
+
+.action-btn.secondary, .nav-btn.secondary, .retake-btn, .switch-camera-btn {
+    background: var(--surface) !important;
+    color: var(--ink) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: none !important;
+}
+
+button, .action-btn, .nav-btn, .start-button, .radio-option {
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.form-input, .form-textarea, .api-input {
+    border-color: var(--line) !important;
+    background: #fcfdfd;
+}
+
+.form-input:focus, .form-textarea:focus, .api-input:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 3px rgba(47, 107, 79, 0.13) !important;
+}
+
+.radio-option:hover, .radio-option:has(input:checked) {
+    border-color: var(--brand) !important;
+    background: var(--brand-soft) !important;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom {
+    border-color: var(--brand) !important;
+    background: var(--brand) !important;
+}
+
+.camera-container, .photo-preview, .compass-container {
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.stat-item, .checklist-item {
+    border-color: var(--line);
+    background: #fbfcfc;
+}
+
+.stat-number { color: var(--brand); }
+.total-photos { background: #293241; box-shadow: none; }
+
+@media (max-width: 700px) {
+    .header { padding: 1.5rem 1rem; }
+    .main-content { padding: 1.25rem 1rem 2rem; }
+    .hero-section, .elevation-card, .inspection-card, .photo-card, .hail-hits-card,
+    .closeup-card, .interview-card, .completion-checklist, .setup-card { border-radius: 14px; }
+    .section-header { align-items: center; }
+}
