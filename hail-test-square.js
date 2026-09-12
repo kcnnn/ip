@@ -332,7 +332,9 @@ async function analyzeHailDamageWithChatGPT(imageData, step) {
    - Are there signs of granule loss around impact points?
    - Any bruising or soft spots visible?
 
-For this documentation workflow, make a conservative count of only distinct, fully visible candidate hits that are individually circled in chalk and lie inside the marked test-square boundary. Before returning the count, enumerate the marks from top to bottom, left to right. Count a mark only once.
+First read any legible inspector chalk annotations. Treat slope labels such as "B" (back slope), "F" (front slope), "L" (left), and "R" (right) as context labels — never as damage marks. Treat an annotation such as "H=10+" or "H 10+" as the inspector's documented lower-bound count, meaning "at least 10 hail hits," not an exact count and not a chalk circle. When that notation is clearly legible, preserve it verbatim in "inspectorHailNotation", set "countBasis" to "inspector_notation", and set "circledHailHitCount" to its numeric lower bound. Do not replace that documented lower bound with an invented exact total.
+
+Otherwise, make a conservative count of only distinct, fully visible candidate hits that are individually circled in chalk and lie inside the marked test-square boundary. Before returning the count, enumerate the marks from top to bottom, left to right. Count a mark only once.
 
 Exclude partial circles clipped by any image edge; chalk labels, numbers, arrows, boundary lines, strokes, and loops that do not clearly surround a candidate impact. Do not infer extra hits from ordinary shingle texture, shadows, granule variation, or unmarked impacts. Do not count a partial chalk arc unless it clearly encloses one visible candidate impact within the frame. If an exact count cannot be made confidently, set "countConfidence" to "low" and use the conservative lower count, not an estimate. Only set "hailDamageDetected" to true when one or more clear, reviewable chalk-marked candidate hits are visible. If the test square or marked/circled candidate hits are not clearly visible, return false, a count of 0, and severity "none".
 
@@ -352,6 +354,8 @@ Please respond in JSON format with the following structure:
   "testSquareQuality": "excellent" | "good" | "fair" | "poor",
   "hailDamageDetected": boolean,
   "circledHailHitCount": number,
+  "countBasis": "counted_circles" | "inspector_notation",
+  "inspectorHailNotation": "exact chalk text such as H=10+, or null",
   "countConfidence": "high" | "medium" | "low",
   "countedMarkLocations": ["short location for each counted circle, in top-to-bottom then left-to-right order"],
   "damageSeverity": "none" | "light" | "moderate" | "severe",
@@ -524,6 +528,10 @@ function validateHailAnalysis(analysis, step) {
     analysis.hailDamageDetected = normalizeBoolean(analysis.hailDamageDetected);
     // Accept the previous field name too, but store one authoritative count.
     analysis.circledHailHitCount = Number(analysis.circledHailHitCount ?? analysis.hailHitCount);
+    analysis.countBasis = String(analysis.countBasis || '').toLowerCase();
+    analysis.inspectorHailNotation = typeof analysis.inspectorHailNotation === 'string'
+        ? analysis.inspectorHailNotation.trim()
+        : null;
     analysis.countConfidence = String(analysis.countConfidence || '').toLowerCase();
     analysis.countedMarkLocations = Array.isArray(analysis.countedMarkLocations)
         ? analysis.countedMarkLocations.filter(location => typeof location === 'string' && location.trim())
@@ -533,15 +541,20 @@ function validateHailAnalysis(analysis, step) {
 
     const validDetection = typeof analysis.hailDamageDetected === 'boolean';
     const validCount = Number.isInteger(analysis.circledHailHitCount) && analysis.circledHailHitCount >= 0;
+    const validCountBasis = ['counted_circles', 'inspector_notation'].includes(analysis.countBasis);
+    const validInspectorNotation = analysis.countBasis !== 'inspector_notation' ||
+        /^h\s*=?\s*\d+\s*\+$/i.test(analysis.inspectorHailNotation || '');
     const validCountConfidence = ['high', 'medium', 'low'].includes(analysis.countConfidence);
-    const validCountLocations = analysis.countedMarkLocations.length === analysis.circledHailHitCount;
+    const validCountLocations = analysis.countBasis === 'inspector_notation'
+        ? true
+        : analysis.countedMarkLocations.length === analysis.circledHailHitCount;
     const validSeverity = ['none', 'light', 'moderate', 'severe'].includes(analysis.damageSeverity);
     const contradictoryFinding = analysis.hailDamageDetected === true &&
         (analysis.circledHailHitCount === 0 || analysis.damageSeverity === 'none');
     const contradictoryNegative = analysis.hailDamageDetected === false &&
         (analysis.circledHailHitCount !== 0 || analysis.damageSeverity !== 'none');
 
-    if (!validDetection || !validCount || !validCountConfidence || !validCountLocations || !validSeverity || contradictoryFinding || contradictoryNegative) {
+    if (!validDetection || !validCount || !validCountBasis || !validInspectorNotation || !validCountConfidence || !validCountLocations || !validSeverity || contradictoryFinding || contradictoryNegative) {
         return unverifiedHailAnalysis();
     }
 
@@ -647,7 +660,9 @@ function displayAIResults(results) {
             <p>Test Square Quality: ${results.testSquareQuality.charAt(0).toUpperCase() + results.testSquareQuality.slice(1)}</p>
             <p>Automated observation — human verification required</p>
             <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
-            <p>Circled hail hits in test square: ${results.circledHailHitCount}</p>
+            <p>${results.countBasis === 'inspector_notation'
+                ? `Inspector hail notation: ${results.inspectorHailNotation} (at least ${results.circledHailHitCount} hits)`
+                : `Circled hail hits in test square: ${results.circledHailHitCount}`}</p>
             <p>Count confidence: ${results.countConfidence.charAt(0).toUpperCase() + results.countConfidence.slice(1)} — verify against the photo.</p>
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
