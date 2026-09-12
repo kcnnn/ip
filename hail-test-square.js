@@ -651,7 +651,7 @@ function unverifiedHailAnalysis(source) {
         damageSeverity: null,
         visualObservations,
         issues: [],
-        recommendations: ['Review the captured chalk markings and complete human verification before recording a hail finding.'],
+        recommendations: ['Review the captured chalk markings before recording a hail finding.'],
         shouldRetake: false
     };
 }
@@ -666,7 +666,7 @@ function unverifiedCloseupAnalysis() {
         hailHitGenuine: null,
         damageSeverity: null,
         issues: [],
-        recommendations: ['Retake the closeup with the candidate hit clearly circled in chalk for human review.'],
+        recommendations: ['Retake the closeup with the candidate hit clearly circled in chalk.'],
         shouldRetake: false
     };
 }
@@ -688,7 +688,7 @@ function displayAIResults(results) {
     
     if (results.analysisUnavailable) {
         html += `<div class="quality-indicator quality-warning">
-            <h4>Hail assessment needs human review</h4>
+            <h4>Hail assessment needs additional detail</h4>
             <p>No hail finding was recorded because the response could not be verified.</p>
         </div>`;
     } else {
@@ -708,34 +708,33 @@ function displayAIResults(results) {
         html += `<div class="test-square-analysis test-square-poor">
             <h4>Test Square Review</h4>
             <p>Unable to verify a hail-damage assessment from this upload.</p>
-            <p>Human review is required before recording a hail finding.</p>
             ${results.visualObservations?.length ? `<div class="visual-observations"><strong>Automated visual observations</strong><ul>${results.visualObservations.map(observation => `<li>${observation}</li>`).join('')}</ul></div>` : ''}
         </div>`;
     } else if (results.analysisUnavailable && results.hailHitVisible !== undefined) {
         html += `<div class="test-square-analysis test-square-poor">
             <h4>Closeup Damage Review</h4>
             <p>Unable to verify a marked hail hit from this upload.</p>
-            <p>Retake the photo with the candidate hit circled in chalk for human review.</p>
+            <p>Retake the photo with the candidate hit circled in chalk.</p>
         </div>`;
     } else if (results.testSquareQuality !== undefined) {
         const testSquareClass = results.testSquareQuality === 'excellent' || results.testSquareQuality === 'good' ? 'test-square-good' : 'test-square-poor';
         html += `<div class="test-square-analysis ${testSquareClass}">
             <h4>📏 Test Square Analysis</h4>
             <p>Test Square Quality: ${results.testSquareQuality.charAt(0).toUpperCase() + results.testSquareQuality.slice(1)}</p>
-            <p>Automated observation — human verification required</p>
+            <p>Automated observation</p>
             <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
             <p>${results.countBasis === 'inspector_notation'
                 ? `Inspector hail notation: ${results.inspectorHailNotation} (at least ${results.circledHailHitCount} hits)`
                 : `Circled hail hits in test square: ${results.circledHailHitCount}`}</p>
             <p>Count confidence: ${results.countConfidence.charAt(0).toUpperCase() + results.countConfidence.slice(1)} — verify against the photo.</p>
-            ${results.countAuditIncomplete ? '<p>Count audit is incomplete; this automated observation must be checked by the inspector before it is recorded.</p>' : ''}
+            ${results.countAuditIncomplete ? '<p>Count audit is incomplete; review the photo before recording the count.</p>' : ''}
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
     } else if (results.hailHitVisible !== undefined) {
         const markedHailHit = results.chalkMarkingVisible && results.hailHitVisible && results.hailHitGenuine;
         html += `<div class="test-square-analysis ${markedHailHit ? 'test-square-good' : 'test-square-poor'}">
             <h4>Closeup Damage Review</h4>
-            <p>Automated observation — human verification required</p>
+            <p>Automated observation</p>
             <p>Chalk marking visible: ${results.chalkMarkingVisible ? 'Yes' : 'No'}</p>
             <p>Marked hail hit visible: ${markedHailHit ? 'Yes' : 'No'}</p>
             <p>${markedHailHit ? 'A marked candidate hit is visible for review.' : 'No circled hail hit or confirmed hail damage is visible in this photo.'}</p>
