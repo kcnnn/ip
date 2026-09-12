@@ -358,7 +358,7 @@ function showReportGeneration(data) {
         
         .progress-fill {
             height: 100%;
-            background: #2563eb;
+            background: #2f6b4f;
             width: 0%;
             transition: width 0.5s ease;
         }
@@ -389,8 +389,8 @@ function showReportGeneration(data) {
         }
         
         .step-item.current {
-            background: #e3f2fd;
-            border: 2px solid #2196F3;
+            background: #edf5ee;
+            border: 2px solid #2f6b4f;
         }
         
         .step-icon {
@@ -757,9 +757,9 @@ function showAIReport(report, interviewData) {
         }
         
         .action-btn.primary {
-            background: #2563eb;
+            background: #2f6b4f;
             color: white;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 4px 15px rgba(47, 107, 79, 0.4);
         }
         
         .action-btn.secondary {

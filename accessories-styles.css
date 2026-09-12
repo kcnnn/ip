@@ -111,7 +111,7 @@
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
-    border-left: 4px solid #2563eb;
+    border-left: 4px solid #2f6b4f;
 }
 
 .photo-instructions p {
@@ -121,10 +121,10 @@
 }
 
 .accessory-tips {
-    background: #e3f2fd;
+    background: #edf5ee;
     padding: 1rem;
     border-radius: 6px;
-    border-left: 4px solid #2196F3;
+    border-left: 4px solid #2f6b4f;
 }
 
 .accessory-tips h4 {
@@ -183,17 +183,17 @@
 }
 
 .accessory-btn:hover {
-    border-color: #2563eb;
-    color: #2563eb;
+    border-color: #2f6b4f;
+    color: #2f6b4f;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 15px rgba(47, 107, 79, 0.2);
 }
 
 .accessory-btn.selected {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: #2f6b4f;
+    border-color: #2f6b4f;
     color: white;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 4px 15px rgba(47, 107, 79, 0.4);
 }
 
 .accessory-btn .btn-icon {
@@ -223,7 +223,7 @@
     align-items: center;
     justify-content: center;
     color: white;
-    background: #2563eb;
+    background: #2f6b4f;
 }
 
 .camera-icon {
@@ -265,9 +265,9 @@
 }
 
 .camera-btn.primary {
-    background: #2563eb;
+    background: #2f6b4f;
     color: white;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 4px 15px rgba(47, 107, 79, 0.4);
 }
 
 .camera-btn.secondary {
@@ -407,8 +407,8 @@
 }
 
 .checklist-item.current {
-    background: #e3f2fd;
-    border-color: #2196F3;
+    background: #edf5ee;
+    border-color: #2f6b4f;
 }
 
 .checklist-item.completed {
@@ -506,7 +506,7 @@
     width: 40px;
     height: 40px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #2563eb;
+    border-top: 4px solid #2f6b4f;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
@@ -545,9 +545,9 @@
 }
 
 .nav-btn.primary {
-    background: #2563eb;
+    background: #2f6b4f;
     color: white;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 4px 15px rgba(47, 107, 79, 0.4);
 }
 
 .nav-btn.secondary {
@@ -600,8 +600,8 @@
 }
 
 .installation-analysis {
-    background: #e3f2fd;
-    border: 2px solid #2196F3;
+    background: #edf5ee;
+    border: 2px solid #2f6b4f;
     border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;

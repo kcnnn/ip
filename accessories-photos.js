@@ -812,15 +812,15 @@ style.textContent = `
     }
     
     .issue-info {
-        background: #e3f2fd;
+        background: #edf5ee;
         color: #1565c0;
-        border-left: 4px solid #2196F3;
+        border-left: 4px solid #2f6b4f;
     }
     
     .recommendations-section li {
         background: #f0f8ff;
         color: #1565c0;
-        border-left: 4px solid #2196F3;
+        border-left: 4px solid #2f6b4f;
         padding: 0.5rem;
         border-radius: 4px;
         margin-bottom: 0.5rem;

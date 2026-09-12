@@ -129,7 +129,7 @@
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
-    border-left: 4px solid #2563eb;
+    border-left: 4px solid #2f6b4f;
 }
 
 .discussion-points h3 {
@@ -172,8 +172,8 @@
 
 .form-textarea:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #2f6b4f;
+    box-shadow: 0 0 0 3px rgba(47, 107, 79, 0.1);
 }
 
 .form-input {
@@ -187,8 +187,8 @@
 
 .form-input:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #2f6b4f;
+    box-shadow: 0 0 0 3px rgba(47, 107, 79, 0.1);
 }
 
 /* Notes sections */
@@ -198,11 +198,11 @@
 
 /* Satellite dish section */
 .satellite-info {
-    background: #e3f2fd;
+    background: #edf5ee;
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
-    border-left: 4px solid #2196F3;
+    border-left: 4px solid #2f6b4f;
 }
 
 .satellite-info p {
@@ -265,7 +265,7 @@
 }
 
 .radio-option:hover {
-    border-color: #2563eb;
+    border-color: #2f6b4f;
     background: #f8f9ff;
 }
 
@@ -283,8 +283,8 @@
 }
 
 .radio-option input[type="radio"]:checked + .radio-custom {
-    border-color: #2563eb;
-    background: #2563eb;
+    border-color: #2f6b4f;
+    background: #2f6b4f;
 }
 
 .radio-option input[type="radio"]:checked + .radio-custom::after {
@@ -343,7 +343,7 @@
 .stat-number {
     font-size: 2rem;
     font-weight: bold;
-    color: #2563eb;
+    color: #2f6b4f;
     margin-bottom: 0.5rem;
 }
 
@@ -356,10 +356,10 @@
 .total-photos {
     text-align: center;
     padding: 2rem;
-    background: #2563eb;
+    background: #2f6b4f;
     color: white;
     border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 10px 30px rgba(47, 107, 79, 0.3);
 }
 
 .total-number {
@@ -411,8 +411,8 @@
 }
 
 .checklist-item.current {
-    background: #e3f2fd;
-    border-color: #2196F3;
+    background: #edf5ee;
+    border-color: #2f6b4f;
 }
 
 .checklist-item.completed {
@@ -461,9 +461,9 @@
 }
 
 .nav-btn.primary {
-    background: #2563eb;
+    background: #2f6b4f;
     color: white;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 4px 15px rgba(47, 107, 79, 0.4);
 }
 
 .nav-btn.secondary {
