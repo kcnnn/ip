@@ -36,6 +36,14 @@
                                     Your API key is stored locally and never sent to our servers.
                                 </small>
                             </div>
+
+                            <div class="form-group">
+                                <label for="workspaceId">Anthropic Workspace ID (required for organization-level keys):</label>
+                                <input type="text" id="workspaceId" placeholder="Your workspace ID" class="api-input" autocomplete="off">
+                                <small class="form-help">
+                                    Find this ID in your Anthropic Console workspace settings. Leave it blank only when your API key is already scoped to a workspace.
+                                </small>
+                            </div>
                             
                             <div class="form-actions">
                                 <button class="action-btn secondary" onclick="skipSetup()">
@@ -103,6 +111,7 @@
         
         function saveAPIKey() {
             const apiKey = document.getElementById('apiKey').value.trim();
+            const workspaceId = document.getElementById('workspaceId').value.trim();
             
             if (!apiKey) {
                 showError('Please enter your API key');
@@ -116,6 +125,7 @@
             
             try {
                 setAPIKey(apiKey);
+                setWorkspaceId(workspaceId);
                 showAPIKeyStatus('saved');
                 
                 // Redirect to elevation photos after a short delay
@@ -153,6 +163,7 @@
                 apiInput.style.background = '#e3f2fd';
                 apiInput.style.color = '#1565c0';
                 document.getElementById('saveApiKeyButton').innerHTML = '<span class="btn-icon">🔄</span> Replace API Key';
+                document.getElementById('workspaceId').value = getWorkspaceId();
                 
                 // Show configured message
                 const configuredMsg = document.createElement('div');

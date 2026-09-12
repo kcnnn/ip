@@ -17,9 +17,23 @@ function setAPIKey(apiKey) {
     localStorage.setItem('claude_api_key', apiKey);
 }
 
+// Store the optional Anthropic workspace that owns an organization-level key.
+function setWorkspaceId(workspaceId) {
+    const value = workspaceId.trim();
+    if (value) {
+        localStorage.setItem('anthropic_workspace_id', value);
+    } else {
+        localStorage.removeItem('anthropic_workspace_id');
+    }
+}
+
 // Function to get API key from localStorage
 function getAPIKey() {
     return localStorage.getItem('claude_api_key') || localStorage.getItem('chatgpt_api_key') || API_CONFIG.API_KEY;
+}
+
+function getWorkspaceId() {
+    return localStorage.getItem('anthropic_workspace_id') || '';
 }
 
 // Initialize API key on load
@@ -52,6 +66,7 @@ async function analyzePhotoWithChatGPT(imageData, elevationType) {
     }
 
     const apiKey = getAPIKey();
+    const workspaceId = getWorkspaceId();
     const { mediaType, base64Data } = parseDataUrl(imageData);
     
     // Prepare the prompt for photo analysis
@@ -102,6 +117,7 @@ Respond with ONLY the raw JSON object above and nothing else - no explanation, n
                 'x-api-key': apiKey,
                 'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
                 'anthropic-dangerous-direct-browser-access': 'true',
+                ...(workspaceId ? { 'anthropic-workspace-id': workspaceId } : {}),
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -254,6 +270,8 @@ function resizeImageForAPI(imageData, maxWidth = 1024, maxHeight = 1024) {
 window.API_CONFIG = API_CONFIG;
 window.setAPIKey = setAPIKey;
 window.getAPIKey = getAPIKey;
+window.setWorkspaceId = setWorkspaceId;
+window.getWorkspaceId = getWorkspaceId;
 window.isAPIKeyConfigured = isAPIKeyConfigured;
 window.analyzePhotoWithChatGPT = analyzePhotoWithChatGPT;
 window.convertImageToBase64 = convertImageToBase64;
