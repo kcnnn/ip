@@ -6,7 +6,9 @@ const API_CONFIG = {
     API_KEY: '', // Will be populated from localStorage or user input
     BASE_URL: 'https://api.anthropic.com/v1/messages',
     MODEL: 'claude-sonnet-5', // Claude model with vision capabilities
-    MAX_TOKENS: 1000,
+    // Hail inspections return structured observations plus a short audit trail.
+    // Leave enough room for valid JSON so it is not cut off mid-response.
+    MAX_TOKENS: 2000,
     TEMPERATURE: 0.3,
     ANTHROPIC_VERSION: '2023-06-01'
 };

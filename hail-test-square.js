@@ -527,9 +527,11 @@ function validateHailAnalysis(analysis, step) {
             : analysis;
     }
 
-    analysis.hailDamageDetected = normalizeBoolean(analysis.hailDamageDetected);
+    analysis.hailDamageDetected = normalizeBoolean(
+        analysis.hailDamageDetected ?? analysis.hailDetected ?? analysis.hailDamage
+    );
     // Accept the previous field name too, but store one authoritative count.
-    const rawCount = analysis.circledHailHitCount ?? analysis.hailHitCount;
+    const rawCount = analysis.circledHailHitCount ?? analysis.hailHitCount ?? analysis.hailHits;
     const countText = String(rawCount ?? '').trim();
     analysis.circledHailHitCount = /^\d+\s*\+$/.test(countText)
         ? Number.parseInt(countText, 10)
@@ -542,13 +544,23 @@ function validateHailAnalysis(analysis, step) {
     analysis.countedMarkLocations = Array.isArray(analysis.countedMarkLocations)
         ? analysis.countedMarkLocations.filter(location => typeof location === 'string' && location.trim())
         : [];
-    analysis.damageSeverity = String(analysis.damageSeverity || '').toLowerCase();
+    analysis.damageSeverity = String(analysis.damageSeverity || analysis.severity || '').toLowerCase();
     analysis.testSquareQuality = String(analysis.testSquareQuality || '').toLowerCase();
 
     // Normalize common model wording without turning prose into a hail finding.
-    if (analysis.damageSeverity === 'minor') analysis.damageSeverity = 'light';
-    if (analysis.damageSeverity === 'medium') analysis.damageSeverity = 'moderate';
-    if (analysis.damageSeverity === 'major') analysis.damageSeverity = 'severe';
+    if (analysis.damageSeverity.includes('minor')) analysis.damageSeverity = 'light';
+    if (analysis.damageSeverity.includes('medium')) analysis.damageSeverity = 'moderate';
+    if (analysis.damageSeverity.includes('major')) analysis.damageSeverity = 'severe';
+    if (analysis.damageSeverity.includes('moderate')) analysis.damageSeverity = 'moderate';
+    if (analysis.damageSeverity.includes('severe')) analysis.damageSeverity = 'severe';
+    if (analysis.damageSeverity.includes('light')) analysis.damageSeverity = 'light';
+
+    if (['inspection_notation', 'inspector_annotation', 'chalk_notation', 'documented_notation'].includes(analysis.countBasis)) {
+        analysis.countBasis = 'inspector_notation';
+    }
+    if (analysis.countConfidence.includes('high')) analysis.countConfidence = 'high';
+    else if (analysis.countConfidence.includes('medium')) analysis.countConfidence = 'medium';
+    else if (analysis.countConfidence.includes('low')) analysis.countConfidence = 'low';
 
     const notationLowerBound = (analysis.inspectorHailNotation || '').match(/(\d+)\s*\+/);
     if (notationLowerBound) {
