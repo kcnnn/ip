@@ -331,7 +331,7 @@ async function analyzeHailDamageWithChatGPT(imageData, step) {
    - Are there signs of granule loss around impact points?
    - Any bruising or soft spots visible?
 
-For this documentation workflow, do not infer hail damage from ordinary shingle texture, shadows, or granule variation. Only set "hailDamageDetected" to true when clear, reviewable impact evidence is visible within a marked test square. If the test square or marked/circled candidate hits are not clearly visible, return false, a hit count of 0, and severity "none".
+For this documentation workflow, count only distinct candidate hits that are visibly circled or marked in chalk and lie inside the marked test-square boundary. Do not estimate unmarked impacts from ordinary shingle texture, shadows, or granule variation. Only set "hailDamageDetected" to true when one or more clear, reviewable chalk-marked candidate hits are visible. If the test square or marked/circled candidate hits are not clearly visible, return false, a count of 0, and severity "none".
 
 4. Test Square Setup:
    - Is the test square properly positioned?
@@ -348,7 +348,7 @@ Please respond in JSON format with the following structure:
   "confidence": number (0-100),
   "testSquareQuality": "excellent" | "good" | "fair" | "poor",
   "hailDamageDetected": boolean,
-  "hailHitCount": number,
+  "circledHailHitCount": number,
   "damageSeverity": "none" | "light" | "moderate" | "severe",
   "issues": [
     {
@@ -514,17 +514,20 @@ function validateHailAnalysis(analysis, step) {
     }
 
     analysis.hailDamageDetected = normalizeBoolean(analysis.hailDamageDetected);
-    analysis.hailHitCount = Number(analysis.hailHitCount);
+    // Accept the previous field name too, but store one authoritative count.
+    analysis.circledHailHitCount = Number(analysis.circledHailHitCount ?? analysis.hailHitCount);
     analysis.damageSeverity = String(analysis.damageSeverity || '').toLowerCase();
     analysis.testSquareQuality = String(analysis.testSquareQuality || '').toLowerCase();
 
     const validDetection = typeof analysis.hailDamageDetected === 'boolean';
-    const validCount = Number.isInteger(analysis.hailHitCount) && analysis.hailHitCount >= 0;
+    const validCount = Number.isInteger(analysis.circledHailHitCount) && analysis.circledHailHitCount >= 0;
     const validSeverity = ['none', 'light', 'moderate', 'severe'].includes(analysis.damageSeverity);
     const contradictoryFinding = analysis.hailDamageDetected === true &&
-        (analysis.hailHitCount === 0 || analysis.damageSeverity === 'none');
+        (analysis.circledHailHitCount === 0 || analysis.damageSeverity === 'none');
+    const contradictoryNegative = analysis.hailDamageDetected === false &&
+        (analysis.circledHailHitCount !== 0 || analysis.damageSeverity !== 'none');
 
-    if (!validDetection || !validCount || !validSeverity || contradictoryFinding) {
+    if (!validDetection || !validCount || !validSeverity || contradictoryFinding || contradictoryNegative) {
         return unverifiedHailAnalysis();
     }
 
@@ -555,7 +558,7 @@ function unverifiedHailAnalysis() {
         confidence: null,
         testSquareQuality: 'unverified',
         hailDamageDetected: null,
-        hailHitCount: null,
+        circledHailHitCount: null,
         damageSeverity: null,
         issues: [],
         recommendations: ['Retake the photo with the test square boundary and any candidate hits clearly marked for human review.'],
@@ -629,7 +632,7 @@ function displayAIResults(results) {
             <p>Test Square Quality: ${results.testSquareQuality.charAt(0).toUpperCase() + results.testSquareQuality.slice(1)}</p>
             <p>Automated observation — human verification required</p>
             <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
-            <p>Hail Hits Count: ${results.hailHitCount}</p>
+            <p>Circled hail hits in test square: ${results.circledHailHitCount}</p>
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
     } else if (results.hailHitVisible !== undefined) {
