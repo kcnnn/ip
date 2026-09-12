@@ -94,8 +94,8 @@ body {
 
 .camera-container, .photo-preview, .compass-container { overflow: hidden; border: 1px solid var(--trv-charcoal); border-radius: 0; }.camera-preview { background: var(--trv-charcoal); }.camera-placeholder { background: linear-gradient(135deg, #3c3f42, #131517); }.camera-placeholder p { color: #fff; }.camera-icon { color: var(--trv-yellow); }
 /* Preserve the whole uploaded image. Filling the box with `cover` crops inspection evidence. */
-.photo-preview { display: grid; place-items: center; background: #131517; }
-.photo-preview img { display: block; width: 100%; height: 100%; object-fit: contain !important; }
+.photo-preview { display: block; height: auto !important; background: #131517; }
+.photo-preview img { display: block; width: 100%; height: auto !important; max-width: 100%; object-fit: initial !important; }
 .checklist-item, .stat-item, .feature-item { background: #fff; border-color: var(--trv-line); border-radius: 0; box-shadow: none; }.checklist-item.current { background: #fef8f2; border-color: #f5b068; }.checklist-item.completed { background: #f4fbf7; border-color: #b5d9b3; }.checklist-item.current .checklist-icon { background: var(--trv-red); color: #fff; }.stat-number { color: var(--trv-red); }
 
 button, .action-btn, .nav-btn, .camera-btn, .start-button, .accessory-btn, .complete-btn, .capture-btn, .confirm-btn, .continue-btn, .next-btn {
