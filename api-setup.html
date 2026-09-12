@@ -42,7 +42,7 @@
                                     <span class="btn-icon">⏭️</span>
                                     Skip for Now
                                 </button>
-                                <button class="action-btn primary" onclick="saveAPIKey()">
+                                <button class="action-btn primary" id="saveApiKeyButton" onclick="saveAPIKey()">
                                     <span class="btn-icon">💾</span>
                                     Save API Key
                                 </button>
@@ -148,15 +148,16 @@
                 successMsg.innerHTML = '✅ API key saved! Redirecting to inspection...';
                 formGroup.appendChild(successMsg);
             } else if (status === 'configured') {
-                apiInput.value = 'API key already configured';
+                apiInput.value = '';
+                apiInput.placeholder = 'A key is saved — enter a replacement key';
                 apiInput.style.background = '#e3f2fd';
                 apiInput.style.color = '#1565c0';
-                apiInput.disabled = true;
+                document.getElementById('saveApiKeyButton').innerHTML = '<span class="btn-icon">🔄</span> Replace API Key';
                 
                 // Show configured message
                 const configuredMsg = document.createElement('div');
                 configuredMsg.className = 'success-message';
-                configuredMsg.innerHTML = '✅ API key already configured. You can proceed to inspection.';
+                configuredMsg.innerHTML = '✅ An API key is saved. Enter a new key above to replace it.';
                 formGroup.appendChild(configuredMsg);
             }
         }
