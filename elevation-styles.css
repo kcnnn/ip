@@ -92,3 +92,10 @@ body { background: #fff; color: var(--trv-charcoal); font-family: "Batterson San
 .checklist-note { margin: 1.15rem 0 0; padding: 1rem 0 0; border-top-color: #e6e7e7; color: #6b6d71; font-size: .82rem; }
 
 @media (max-width: 760px) { .elevation-checklist { padding: 1.1rem; } }
+
+/* Replace the decorative viewfinder with a simple, useful camera-ready state. */
+.camera-preview { min-height: 240px; height: 280px; background: #f7f8f8; border: 1px dashed #b5b6b8; border-radius: 10px; }
+.camera-placeholder { display: grid; width: 100%; height: 100%; place-content: center; justify-items: center; gap: .85rem; background: transparent; color: var(--trv-charcoal); }
+.camera-placeholder::before, .camera-placeholder::after { display: none; }
+.camera-placeholder-copy { margin: 0; text-align: center; }.camera-placeholder-copy strong { color: var(--trv-charcoal); font-size: 1.05rem; }.camera-placeholder-copy p { max-width: 18rem; margin: .3rem 0 0; color: var(--trv-gray); font-size: .88rem; }
+.camera-symbol { position: relative; width: 48px; height: 36px; border: 2px solid var(--trv-red); border-radius: 5px; }.camera-symbol::before { position: absolute; top: 7px; left: 13px; width: 16px; height: 16px; content: ""; border: 2px solid var(--trv-red); border-radius: 50%; }.camera-symbol::after { position: absolute; top: -7px; left: 7px; width: 15px; height: 6px; content: ""; background: var(--trv-red); border-radius: 2px 2px 0 0; }
