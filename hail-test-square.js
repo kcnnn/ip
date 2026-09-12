@@ -597,7 +597,7 @@ function validateHailAnalysis(analysis, step) {
         (analysis.circledHailHitCount !== 0 || analysis.damageSeverity !== 'none');
 
     if (!validDetection || !validCount || !validCountBasis || !validInspectorNotation || !validCountConfidence || !validCountLocations || !validSeverity || contradictoryFinding || contradictoryNegative) {
-        return unverifiedHailAnalysis();
+        return unverifiedHailAnalysis(analysis);
     }
 
     if (analysis.countBasis === 'counted_circles' && analysis.countedMarkLocations.length === 0) {
@@ -620,13 +620,27 @@ function normalizeBoolean(value) {
 // Never guess a hail finding from unstructured model text.
 function parseTextResponse(text, step) {
     if (step === 'test-square') {
-        return unverifiedHailAnalysis();
+        return unverifiedHailAnalysis(text);
     }
 
     return unverifiedCloseupAnalysis();
 }
 
-function unverifiedHailAnalysis() {
+function unverifiedHailAnalysis(source) {
+    const sourceText = typeof source === 'string' ? source : JSON.stringify(source || {});
+    const normalizedText = sourceText.toLowerCase();
+    const visualObservations = [];
+
+    if (/(full|entire|complete).{0,40}(test square|square)|(test square|square).{0,40}(full|entire|complete)/i.test(sourceText)) {
+        visualObservations.push('The full test-square area appears to be shown.');
+    }
+    if (/(chalk.{0,40}(circle|circled|mark)|(?:circle|circled|mark).{0,40}chalk)/i.test(sourceText)) {
+        visualObservations.push('Chalk circles or markings are visible around candidate areas.');
+    }
+    if (/\d+\s*\+/.test(sourceText)) {
+        visualObservations.push('A chalk count notation with a lower-bound (+) marker is visible.');
+    }
+
     return {
         analysisUnavailable: true,
         overallQuality: 'needs_improvement',
@@ -635,8 +649,9 @@ function unverifiedHailAnalysis() {
         hailDamageDetected: null,
         circledHailHitCount: null,
         damageSeverity: null,
+        visualObservations,
         issues: [],
-        recommendations: ['Retake the photo with the test square boundary and any candidate hits clearly marked for human review.'],
+        recommendations: ['Review the captured chalk markings and complete human verification before recording a hail finding.'],
         shouldRetake: false
     };
 }
@@ -694,6 +709,7 @@ function displayAIResults(results) {
             <h4>Test Square Review</h4>
             <p>Unable to verify a hail-damage assessment from this upload.</p>
             <p>Human review is required before recording a hail finding.</p>
+            ${results.visualObservations?.length ? `<div class="visual-observations"><strong>Automated visual observations</strong><ul>${results.visualObservations.map(observation => `<li>${observation}</li>`).join('')}</ul></div>` : ''}
         </div>`;
     } else if (results.analysisUnavailable && results.hailHitVisible !== undefined) {
         html += `<div class="test-square-analysis test-square-poor">
