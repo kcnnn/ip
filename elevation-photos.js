@@ -53,6 +53,7 @@ const aiResults = document.getElementById('aiResults');
 const nextBtn = document.getElementById('nextBtn');
 const progressFill = document.getElementById('progressFill');
 const progressText = document.getElementById('progressText');
+const captureReadyTitle = document.getElementById('captureReadyTitle');
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -75,6 +76,7 @@ function updateElevationDisplay() {
     elevationTitle.textContent = currentElevation.name;
     elevationIcon.textContent = currentElevation.icon;
     elevationInstructions.textContent = currentElevation.instructions;
+    captureReadyTitle.textContent = `Ready for the ${currentElevation.key}`;
     
     // Update status
     const statusBadge = elevationStatus.querySelector('.status-badge');
