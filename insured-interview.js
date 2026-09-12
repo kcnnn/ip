@@ -358,7 +358,7 @@ function showReportGeneration(data) {
         
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: #2563eb;
             width: 0%;
             transition: width 0.5s ease;
         }
@@ -757,9 +757,9 @@ function showAIReport(report, interviewData) {
         }
         
         .action-btn.primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #2563eb;
             color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
         }
         
         .action-btn.secondary {

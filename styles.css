@@ -21,7 +21,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #eef3f8;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -46,6 +46,8 @@ body {
     text-align: center;
     padding: 2rem 0;
     color: white;
+    background: #1f4f7a;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
 }
 
 .title {
@@ -134,7 +136,7 @@ body {
 
 /* Start button */
 .start-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #2563eb;
     color: white;
     border: none;
     padding: 1rem 3rem;
@@ -146,14 +148,14 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 1rem;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .start-button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 15px 40px rgba(37, 99, 235, 0.6);
 }
 
 .start-button:active {

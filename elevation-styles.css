@@ -111,7 +111,7 @@
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #2563eb;
 }
 
 .elevation-instructions p {
@@ -143,7 +143,7 @@
     align-items: center;
     justify-content: center;
     color: white;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #2563eb;
 }
 
 .camera-icon {
@@ -185,9 +185,9 @@
 }
 
 .camera-btn.primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #2563eb;
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
 }
 
 .camera-btn.secondary {
@@ -358,7 +358,7 @@
     width: 40px;
     height: 40px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
+    border-top: 4px solid #2563eb;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
@@ -397,9 +397,9 @@
 }
 
 .nav-btn.primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #2563eb;
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
 }
 
 .nav-btn.secondary {

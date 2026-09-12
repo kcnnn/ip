@@ -129,7 +129,7 @@
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #2563eb;
 }
 
 .discussion-points h3 {
@@ -172,8 +172,8 @@
 
 .form-textarea:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .form-input {
@@ -187,8 +187,8 @@
 
 .form-input:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* Notes sections */
@@ -265,7 +265,7 @@
 }
 
 .radio-option:hover {
-    border-color: #667eea;
+    border-color: #2563eb;
     background: #f8f9ff;
 }
 
@@ -283,8 +283,8 @@
 }
 
 .radio-option input[type="radio"]:checked + .radio-custom {
-    border-color: #667eea;
-    background: #667eea;
+    border-color: #2563eb;
+    background: #2563eb;
 }
 
 .radio-option input[type="radio"]:checked + .radio-custom::after {
@@ -343,7 +343,7 @@
 .stat-number {
     font-size: 2rem;
     font-weight: bold;
-    color: #667eea;
+    color: #2563eb;
     margin-bottom: 0.5rem;
 }
 
@@ -356,10 +356,10 @@
 .total-photos {
     text-align: center;
     padding: 2rem;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #2563eb;
     color: white;
     border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
 }
 
 .total-number {
@@ -461,9 +461,9 @@
 }
 
 .nav-btn.primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #2563eb;
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
 }
 
 .nav-btn.secondary {
