@@ -50,3 +50,45 @@ body { background: #fff; color: var(--trv-charcoal); font-family: "Batterson San
 .elevation-checklist { border-top: 4px solid var(--trv-charcoal); }.checklist-count { border-radius: 0; color: var(--trv-charcoal); background: #f2f5f7; }.checklist-item { border-radius: 0; }.checklist-item.current { background: #fef8f2; border-color: #f5b068; }.checklist-item.current .checklist-icon { background: var(--trv-red); border-radius: 0; }.checklist-icon { border-radius: 0; }.checklist-note { color: var(--trv-gray); }.navigation-buttons { border-top-color: var(--trv-line); }
 
 @media (max-width: 760px) { .header { padding: 0 1rem 2rem; }.brand-bar { height: 66px; margin-bottom: 1.9rem; }.header-copy { margin-top: 1.65rem; }.page-title { font-size: clamp(2.05rem, 9vw, 3rem); } }
+
+/* Elevation checklist: a compact, readable capture tracker. */
+.elevation-checklist {
+    padding: 1.25rem;
+    border: 1px solid #dedfe0;
+    border-top: 4px solid var(--trv-red);
+    border-radius: 14px;
+    box-shadow: 0 10px 26px rgba(39, 42, 45, .07);
+}
+.checklist-heading { align-items: center; margin-bottom: 1.1rem; }
+.elevation-checklist h3 { font-size: 1.22rem; letter-spacing: -.02em; }
+.checklist-count { padding: .42rem .58rem; color: var(--trv-red); background: #fff1f1; border-radius: 6px; font-size: .78rem; }
+.checklist-items { display: flex; flex-direction: column; gap: .55rem; }
+.checklist-item {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 60px;
+    width: 100%;
+    padding: .7rem .75rem;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+}
+.checklist-number {
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    color: #6b6d71;
+    background: #f1f2f2;
+    border-radius: 50%;
+    font-size: .7rem;
+    font-weight: 850;
+}
+.checklist-text { color: var(--trv-charcoal); font-size: .92rem; font-weight: 700; }
+.checklist-status { padding: .28rem .42rem; color: #6b6d71; background: #f1f2f2; border-radius: 999px; font-size: .65rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.checklist-item.current { background: #fff7f7; border-color: #f3b5b6; }.checklist-item.current .checklist-number { color: #fff; background: var(--trv-red); }.checklist-item.current .checklist-status { color: #a50e10; background: #ffe2e2; }
+.checklist-item.completed { background: #f4fbf7; border-color: #b5d9b3; }.checklist-item.completed .checklist-number { color: #fff; background: #27a555; }.checklist-item.completed .checklist-status { color: #165e32; background: #d6ead5; }
+.checklist-note { margin: 1.15rem 0 0; padding: 1rem 0 0; border-top-color: #e6e7e7; color: #6b6d71; font-size: .82rem; }
+
+@media (max-width: 760px) { .elevation-checklist { padding: 1.1rem; } }

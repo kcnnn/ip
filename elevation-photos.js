@@ -105,13 +105,13 @@ function updateChecklist() {
         
         if (index === currentElevationIndex) {
             item.classList.add('current');
-            statusIcon.textContent = '📷';
+            statusIcon.textContent = 'Current';
         } else if (capturedPhotos[elevationKey]) {
             item.classList.add('completed');
-            statusIcon.textContent = '✅';
+            statusIcon.textContent = 'Captured';
         } else {
             item.classList.add('pending');
-            statusIcon.textContent = '⏳';
+            statusIcon.textContent = 'Next';
         }
     });
 
