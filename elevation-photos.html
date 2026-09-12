@@ -5,37 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Elevation Photos - Inspection Wizard</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="elevation-styles.css">
     <link rel="stylesheet" href="refined-theme.css">
+    <link rel="stylesheet" href="elevation-styles.css">
 </head>
 <body>
     <div class="container">
         <!-- Header with progress -->
         <header class="header">
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+            <div class="workflow-header">
+                <div class="brand-bar">
+                    <span class="brand-name">Travelers<span class="brand-mark" aria-hidden="true"></span></span>
+                    <span class="brand-context">Claim documentation</span>
                 </div>
-                <span class="progress-text" id="progressText">Step 1 of 4</span>
+                <div class="progress-container">
+                    <div class="progress-meta">
+                        <span class="eyebrow">Exterior documentation</span>
+                        <span class="progress-text" id="progressText">Step 1 of 4</span>
+                    </div>
+                    <div class="progress-bar" aria-label="Inspection progress">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+                <div class="header-copy">
+                    <h1 class="page-title">Document every side of the home.</h1>
+                    <p class="page-subtitle">Capture one clear, wide photo of each elevation for the claim file.</p>
+                </div>
             </div>
-            <h1 class="page-title">Home Elevation Photos</h1>
-            <p class="page-subtitle">Capture photos of all four sides of the property</p>
         </header>
 
         <!-- Main content -->
         <main class="main-content">
             <!-- Current elevation section -->
-            <div class="elevation-section" id="elevationSection">
+            <div class="capture-layout">
+            <section class="elevation-section" id="elevationSection">
                 <div class="elevation-card">
                     <div class="elevation-header">
-                        <div class="elevation-icon" id="elevationIcon">🏠</div>
-                        <h2 class="elevation-title" id="elevationTitle">Front Elevation</h2>
+                        <div class="elevation-icon" id="elevationIcon">01</div>
+                        <div class="elevation-heading">
+                            <span class="capture-label">Now capturing</span>
+                            <h2 class="elevation-title" id="elevationTitle">Front Elevation</h2>
+                        </div>
                         <div class="elevation-status" id="elevationStatus">
                             <span class="status-badge pending">Pending</span>
                         </div>
                     </div>
                     
                     <div class="elevation-instructions">
+                        <span class="instruction-icon" aria-hidden="true">↗</span>
                         <p id="elevationInstructions">
                             Position yourself at the front of the property. Take a clear photo showing the entire front elevation from a good distance.
                         </p>
@@ -45,8 +61,11 @@
                     <div class="camera-container">
                         <div class="camera-preview" id="cameraPreview">
                             <div class="camera-placeholder">
-                                <div class="camera-icon">📷</div>
-                                <p>Camera will appear here</p>
+                                <div class="capture-frame" aria-hidden="true"><span></span></div>
+                                <div class="camera-placeholder-copy">
+                                    <strong>Ready for the front</strong>
+                                    <p>Take a step back so the entire side of the home fits in frame.</p>
+                                </div>
                             </div>
                         </div>
                         
@@ -77,11 +96,17 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Elevation checklist -->
-            <div class="elevation-checklist">
-                <h3>Photo Checklist</h3>
+            <aside class="elevation-checklist">
+                <div class="checklist-heading">
+                    <div>
+                        <span class="capture-label">Property record</span>
+                        <h3>Your photo list</h3>
+                    </div>
+                    <span class="checklist-count">0 / 4</span>
+                </div>
                 <div class="checklist-items">
                     <div class="checklist-item" data-elevation="front">
                         <div class="checklist-icon">📷</div>
@@ -104,6 +129,8 @@
                         <div class="checklist-status">⏳</div>
                     </div>
                 </div>
+                <p class="checklist-note">Quick tip: stand back, keep the shot level, and include the full roofline.</p>
+            </aside>
             </div>
 
             <!-- AI Analysis Section -->

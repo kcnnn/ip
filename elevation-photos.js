@@ -4,25 +4,25 @@
 const elevations = [
     {
         name: 'Front Elevation',
-        icon: '🏠',
+        icon: '01',
         instructions: 'Position yourself at the front of the property. Take a clear photo showing the entire front elevation from a good distance.',
         key: 'front'
     },
     {
         name: 'Right Elevation', 
-        icon: '🏘️',
+        icon: '02',
         instructions: 'Move to the right side of the property. Capture the entire right elevation with good lighting and clear visibility.',
         key: 'right'
     },
     {
         name: 'Rear Elevation',
-        icon: '🏡',
+        icon: '03',
         instructions: 'Go to the back of the property. Take a comprehensive photo of the rear elevation.',
         key: 'rear'
     },
     {
         name: 'Left Elevation',
-        icon: '🏘️',
+        icon: '04',
         instructions: 'Position yourself at the left side of the property. Capture the complete left elevation.',
         key: 'left'
     }
@@ -112,6 +112,12 @@ function updateChecklist() {
             statusIcon.textContent = '⏳';
         }
     });
+
+    const completedCount = Object.keys(capturedPhotos).length;
+    const checklistCount = document.querySelector('.checklist-count');
+    if (checklistCount) {
+        checklistCount.textContent = `${completedCount} / ${elevations.length}`;
+    }
 }
 
 function openCamera() {

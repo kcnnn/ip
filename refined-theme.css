@@ -1,138 +1,128 @@
-/* Shared visual system: calm, practical, field-friendly. */
+/* Shared Travelers-inspired visual system for the complete claim workflow. */
 :root {
-    --ink: #202b36;
-    --muted: #66727f;
-    --canvas: #f6f5f1;
-    --surface: #ffffff;
-    --line: #dce2e7;
-    --brand: #2f6b4f;
-    --brand-strong: #24533c;
-    --brand-soft: #edf5ee;
-    --shadow: 0 10px 30px rgba(25, 38, 48, 0.08);
-    --shadow-hover: 0 16px 36px rgba(25, 38, 48, 0.13);
+    --trv-red: #e01719;
+    --trv-red-dark: #af1214;
+    --trv-charcoal: #272a2d;
+    --trv-navy: #003557;
+    --trv-muted: #6b6d71;
+    --trv-line: #dadbdb;
+    --trv-soft: #f6f6f6;
+    --trv-yellow: #f7c800;
+    --trv-white: #fff;
 }
 
 body {
-    background: var(--canvas);
-    color: var(--ink);
-    letter-spacing: -0.01em;
+    background: var(--trv-white);
+    color: var(--trv-charcoal);
+    font-family: "Batterson Sans", BattersonSans, Arial, Helvetica, sans-serif;
+    letter-spacing: 0;
 }
 
+.container { max-width: none; }
+
 .header {
-    background: #293241;
-    padding: 2rem max(1.25rem, calc((100vw - 1120px) / 2));
+    position: relative;
+    padding: 6.25rem max(1.25rem, calc((100vw - 1120px) / 2)) 2.75rem;
+    color: var(--trv-charcoal);
+    background: #fff;
+    border-bottom: 1px solid var(--trv-line);
     box-shadow: none;
 }
 
-.page-title, .title { letter-spacing: -0.035em; }
-.page-subtitle, .subtitle { max-width: 42rem; margin-inline: auto; }
+.header::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    height: 4.1rem;
+    padding: 0 max(1.25rem, calc((100vw - 1120px) / 2));
+    box-sizing: border-box;
+    content: "TRAVELERS  /  CLAIM DOCUMENTATION";
+    color: var(--trv-charcoal);
+    background: #fff;
+    border-bottom: 1px solid var(--trv-line);
+    font-size: .78rem;
+    font-style: italic;
+    font-weight: 900;
+    letter-spacing: .025em;
+}
+
+.title, .page-title, .hero-title {
+    color: var(--trv-charcoal) !important;
+    font-family: "Batterson Slab", BattersonSlab, Georgia, serif;
+    font-weight: 700;
+    letter-spacing: -.035em;
+    text-shadow: none;
+}
+
+.title, .page-title { font-size: clamp(2.1rem, 4vw, 3.5rem); line-height: 1.08; }
+.subtitle, .page-subtitle { max-width: 40rem; margin: .75rem auto 0; color: #46494d !important; font-size: 1.05rem; opacity: 1; }
+.progress-container { max-width: 1120px; margin: 0 auto 1.5rem; }
+.progress-bar { height: 5px; background: #e9e9e9; border-radius: 0; }.progress-fill { background: var(--trv-red); }.progress-text { color: var(--trv-muted); font-size: .8rem; font-weight: 800; }
 
 .main-content {
     display: block;
     width: min(100%, 1120px);
     margin: 0 auto;
-    padding: 2rem 1.25rem 3rem;
+    padding: 2rem 1.25rem 4rem;
 }
 
-.main-content:has(.hero-section) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.main-content:has(.hero-section) { display: flex; align-items: center; justify-content: center; }
+.hero-section, .elevation-card, .inspection-card, .photo-card, .hail-hits-card, .closeup-card, .interview-card, .completion-checklist, .setup-card, .elevation-checklist, .inspection-checklist, .photo-checklist, .ai-analysis, .features-preview {
+    background: #fff;
+    border: 1px solid var(--trv-line);
+    border-radius: 0;
+    box-shadow: none;
 }
 
-.hero-section,
-.elevation-card, .inspection-card, .photo-card, .hail-hits-card, .closeup-card,
-.interview-card, .completion-checklist, .setup-card {
-    border: 1px solid rgba(220, 226, 231, 0.9);
-    border-radius: 18px;
-    box-shadow: var(--shadow);
-}
+.hero-section { max-width: 850px; padding: clamp(1.5rem, 5vw, 4rem); text-align: left; border-top: 5px solid var(--trv-red); }
+.hero-title { font-size: clamp(2rem, 4vw, 3.2rem); }.hero-description { max-width: 48rem; color: #46494d; }
+.features { gap: 0; margin: 2rem 0; border-top: 1px solid var(--trv-line); border-left: 1px solid var(--trv-line); }
+.feature { min-height: 175px; padding: 1.35rem; background: #fff; border-right: 1px solid var(--trv-line); border-bottom: 1px solid var(--trv-line); border-radius: 0; }.feature:hover { transform: none; box-shadow: none; background: #fef8f2; }.feature-icon { font-size: 1.75rem; }.feature h3, .feature p { color: var(--trv-charcoal); }.feature p { color: var(--trv-muted); }
 
-.hero-section { max-width: 880px; }
-.elevation-section, .inspection-section, .photo-section, .closeup-section, .interview-section { width: 100%; }
+.section-header, .elevation-header, .inspection-header, .photo-header, .setup-header { padding-bottom: 1rem; border-bottom: 1px solid var(--trv-line); }
+.section-icon, .elevation-icon, .inspection-icon, .photo-icon, .setup-icon { background: var(--trv-soft); border-radius: 0; }.section-header h2, .elevation-header h2, .inspection-header h2, .photo-header h2, .setup-header h2 { color: var(--trv-charcoal); }
+.status-badge { border-radius: 0; font-weight: 800; }.status-badge.pending { background: #fcedba; color: #665004; }.status-badge.completed { background: #f4fbf7; color: #165e32; }.status-badge.analyzing { background: #f2fafe; color: #005389; }
 
-.elevation-card, .inspection-card, .photo-card, .hail-hits-card, .closeup-card,
-.interview-card, .completion-checklist, .setup-card {
-    max-width: 920px;
-    margin-inline: auto;
-}
+.elevation-card, .inspection-card, .photo-card, .hail-hits-card, .closeup-card, .interview-card, .completion-checklist, .setup-card { border-top: 4px solid var(--trv-red); }
+.elevation-instructions, .inspection-instructions, .photo-instructions, .safety-reminder, .setup-info, .security-note { background: var(--trv-soft); border-radius: 0; border-left: 3px solid var(--trv-red); }
+.elevation-instructions p, .inspection-instructions p, .photo-instructions p { color: #46494d; }
+.inspection-tips, .measurement-tips, .accessory-tips, .overview-tips, .hail-tips { border-color: var(--trv-line); background: #fff; }
+.inspection-tips h4, .measurement-tips h4, .accessory-tips h4, .overview-tips h4, .hail-tips h4 { color: var(--trv-charcoal); }
 
-.section-header, .elevation-header, .inspection-header, .photo-header {
-    border-bottom-color: var(--line);
-}
+.camera-container, .photo-preview, .compass-container { overflow: hidden; border: 1px solid var(--trv-charcoal); border-radius: 0; }.camera-preview { background: var(--trv-charcoal); }.camera-placeholder { background: linear-gradient(135deg, #3c3f42, #131517); }.camera-placeholder p { color: #fff; }.camera-icon { color: var(--trv-yellow); }
+.checklist-item, .stat-item, .feature-item { background: #fff; border-color: var(--trv-line); border-radius: 0; box-shadow: none; }.checklist-item.current { background: #fef8f2; border-color: #f5b068; }.checklist-item.completed { background: #f4fbf7; border-color: #b5d9b3; }.checklist-item.current .checklist-icon { background: var(--trv-red); color: #fff; }.stat-number { color: var(--trv-red); }
 
-.section-icon, .elevation-icon, .inspection-icon, .photo-icon {
-    background: var(--brand-soft);
-}
-
-.section-header h2, .elevation-header h2, .inspection-header h2, .photo-header h2,
-.hero-title { color: var(--ink); }
-
-.progress-bar { background: rgba(255, 255, 255, 0.24); }
-.progress-fill { background: #72b58c; }
-
-.action-btn, .nav-btn.primary, .start-button, .capture-btn, .confirm-btn,
-.continue-btn, .next-btn, button.primary {
-    background: var(--brand) !important;
-    border-color: var(--brand) !important;
-    box-shadow: 0 6px 14px rgba(47, 107, 79, 0.2) !important;
-}
-
-.action-btn:hover, .nav-btn.primary:hover, .start-button:hover, .capture-btn:hover,
-.confirm-btn:hover, .continue-btn:hover, .next-btn:hover, button.primary:hover {
-    background: var(--brand-strong) !important;
-    box-shadow: 0 9px 18px rgba(47, 107, 79, 0.27) !important;
-    transform: translateY(-1px);
-}
-
-.action-btn.secondary, .nav-btn.secondary, .retake-btn, .switch-camera-btn {
-    background: var(--surface) !important;
-    color: var(--ink) !important;
-    border: 1px solid var(--line) !important;
+button, .action-btn, .nav-btn, .camera-btn, .start-button, .accessory-btn, .complete-btn, .capture-btn, .confirm-btn, .continue-btn, .next-btn {
+    min-height: 46px;
+    background: #fff !important;
+    color: var(--trv-charcoal) !important;
+    border: 1px solid #b5b6b8 !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
+    font-family: inherit;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
 }
 
-button, .action-btn, .nav-btn, .start-button, .radio-option {
-    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+.start-button, .camera-btn.primary, .action-btn.primary, .nav-btn.primary, .complete-btn, .confirm-btn, #nextBtn:not(:disabled), button.primary {
+    background: var(--trv-red) !important;
+    color: #fff !important;
+    border-color: var(--trv-red) !important;
 }
 
-.form-input, .form-textarea, .api-input {
-    border-color: var(--line) !important;
-    background: #fcfdfd;
-}
+button:hover:not(:disabled), .accessory-btn:hover { background: #f6f6f6 !important; border-color: #6b6d71 !important; transform: none; }
+.start-button:hover, .camera-btn.primary:hover, .action-btn.primary:hover, .nav-btn.primary:hover, .complete-btn:hover, .confirm-btn:hover, #nextBtn:not(:disabled):hover, button.primary:hover { background: var(--trv-red-dark) !important; border-color: var(--trv-red-dark) !important; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid #99d3f7; outline-offset: 2px; }
+button:disabled { opacity: .45; }
 
-.form-input:focus, .form-textarea:focus, .api-input:focus {
-    border-color: var(--brand) !important;
-    box-shadow: 0 0 0 3px rgba(47, 107, 79, 0.13) !important;
-}
-
-.radio-option:hover, .radio-option:has(input:checked) {
-    border-color: var(--brand) !important;
-    background: var(--brand-soft) !important;
-}
-
-.radio-option input[type="radio"]:checked + .radio-custom {
-    border-color: var(--brand) !important;
-    background: var(--brand) !important;
-}
-
-.camera-container, .photo-preview, .compass-container {
-    border-radius: 14px;
-    overflow: hidden;
-}
-
-.stat-item, .checklist-item {
-    border-color: var(--line);
-    background: #fbfcfc;
-}
-
-.stat-number { color: var(--brand); }
-.total-photos { background: #293241; box-shadow: none; }
+.form-input, .form-textarea, .api-input { color: var(--trv-charcoal); background: #fff; border: 1px solid #909294 !important; border-radius: 0 !important; }.form-input:focus, .form-textarea:focus, .api-input:focus { border-color: var(--trv-navy) !important; box-shadow: 0 0 0 3px #cce9fb !important; }
+.radio-option { min-height: 64px; background: #fff; border: 1px solid var(--trv-line); border-radius: 0; box-shadow: none; }.radio-option:hover, .radio-option:has(input:checked) { background: #f2fafe !important; border-color: #66bdf3 !important; }.radio-option input[type="radio"]:checked + .radio-custom { background: var(--trv-red) !important; border-color: var(--trv-red) !important; }
+.navigation-buttons { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--trv-line); }.footer { color: var(--trv-muted); }
 
 @media (max-width: 700px) {
-    .header { padding: 1.5rem 1rem; }
-    .main-content { padding: 1.25rem 1rem 2rem; }
-    .hero-section, .elevation-card, .inspection-card, .photo-card, .hail-hits-card,
-    .closeup-card, .interview-card, .completion-checklist, .setup-card { border-radius: 14px; }
-    .section-header { align-items: center; }
+    .header { padding: 5.2rem 1rem 1.75rem; }.header::before { height: 3.5rem; padding: 0 1rem; font-size: .68rem; }.main-content { padding: 1.25rem 1rem 2.5rem; }.hero-section { padding: 1.4rem; }.features { grid-template-columns: 1fr; }.feature { min-height: auto; }.camera-controls, .photo-buttons, .navigation-buttons { gap: .6rem; }
 }
