@@ -469,12 +469,13 @@ Please respond in JSON format with the following structure:
         const analysisText = data.content?.[0]?.text || '';
         console.log('Analysis Text:', analysisText);
         
-        // Parse the JSON response
+        // Models sometimes wrap valid JSON in a code fence or a brief sentence.
+        // Extract the JSON object before deciding the response is unusable.
         try {
-            const analysis = JSON.parse(analysisText);
+            const analysis = parseStructuredAnalysis(analysisText);
             return validateHailAnalysis(analysis, step);
         } catch (parseError) {
-            // If JSON parsing fails, try to extract information from text
+            // Do not infer a hail finding from prose.
             return parseTextResponse(analysisText, step);
         }
 
@@ -484,8 +485,23 @@ Please respond in JSON format with the following structure:
     }
 }
 
+function parseStructuredAnalysis(text) {
+    const fencedJson = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    const candidate = fencedJson ? fencedJson[1] : text;
+    const objectMatch = candidate.match(/\{[\s\S]*\}/);
+
+    if (!objectMatch) {
+        throw new Error('No JSON object found in AI response');
+    }
+
+    return JSON.parse(objectMatch[0]);
+}
+
 function validateHailAnalysis(analysis, step) {
     if (step !== 'test-square') {
+        analysis.damageSeverity = String(analysis.damageSeverity || '').toLowerCase();
+        analysis.hailHitVisible = normalizeBoolean(analysis.hailHitVisible);
+        analysis.hailHitGenuine = normalizeBoolean(analysis.hailHitGenuine);
         const validVisibility = typeof analysis.hailHitVisible === 'boolean';
         const validGenuine = typeof analysis.hailHitGenuine === 'boolean';
         const validSeverity = ['none', 'light', 'moderate', 'severe'].includes(analysis.damageSeverity);
@@ -496,6 +512,11 @@ function validateHailAnalysis(analysis, step) {
             ? unverifiedCloseupAnalysis()
             : analysis;
     }
+
+    analysis.hailDamageDetected = normalizeBoolean(analysis.hailDamageDetected);
+    analysis.hailHitCount = Number(analysis.hailHitCount);
+    analysis.damageSeverity = String(analysis.damageSeverity || '').toLowerCase();
+    analysis.testSquareQuality = String(analysis.testSquareQuality || '').toLowerCase();
 
     const validDetection = typeof analysis.hailDamageDetected === 'boolean';
     const validCount = Number.isInteger(analysis.hailHitCount) && analysis.hailHitCount >= 0;
@@ -508,6 +529,14 @@ function validateHailAnalysis(analysis, step) {
     }
 
     return analysis;
+}
+
+function normalizeBoolean(value) {
+    if (value === true || value === false) return value;
+    if (typeof value === 'string' && /^(true|false)$/i.test(value.trim())) {
+        return value.trim().toLowerCase() === 'true';
+    }
+    return value;
 }
 
 // Never guess a hail finding from unstructured model text.
