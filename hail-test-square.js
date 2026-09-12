@@ -51,7 +51,7 @@ function updateStepDisplay() {
         case 'test-square':
             photoTitle.textContent = 'Test Square Full View';
             photoIcon.textContent = '📸';
-            photoInstructions.textContent = 'Take a full view photo of the 10\'x10\' test square. Ensure the entire test area is visible and clearly marked.';
+            photoInstructions.textContent = 'Take a full view photo of the 10\'x10\' test square. A normal roof-angle photo is acceptable when all four marked corners are visible.';
             closeupSection.style.display = 'none';
             break;
         case 'closeup-1':
@@ -317,9 +317,10 @@ async function analyzeHailDamageWithChatGPT(imageData, step) {
         prompt = `Analyze this hail damage test square photo for roof inspection purposes. Please evaluate:
 
 1. Test Square Quality:
-   - Is the 10'x10' test square clearly visible and properly marked?
-   - Is the entire test area captured in the photo?
-   - Are the boundaries clearly defined?
+   - Are all four marked corners of the 10'x10' test square visible in the photo?
+   - A normal oblique/roof-angle photograph is expected and acceptable. Do NOT require an overhead or perpendicular-to-roof photo.
+   - Four visible corner marks (chalk ticks, short lines, or corner identifiers) are sufficient. Do NOT require a closed chalk perimeter or continuous boundary lines.
+   - If all four corners are visible and the candidate hits can be seen, treat the test square as adequately documented even if perspective makes it appear trapezoidal.
 
 2. Photo Quality:
    - Is the image clear and in focus?
@@ -334,9 +335,9 @@ async function analyzeHailDamageWithChatGPT(imageData, step) {
 
 First read any legible inspector chalk annotations. Treat slope labels such as "B" (back slope), "F" (front slope), "L" (left), and "R" (right) as context labels — never as damage marks. Treat an annotation such as "H=10+" or "H 10+" as the inspector's documented lower-bound count, meaning "at least 10 hail hits," not an exact count and not a chalk circle. When that notation is clearly legible, preserve it verbatim in "inspectorHailNotation", set "countBasis" to "inspector_notation", and set "circledHailHitCount" to its numeric lower bound. Do not replace that documented lower bound with an invented exact total.
 
-Otherwise, make a conservative count of only distinct, fully visible candidate hits that are individually circled in chalk and lie inside the marked test-square boundary. Before returning the count, enumerate the marks from top to bottom, left to right. Count a mark only once.
+Otherwise, make a conservative count of only distinct, fully visible candidate hits that are individually circled in chalk and lie within the area defined by the four marked corners. Before returning the count, enumerate the marks from top to bottom, left to right. Count a mark only once.
 
-Exclude partial circles clipped by any image edge; chalk labels, numbers, arrows, boundary lines, strokes, and loops that do not clearly surround a candidate impact. Do not infer extra hits from ordinary shingle texture, shadows, granule variation, or unmarked impacts. Do not count a partial chalk arc unless it clearly encloses one visible candidate impact within the frame. If an exact count cannot be made confidently, set "countConfidence" to "low" and use the conservative lower count, not an estimate. Only set "hailDamageDetected" to true when one or more clear, reviewable chalk-marked candidate hits are visible. If the test square or marked/circled candidate hits are not clearly visible, return false, a count of 0, and severity "none".
+Exclude partial circles clipped by any image edge; chalk labels, numbers, arrows, corner ticks, lines, strokes, and loops that do not clearly surround a candidate impact. Do not infer extra hits from ordinary shingle texture, shadows, granule variation, or unmarked impacts. Do not count a partial chalk arc unless it clearly encloses one visible candidate impact within the frame. If an exact count cannot be made confidently, set "countConfidence" to "low" and use the conservative lower count, not an estimate. Only set "hailDamageDetected" to true when one or more clear, reviewable chalk-marked candidate hits are visible. Do not recommend an overhead shot, a closed outline, or continuous boundary lines. Only recommend a retake if fewer than four corner marks, the marked candidate hits, or the roof surface are not visible.
 
 4. Test Square Setup:
    - Is the test square properly positioned?
@@ -352,6 +353,7 @@ Please respond in JSON format with the following structure:
   "overallQuality": "good" | "needs_improvement" | "poor",
   "confidence": number (0-100),
   "testSquareQuality": "excellent" | "good" | "fair" | "poor",
+  "fourCornersVisible": boolean,
   "hailDamageDetected": boolean,
   "circledHailHitCount": number,
   "countBasis": "counted_circles" | "inspector_notation",
@@ -721,6 +723,7 @@ function displayAIResults(results) {
         html += `<div class="test-square-analysis ${testSquareClass}">
             <h4>📏 Test Square Analysis</h4>
             <p>Test Square Quality: ${results.testSquareQuality.charAt(0).toUpperCase() + results.testSquareQuality.slice(1)}</p>
+            ${typeof results.fourCornersVisible === 'boolean' ? `<p>Four marked test-square corners visible: ${results.fourCornersVisible ? 'Yes' : 'No'}</p>` : ''}
             <p>Automated observation</p>
             <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
             <p>${results.countBasis === 'inspector_notation'
