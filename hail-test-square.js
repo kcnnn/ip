@@ -332,7 +332,9 @@ async function analyzeHailDamageWithChatGPT(imageData, step) {
    - Are there signs of granule loss around impact points?
    - Any bruising or soft spots visible?
 
-For this documentation workflow, count only distinct candidate hits that are visibly circled or marked in chalk and lie inside the marked test-square boundary. Do not estimate unmarked impacts from ordinary shingle texture, shadows, or granule variation. Only set "hailDamageDetected" to true when one or more clear, reviewable chalk-marked candidate hits are visible. If the test square or marked/circled candidate hits are not clearly visible, return false, a count of 0, and severity "none".
+For this documentation workflow, make a conservative count of only distinct, fully visible candidate hits that are individually circled in chalk and lie inside the marked test-square boundary. Before returning the count, enumerate the marks from top to bottom, left to right. Count a mark only once.
+
+Exclude partial circles clipped by any image edge; chalk labels, numbers, arrows, boundary lines, strokes, and loops that do not clearly surround a candidate impact. Do not infer extra hits from ordinary shingle texture, shadows, granule variation, or unmarked impacts. Do not count a partial chalk arc unless it clearly encloses one visible candidate impact within the frame. If an exact count cannot be made confidently, set "countConfidence" to "low" and use the conservative lower count, not an estimate. Only set "hailDamageDetected" to true when one or more clear, reviewable chalk-marked candidate hits are visible. If the test square or marked/circled candidate hits are not clearly visible, return false, a count of 0, and severity "none".
 
 4. Test Square Setup:
    - Is the test square properly positioned?
@@ -350,6 +352,8 @@ Please respond in JSON format with the following structure:
   "testSquareQuality": "excellent" | "good" | "fair" | "poor",
   "hailDamageDetected": boolean,
   "circledHailHitCount": number,
+  "countConfidence": "high" | "medium" | "low",
+  "countedMarkLocations": ["short location for each counted circle, in top-to-bottom then left-to-right order"],
   "damageSeverity": "none" | "light" | "moderate" | "severe",
   "issues": [
     {
@@ -520,18 +524,24 @@ function validateHailAnalysis(analysis, step) {
     analysis.hailDamageDetected = normalizeBoolean(analysis.hailDamageDetected);
     // Accept the previous field name too, but store one authoritative count.
     analysis.circledHailHitCount = Number(analysis.circledHailHitCount ?? analysis.hailHitCount);
+    analysis.countConfidence = String(analysis.countConfidence || '').toLowerCase();
+    analysis.countedMarkLocations = Array.isArray(analysis.countedMarkLocations)
+        ? analysis.countedMarkLocations.filter(location => typeof location === 'string' && location.trim())
+        : [];
     analysis.damageSeverity = String(analysis.damageSeverity || '').toLowerCase();
     analysis.testSquareQuality = String(analysis.testSquareQuality || '').toLowerCase();
 
     const validDetection = typeof analysis.hailDamageDetected === 'boolean';
     const validCount = Number.isInteger(analysis.circledHailHitCount) && analysis.circledHailHitCount >= 0;
+    const validCountConfidence = ['high', 'medium', 'low'].includes(analysis.countConfidence);
+    const validCountLocations = analysis.countedMarkLocations.length === analysis.circledHailHitCount;
     const validSeverity = ['none', 'light', 'moderate', 'severe'].includes(analysis.damageSeverity);
     const contradictoryFinding = analysis.hailDamageDetected === true &&
         (analysis.circledHailHitCount === 0 || analysis.damageSeverity === 'none');
     const contradictoryNegative = analysis.hailDamageDetected === false &&
         (analysis.circledHailHitCount !== 0 || analysis.damageSeverity !== 'none');
 
-    if (!validDetection || !validCount || !validSeverity || contradictoryFinding || contradictoryNegative) {
+    if (!validDetection || !validCount || !validCountConfidence || !validCountLocations || !validSeverity || contradictoryFinding || contradictoryNegative) {
         return unverifiedHailAnalysis();
     }
 
@@ -638,6 +648,7 @@ function displayAIResults(results) {
             <p>Automated observation — human verification required</p>
             <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
             <p>Circled hail hits in test square: ${results.circledHailHitCount}</p>
+            <p>Count confidence: ${results.countConfidence.charAt(0).toUpperCase() + results.countConfidence.slice(1)} — verify against the photo.</p>
             ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
     } else if (results.hailHitVisible !== undefined) {
