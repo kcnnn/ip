@@ -376,7 +376,7 @@ Please respond in JSON format with the following structure:
         }
 
         const data = await response.json();
-        const analysisText = data.content?.[0]?.text || '';
+        const analysisText = getAITextContent(data);
         
         // Parse the JSON response
         try {

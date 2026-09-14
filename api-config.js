@@ -61,6 +61,16 @@ function parseDataUrl(dataUrl) {
     return { mediaType: match[1], base64Data: match[2] };
 }
 
+// Claude may return non-text blocks before its answer (for example, an
+// extended-thinking block). Read every text block rather than assuming index 0.
+function getAITextContent(responseData) {
+    return (responseData.content || [])
+        .filter(block => block?.type === 'text' && typeof block.text === 'string')
+        .map(block => block.text)
+        .join('\n')
+        .trim();
+}
+
 // Function to make API call to Claude
 async function analyzePhotoWithChatGPT(imageData, elevationType) {
     if (!isAPIKeyConfigured()) {
@@ -153,7 +163,7 @@ Respond with ONLY the raw JSON object above and nothing else - no explanation, n
         }
 
         const data = await response.json();
-        const analysisText = data.content?.[0]?.text || '';
+        const analysisText = getAITextContent(data);
 
         // Parse the JSON response
         try {

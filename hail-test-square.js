@@ -480,7 +480,7 @@ Please respond in JSON format with the following structure:
 
         const data = await response.json();
         console.log('API Response:', data);
-        const analysisText = data.content?.[0]?.text || '';
+        const analysisText = getAITextContent(data);
         console.log('Analysis Text:', analysisText);
         
         // Models sometimes wrap valid JSON in a code fence or a brief sentence.

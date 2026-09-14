@@ -608,7 +608,7 @@ Format the report professionally with clear sections, bullet points, and actiona
         }
 
         const data = await response.json();
-        const report = data.content?.[0]?.text?.trim();
+        const report = getAITextContent(data);
         if (!report) {
             throw new Error('The AI returned an empty report.');
         }
