@@ -581,16 +581,10 @@ Please generate a professional, detailed roof inspection report that includes:
 Format the report professionally with clear sections, bullet points, and actionable recommendations.`;
 
     try {
-        const response = await fetch(API_CONFIG.BASE_URL, {
-            method: 'POST',
-            headers: {
-                'x-api-key': apiKey,
-                'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
-                'anthropic-dangerous-direct-browser-access': 'true',
-                ...(workspaceId ? { 'anthropic-workspace-id': workspaceId } : {}),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+        const response = await sendAnthropicRequest({
+            apiKey,
+            workspaceId,
+            payload: {
                 model: API_CONFIG.MODEL,
                 max_tokens: 2000,
                 messages: [
@@ -599,7 +593,7 @@ Format the report professionally with clear sections, bullet points, and actiona
                         content: prompt
                     }
                 ]
-            })
+            }
         });
 
         if (!response.ok) {

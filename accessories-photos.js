@@ -326,6 +326,7 @@ async function analyzeAccessoryWithChatGPT(imageData, accessoryType) {
     }
 
     const apiKey = getAPIKey();
+    const workspaceId = getWorkspaceId();
     const { mediaType, base64Data } = parseDataUrl(imageData);
     
     const prompt = `Analyze this ${accessoryType.name} photo for roof inspection purposes. Please evaluate:
@@ -385,15 +386,10 @@ Please respond in JSON format with the following structure:
 }`;
 
     try {
-        const response = await fetch(API_CONFIG.BASE_URL, {
-            method: 'POST',
-            headers: {
-                'x-api-key': apiKey,
-                'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
-                'anthropic-dangerous-direct-browser-access': 'true',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+        const response = await sendAnthropicRequest({
+            apiKey,
+            workspaceId,
+            payload: {
                 model: API_CONFIG.MODEL,
                 max_tokens: API_CONFIG.MAX_TOKENS,
                 messages: [
@@ -415,7 +411,7 @@ Please respond in JSON format with the following structure:
                         ]
                     }
                 ]
-            })
+            }
         });
 
         if (!response.ok) {
