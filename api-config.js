@@ -71,6 +71,33 @@ function getAITextContent(responseData) {
         .trim();
 }
 
+// Hosted deployments use our Vercel endpoint so browser/IT network policies
+// never have to permit a direct request to Anthropic. Local file previews keep
+// the existing direct request behavior.
+async function sendAnthropicRequest({ apiKey, workspaceId, payload }) {
+    const isHosted = window.location.protocol === 'https:' || window.location.protocol === 'http:';
+
+    if (isHosted) {
+        return fetch('/api/anthropic', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey, workspaceId, payload })
+        });
+    }
+
+    return fetch(API_CONFIG.BASE_URL, {
+        method: 'POST',
+        headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
+            'anthropic-dangerous-direct-browser-access': 'true',
+            ...(workspaceId ? { 'anthropic-workspace-id': workspaceId } : {}),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+}
+
 // Function to make API call to Claude
 async function analyzePhotoWithChatGPT(imageData, elevationType) {
     if (!isAPIKeyConfigured()) {
@@ -123,16 +150,10 @@ Please respond in JSON format with the following structure:
 Respond with ONLY the raw JSON object above and nothing else - no explanation, no markdown code fences, no additional text before or after it.`;
 
     try {
-        const response = await fetch(API_CONFIG.BASE_URL, {
-            method: 'POST',
-            headers: {
-                'x-api-key': apiKey,
-                'anthropic-version': API_CONFIG.ANTHROPIC_VERSION,
-                'anthropic-dangerous-direct-browser-access': 'true',
-                ...(workspaceId ? { 'anthropic-workspace-id': workspaceId } : {}),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+        const response = await sendAnthropicRequest({
+            apiKey,
+            workspaceId,
+            payload: {
                 model: API_CONFIG.MODEL,
                 max_tokens: API_CONFIG.MAX_TOKENS,
                 messages: [
@@ -154,7 +175,7 @@ Respond with ONLY the raw JSON object above and nothing else - no explanation, n
                         ]
                     }
                 ]
-            })
+            }
         });
 
         if (!response.ok) {
