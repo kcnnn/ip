@@ -46,15 +46,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function isHostedDeployment() {
-    return window.location.protocol === 'https:' || window.location.protocol === 'http:';
-}
-
-// Hosted deployments use the server-side Vercel secret; local file previews
-// still require a browser-supplied key.
 function isAPIKeyConfigured() {
     const key = getAPIKey();
-    return isHostedDeployment() || (key && key.length > 0);
+    return key && key.length > 0;
 }
 
 // Helper to split a base64 data URL into media type + raw base64 data
@@ -76,18 +70,9 @@ function getAITextContent(responseData) {
         .trim();
 }
 
-// Hosted deployments use our Vercel endpoint so browser/IT network policies
-// never have to permit a direct request to Anthropic. Local file previews keep
-// the existing direct request behavior.
+// Send requests directly from the browser using the key configured for this
+// browser profile.
 async function sendAnthropicRequest({ apiKey, workspaceId, payload }) {
-    if (isHostedDeployment()) {
-        return fetch('/api/anthropic', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ payload })
-        });
-    }
-
     return fetch(API_CONFIG.BASE_URL, {
         method: 'POST',
         headers: {
