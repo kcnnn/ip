@@ -298,6 +298,15 @@ function displayAIResults(results) {
         <h4>Photo Quality: ${qualityText}</h4>
         <p>Confidence: ${results.confidence}%</p>
     </div>`;
+
+    const downspoutVisible = results.downspoutVisible === true ||
+        (typeof results.downspoutVisible === 'string' && /^(true|yes)$/i.test(results.downspoutVisible.trim()));
+    if (elevations[currentElevationIndex]?.key === 'front' && downspoutVisible) {
+        html += `<div class="downspout-handoff">
+            <strong>Downspout visible</strong>
+            <span>Document the gutter size in the upcoming roof-edge photo step.</span>
+        </div>`;
+    }
     
     // Issues
     if (results.issues && results.issues.length > 0) {
@@ -522,6 +531,16 @@ style.textContent = `
         background: #fff3e0;
         border: 2px solid #ff9800;
         color: #e65100;
+    }
+
+    .downspout-handoff {
+        display: grid;
+        gap: 0.25rem;
+        margin-bottom: 1rem;
+        padding: 1rem 1.1rem;
+        background: #f4f8fc;
+        border-left: 4px solid #e01719;
+        color: #272a2d;
     }
     
     .issues-section, .recommendations-section {
