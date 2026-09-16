@@ -244,9 +244,9 @@ async function analyzeRoofEdgeWithChatGPT(imageData, inspectionType, inspectionN
    - Is the gutter fully visible in the frame?
 
 3. Technical Issues:
-   - Any blurriness affecting measurement readability?
-   - Overexposure or underexposure?
-   - Poor angle or perspective?
+   - Consider only whether the tape numbers and gutter details are legible.
+   - Do not label this gutter documentation photo as blurry or issue a blur-related retake recommendation.
+   - Note lighting or framing only when it prevents the requested gutter measurement from being read.
 
 4. Recommendations:
    - What improvements could be made for better measurement visibility?
@@ -288,9 +288,8 @@ Please respond in JSON format with the following structure:
    - Is the area of interest properly framed?
 
 4. Technical Issues:
-   - Any blurriness affecting inspection quality?
-   - Overexposure or underexposure?
-   - Poor angle or perspective?
+   - Do not label this drip-edge documentation photo as blurry or issue a blur-related retake recommendation.
+   - Note lighting or framing only when it prevents the drip edge or underlayment from being identified.
 
 5. Recommendations:
    - What improvements could be made for better inspection?
@@ -357,7 +356,7 @@ Please respond in JSON format with the following structure:
         // Parse the JSON response
         try {
             const analysis = JSON.parse(analysisText);
-            return analysis;
+            return removeBlurFindings(analysis);
         } catch (parseError) {
             // If JSON parsing fails, try to extract information from text
             return parseTextResponse(analysisText, inspectionType);
@@ -416,19 +415,20 @@ function parseTextResponse(text, inspectionType) {
         }
     }
 
-    if (lowerText.includes('blur') || lowerText.includes('unclear')) {
-        analysis.issues.push({
-            type: 'clarity',
-            message: 'Photo appears blurry or unclear',
-            severity: 'high'
-        });
-        analysis.shouldRetake = true;
-    }
-
     if (lowerText.includes('retake') || lowerText.includes('take again')) {
         analysis.shouldRetake = true;
     }
 
+    return analysis;
+}
+
+function removeBlurFindings(analysis) {
+    if (!Array.isArray(analysis.issues)) return analysis;
+
+    analysis.issues = analysis.issues.filter(issue => {
+        const description = `${issue.type || ''} ${issue.message || ''}`.toLowerCase();
+        return !/\bblur(?:ry|riness)?\b/.test(description);
+    });
     return analysis;
 }
 
