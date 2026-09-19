@@ -21,7 +21,7 @@
     const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const options = values => values.map(value => `<option>${escape(value)}</option>`).join('');
     const narrative = note => {
-        const parts = [`${note.section} / ${note.location || 'Location unspecified'} — ${note.component || 'Component unspecified'}: ${note.condition || 'Observation unspecified'}.`];
+        const parts = [`${note.section} / ${note.elevationKey ? `${note.elevationKey} elevation · ` : ''}${note.location || 'Location unspecified'} — ${note.component || 'Component unspecified'}: ${note.condition || 'Observation unspecified'}.`];
         if (['Observed damage', 'Suspected damage'].includes(note.condition)) {
             if (note.damageTypes?.length) parts.push(`Damage type: ${note.damageTypes.join(', ')}.`);
             if (note.severity && note.severity !== 'Not assessed') parts.push(`Severity: ${note.severity.toLowerCase()}.`);
@@ -36,6 +36,7 @@
     function formMarkup() {
         return `<form id="fieldNoteForm" class="field-form">
             <input type="hidden" name="id">
+            <p id="fieldElevationContext" class="field-preview" hidden></p>
             <section class="field-dictation-first field-photo-first" aria-label="Observation photo">
                 <span class="field-eyebrow">01 / CAPTURE THE DETAIL</span>
                 <h3>Start with a photo.</h3>
@@ -74,6 +75,7 @@
             </div>
             <div class="field-preview"><span class="field-eyebrow">CONSISTENT NOTE PREVIEW</span><p id="fieldNarrative"></p></div>
             <div class="field-actions"><button type="submit" class="field-button field-primary">Add to report</button><button type="button" id="fieldNewNote" class="field-button">New / clear draft</button><span id="fieldSaveStatus" role="status"></span></div>
+            <div id="fieldElevationActions" class="field-actions" hidden><button type="button" id="fieldAnotherDetail" class="field-button">Add another detail photo</button><button type="button" id="fieldReturnElevation" class="field-button">Back to elevation</button></div>
         </form>`;
     }
 
@@ -109,7 +111,8 @@
             field('location').placeholder = field('section').value === 'Elevations' ? 'e.g. Front wall, right of entry door' : 'e.g. Back slope, east corner';
         }
         let recognition, listening = false, dictated = false, voiceSession = 0;
-        let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false;
+        let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false, elevationKey = null;
+        const elevationName = key => `${key.charAt(0).toUpperCase()}${key.slice(1)} Elevation`;
         const renderReview = () => {
             const panel = document.getElementById('fieldPhotoReview');
             panel.hidden = !aiReview;
@@ -121,7 +124,7 @@
             const id = field('photoId').value;
             const img = document.getElementById('fieldPhotoPreview');
             img.hidden = true;
-            document.getElementById('fieldFill').textContent = id ? 'Analyze photo & note' : 'Fill fields from note';
+            document.getElementById('fieldFill').textContent = elevationKey ? 'Analyze & save detail' : id ? 'Analyze photo & note' : 'Fill fields from note';
             const photo = id ? await InspectionStore.getPhoto(id).catch(() => null) : null;
             if (generation !== photoGeneration) return;
             if (photo) { img.src = photo; img.hidden = false; }
@@ -133,11 +136,12 @@
             condition: field('condition').value, severity: field('severity').value,
             damageTypes: [...form.querySelectorAll('[name="damageType"]:checked')].map(input => input.value),
             quantity: field('quantity').value, unit: field('unit').value,
-            details: field('details').value, photoId: field('photoId').value, dictated, aiReview
+            details: field('details').value, photoId: field('photoId').value, dictated, aiReview, elevationKey,
+            parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null
         });
         const refreshPhotos = () => {
             const selected = field('photoId').value;
-            field('photoId').innerHTML = '<option value="">No photo — text-only note</option>' + Object.entries(InspectionStore.get().photos).map(([id, photo]) => `<option value="${escape(id)}">${escape(photo.section)} · ${escape(photo.label)}</option>`).join('');
+            field('photoId').innerHTML = '<option value="">No photo — text-only note</option>' + Object.entries(InspectionStore.get().photos).filter(([,photo]) => !elevationKey || photo.elevationKey === elevationKey).map(([id, photo]) => `<option value="${escape(id)}">${escape(photo.section)} · ${escape(photo.label)}</option>`).join('');
             if ([...field('photoId').options].some(option => option.value === selected)) field('photoId').value = selected;
             else if (selected) {
                 field('photoId').add(new Option('Previously linked photo — removed', selected));
@@ -164,6 +168,7 @@
             const status = document.getElementById('fieldFillStatus');
             const text = field('details').value.trim();
             if (!text) { status.textContent = 'Dictate or type an observation first.'; return; }
+            if (elevationKey && !field('photoId').value) { status.textContent = 'Take or upload a close-up photo first.'; return; }
             if (manualFields) {
                 if (automatic) { status.textContent = 'Your existing selections were kept. Click Fill fields from note to replace them with this dictation.'; return; }
                 if (!confirm('Replace the current detail selections using this note? Your transcript and photo link will be kept.')) return;
@@ -189,16 +194,27 @@
                 if (photoId && InspectionStore.get().photos[photoId]?.revision !== revision) throw new Error('The photo changed during analysis. Analyze again.');
                 if (JSON.stringify(readForm()) !== snapshot) { status.textContent = 'You changed this note while it was being organized. Your changes were kept; click Fill fields to try again.'; return; }
                 const extracted = photo ? result.fields : result;
+                if (elevationKey && extracted.location) {
+                    const otherElevation = /\b(front|right|rear|back|left)\s+(?:elevation|wall)\b/i.exec(extracted.location)?.[1]?.toLowerCase();
+                    if (otherElevation && (otherElevation === 'back' ? 'rear' : otherElevation) !== elevationKey) throw new Error('The location in your note is a different elevation. Check the note or open the correct elevation before saving.');
+                }
                 aiReview = photo ? { ...result.review, photoId, revision, transcript: field('details').value, reviewedAt: new Date().toISOString() } : null;
                 renderReview();
-                field('section').value = extracted.section || field('section').value;
+                if (elevationKey && extracted.section && extracted.section !== 'Elevations') throw new Error('Your note describes a different inspection section. Check the note before saving this elevation detail.');
+                field('section').value = elevationKey ? 'Elevations' : extracted.section || field('section').value;
                 refreshComponents(extracted.component || '');
                 for (const key of ['location', 'condition', 'severity', 'quantity', 'unit']) field(key).value = extracted[key] || (key === 'severity' ? 'Not assessed' : '');
+                if (elevationKey && !field('location').value) field('location').value = elevationName(elevationKey);
                 form.querySelectorAll('[name="damageType"]').forEach(input => { input.checked = (extracted.damageTypes || []).includes(input.value); });
                 manualFields = false;
                 update();
                 const missing = ['location', 'component', 'condition'].filter(key => !field(key).value);
                 status.textContent = `Details filled from your note. Review before saving.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}`;
+                if (elevationKey && !missing.length) {
+                    const id = InspectionStore.saveObservation(readForm()); field('id').value = id;
+                    status.textContent = `Saved to ${elevationName(elevationKey)}. Review the AI findings below; you can edit this note or add another detail photo.`;
+                    document.getElementById('fieldSaveStatus').textContent = 'Photo, dictation and AI review added to the report.';
+                }
             } catch (error) {
                 if (generation === fillGeneration) status.textContent = error.message || 'Auto-fill unavailable. Your note is kept.';
             } finally {
@@ -223,9 +239,16 @@
             form.querySelector('[type="submit"]').disabled = false;
             document.getElementById('fieldDictate').textContent = 'Start dictation';
             form.reset(); dictated = !!note.dictated;
+            // Hidden input values also change their reset default; clear explicitly.
+            field('id').value = note.id || '';
+            elevationKey = ['front', 'right', 'rear', 'left'].includes(note.elevationKey) ? note.elevationKey : null;
+            field('section').disabled = !!elevationKey;
+            document.getElementById('fieldElevationContext').hidden = !elevationKey;
+            document.getElementById('fieldElevationContext').textContent = elevationKey ? `${elevationName(elevationKey)} · Detail photo. Analyze saves your photo, original note and separate AI findings together. Check any disagreements before relying on the result.` : '';
+            document.getElementById('fieldElevationActions').hidden = !elevationKey;
             aiReview = note.aiReview || null; renderReview();
             refreshPhotos();
-            field('section').value = note.section || currentSection();
+            field('section').value = elevationKey ? 'Elevations' : note.section || currentSection();
             refreshComponents(note.component || '', true);
             for (const key of ['id', 'location', 'component', 'condition', 'severity', 'quantity', 'unit', 'details', 'photoId']) {
                 if (note[key] !== undefined) field(key).value = note[key];
@@ -239,6 +262,17 @@
             const notebook = document.getElementById('fieldNotebook'); if (notebook) notebook.open = true;
             form.scrollIntoView({ behavior: 'smooth', block: 'start' }); field('details').focus({ preventScroll: true });
         };
+        window.InspectionField.startElevationDetail = key => {
+            if (!['front', 'right', 'rear', 'left'].includes(key) || capturing || filling || listening) return;
+            if (!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a new detail? The current unfinished note will be replaced; uploaded photos stay in the record.')) return;
+            loadNote({section:'Elevations', elevationKey:key}); update();
+            const notebook = document.getElementById('fieldNotebook'); if (notebook) notebook.open = true;
+            form.scrollIntoView({behavior:'smooth', block:'start'});
+        };
+        document.getElementById('fieldAnotherDetail').addEventListener('click', () => InspectionField.startElevationDetail(elevationKey));
+        document.getElementById('fieldReturnElevation').addEventListener('click', () => {
+            document.getElementById('elevationDetailPanel')?.scrollIntoView({behavior:'smooth', block:'start'});
+        });
         refreshPhotos();
         loadNote(InspectionStore.get().notes.fieldDraft || {});
         for (const kind of ['Camera', 'Upload']) {
@@ -259,7 +293,8 @@
                     const prepared = await preparePhoto(file, message => { if (generation === fillGeneration) status.textContent = message; });
                     if (generation !== fillGeneration) return;
                     const id = `observation-photo:${Date.now()}:${Math.random().toString(36).slice(2)}`;
-                    const ok = await InspectionStore.recordPhoto(field('section').value, `Field photo · ${file.name}`, prepared.dataUrl, { id, convertedFrom: prepared.convertedFrom, sourceName: prepared.sourceName });
+                    const label = elevationKey ? `${elevationName(elevationKey)} · Detail · ${file.name}` : `Field photo · ${file.name}`;
+                    const ok = await InspectionStore.recordPhoto(field('section').value, label, prepared.dataUrl, { id, elevationKey, parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null, convertedFrom: prepared.convertedFrom, sourceName: prepared.sourceName });
                     if (!ok) throw new Error('Photo could not be saved. Please try again.');
                     if (generation !== fillGeneration) return;
                     refreshPhotos(); field('photoId').value = id; aiReview = null; renderReview(); update(); await previewPhoto();

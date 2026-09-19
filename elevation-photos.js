@@ -61,6 +61,8 @@ document.addEventListener('DOMContentLoaded', function() {
     updateProgress();
     updateChecklist();
     setupEventListeners();
+    renderElevationDetails();
+    window.addEventListener('inspection-record-changed', renderElevationDetails);
 });
 
 function setupEventListeners() {
@@ -77,6 +79,7 @@ function updateElevationDisplay() {
     elevationIcon.textContent = currentElevation.icon;
     elevationInstructions.textContent = currentElevation.instructions;
     captureReadyTitle.textContent = `Ready for the ${currentElevation.key}`;
+    renderElevationDetails();
     
     // Update status
     const statusBadge = elevationStatus.querySelector('.status-badge');
@@ -136,14 +139,16 @@ function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function handleFileSelect(event) {
+async function handleFileSelect(event) {
     const file = event.target.files[0];
     if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            displayPhotoPreview(e.target.result);
-        };
-        reader.readAsDataURL(file);
+        const index = currentElevationIndex;
+        try {
+            const { preparePhoto } = await import('./photo-import.js');
+            const prepared = await preparePhoto(file);
+            if (index === currentElevationIndex) displayPhotoPreview(prepared.dataUrl);
+        } catch (error) { alert(error.message || 'Photo could not be opened.'); }
+        finally { event.target.value = ''; }
     }
 }
 
@@ -347,6 +352,12 @@ function displayAIResults(results) {
     html += '</div>';
     
     aiResults.innerHTML = html;
+    const detailButton = document.createElement('button');
+    detailButton.type = 'button'; detailButton.className = 'action-btn secondary';
+    detailButton.textContent = `Add detail photos · ${elevations[currentElevationIndex].name}`;
+    detailButton.addEventListener('click', () => InspectionField.startElevationDetail(elevations[currentElevationIndex].key));
+    aiResults.querySelector('.ai-actions').prepend(detailButton);
+    renderElevationDetails();
     
     // Update status
     const statusBadge = elevationStatus.querySelector('.status-badge');
@@ -357,6 +368,30 @@ function displayAIResults(results) {
         statusBadge.textContent = 'Issues Found';
         statusBadge.className = 'status-badge analyzing';
     }
+}
+
+// Additional photos never replace an elevation overview or another close-up.
+function renderElevationDetails() {
+    if (!window.InspectionStore || !window.InspectionField) return;
+    let panel = document.getElementById('elevationDetailPanel');
+    if (!panel) {
+        panel = document.createElement('section'); panel.id = 'elevationDetailPanel'; panel.className = 'field-note-panel';
+        aiAnalysis.after(panel);
+    }
+    const elevation = elevations[currentElevationIndex];
+    const record = InspectionStore.get();
+    const escape = InspectionField.escape;
+    const photos = Object.entries(record.photos).filter(([,photo]) => photo.section === 'Elevations' && photo.elevationKey === elevation.key);
+    panel.innerHTML = `<h3>${escape(elevation.name)} · Detail photos</h3><p>Windows, screens, downspouts, doors, garage doors, trim and siding. Capture one detail, describe it, then analyze and save.</p><button type="button" class="field-button field-primary" id="addElevationDetail">Add detail photos</button><p>${photos.length} close-up photo${photos.length === 1 ? '' : 's'} saved for this elevation.</p><div class="elevation-detail-grid">${photos.map(([id,photo]) => {
+        const note = Object.values(record.observations).find(item => item.photoId === id);
+        return `<article>${photo.thumbnail ? `<img src="${escape(photo.thumbnail)}" alt="${escape(photo.label)}">` : ''}<strong>${escape(note?.component || 'Detail photo')}</strong><p>${escape(note?.details || 'Photo saved · note not yet added to report')}</p>${note?.aiReview ? `<p>AI review: ${escape(note.aiReview.status.replaceAll('_', ' '))}</p>` : ''}<button type="button" class="field-button" data-detail-photo="${escape(id)}">${note ? 'Review / edit' : 'Describe & analyze'}</button></article>`;
+    }).join('')}</div>`;
+    panel.querySelector('#addElevationDetail').onclick = () => InspectionField.startElevationDetail(elevation.key);
+    panel.querySelectorAll('[data-detail-photo]').forEach(button => { button.onclick = () => {
+        const note = Object.values(InspectionStore.get().observations).find(item => item.photoId === button.dataset.detailPhoto);
+        if (!confirm('Open this detail? Any unfinished changes in the field notebook will be replaced.')) return;
+        InspectionField.editNote(note || {section:'Elevations', elevationKey:elevation.key, photoId:button.dataset.detailPhoto});
+    }; });
 }
 
 function proceedToNextElevation() {

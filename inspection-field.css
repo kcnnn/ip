@@ -133,3 +133,7 @@
 #fieldPhotoReview li { margin-bottom: 8px; }
 .field-photo-first input[hidden] { display: none; }
 @media (max-width: 600px) { #fieldPhotoPreview { max-height: 300px; } .field-photo-first .field-actions { display: grid; grid-template-columns: 1fr 1fr; } }
+.elevation-detail-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:20px; }
+.elevation-detail-grid article { border:1px solid #ddd; border-radius:16px; padding:16px; min-width:0; overflow-wrap:anywhere; }
+.elevation-detail-grid img { width:100%; height:170px; object-fit:contain; display:block; margin-bottom:12px; }
+#fieldElevationActions[hidden], #fieldElevationContext[hidden] { display:none; }

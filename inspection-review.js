@@ -9,6 +9,12 @@ function renderInspectionReview() {
     document.getElementById('reviewProperty').textContent = [record.property?.address, record.property?.claim && `Reference: ${record.property.claim}`, record.property?.inspector && `Inspector: ${record.property.inspector}`].filter(Boolean).join(' · ');
     document.getElementById('reviewContent').innerHTML = sections.map(([section, url, expected]) => {
         const sectionPhotos = photos.filter(([, photo]) => photo.section === section);
+        // Keep each elevation overview next to its associated close-ups in print/PDF.
+        if (section === 'Elevations') {
+            const keys = ['front', 'right', 'rear', 'left'];
+            const group = photo => keys.indexOf(photo.elevationKey || photo.label.split(' ')[0].toLowerCase());
+            sectionPhotos.sort((a, b) => (group(a[1]) < 0 ? 4 : group(a[1])) - (group(b[1]) < 0 ? 4 : group(b[1])) || Number(!!a[1].elevationKey) - Number(!!b[1].elevationKey));
+        }
         const sectionNotes = notes.filter(note => note.section === section);
         const sectionAbsences = absences.filter(item => item.section === section);
         const missing = expected.filter(label => !sectionPhotos.some(([, p]) => p.label === label) && !sectionAbsences.some(a => a.label.toLowerCase() === label.toLowerCase()));

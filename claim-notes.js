@@ -19,6 +19,10 @@ function buildClaimNotes(record, sections, narrative) {
         const status = record.sectionStates?.[section]?.status || 'Not reviewed';
         lines.push('', `${section.toUpperCase()}`);
         lines.push(`${sectionPhotos.length} photo records. Inspector review: ${status}.`);
+        if (section === 'Elevations') for (const key of ['front', 'right', 'rear', 'left']) {
+            const count = sectionPhotos.filter(photo => photo.elevationKey === key).length;
+            if (count) lines.push(`${key.charAt(0).toUpperCase() + key.slice(1)} elevation: ${count} additional detail photo${count === 1 ? '' : 's'}.`);
+        }
         sectionAbsences.forEach(item => lines.push(`${item.label}: ${item.note || 'Not present'}.`));
         sectionNotes.forEach(note => {
             lines.push(`Inspector observation: ${narrative(note)}`);
