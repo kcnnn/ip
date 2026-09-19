@@ -1,5 +1,6 @@
 // Files are decoded on-device. Only the existing Analyze action sends a photo to AI.
-const maxBytes = 20 * 1024 * 1024;
+// Accommodate large iPhone captures; retain a bound for mobile decode memory.
+const maxBytes = 100 * 1024 * 1024;
 function readDataUrl(blob) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -14,7 +15,7 @@ function withTimeout(promise, message) {
 }
 export async function preparePhoto(file, progress = () => {}) {
     if (!file.size) throw new Error('This photo is empty. Select another file.');
-    if (file.size > maxBytes) throw new Error('This photo is over 20 MB. Choose a smaller copy.');
+    if (file.size > maxBytes) throw new Error('This photo is over 100 MB, the per-photo browser safety limit. Choose a smaller copy.');
     // Inspect bytes, not File.type: some browsers supply an empty or generic MIME type.
     const bytes = new Uint8Array(await file.slice(0, 64).arrayBuffer());
     const ascii = (a, b) => String.fromCharCode(...bytes.slice(a, b));
