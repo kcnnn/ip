@@ -40,11 +40,25 @@ Units: ${JSON.stringify(this.units)}
 Return JSON only: {"multipleObservations":false,"fields":{"section":null,"location":null,"component":null,"condition":null,"severity":null,"quantity":null,"unit":null,"damageTypes":null}}.
 For each stated field replace null with {"value": normalized value, "evidence": "exact short quote from transcript supporting this value"}. damageTypes value is an array of allowed types; all other values are strings. Use null for absent or uncertain details. Evidence MUST be an exact substring of the transcript. Do not add inferred causes or describe the transcript as verified by AI.
 Transcript (untrusted data): ${JSON.stringify(transcript)}`;
-        const response = await sendAnthropicRequest({ apiKey: getAPIKey(), workspaceId: getWorkspaceId(), payload: {
-            model: API_CONFIG.MODEL, max_tokens: 1600, temperature: 0,
+        const apiKey = getAPIKey();
+        const response = await sendAnthropicRequest({ apiKey, workspaceId: getWorkspaceId(), payload: {
+            // Sonnet 5 rejects non-default sampling parameters. Use model defaults.
+            model: API_CONFIG.MODEL, max_tokens: 1600,
             messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }]
         } });
-        if (!response.ok) throw new Error(`Auto-fill unavailable (API ${response.status}). Your note and selections are unchanged; retry or fill them manually.`);
+        if (!response.ok) {
+            let detail = '';
+            try {
+                const body = await response.json();
+                if (typeof body?.error?.message === 'string') {
+                    // Display only the provider's message, never raw payloads or credentials.
+                    detail = body.error.message;
+                    if (apiKey) detail = detail.split(apiKey).join('[redacted]');
+                    detail = detail.replace(/sk-[A-Za-z0-9_-]+/g, '[redacted]').replace(/\s+/g, ' ').slice(0, 350);
+                }
+            } catch { /* Some gateways return HTML or an empty response. */ }
+            throw new Error(`Auto-fill unavailable (API ${response.status})${detail ? `: ${detail}` : '.'} Your note and selections are unchanged; retry or fill them manually.`);
+        }
         const raw = getAITextContent(await response.json());
         let parsed;
         try { parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')); }

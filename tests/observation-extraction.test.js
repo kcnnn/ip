@@ -3,6 +3,40 @@ const assert = require('node:assert/strict');
 const extraction = require('../observation-extraction.js');
 const components = { Elevations: ['Window screen', 'Window', 'Door'], 'Roof edge': ['Gutter'], 'Roof overview': ['Shingles'] };
 const field = (value, evidence) => ({ value, evidence });
+const vm = require('node:vm');
+const fs = require('node:fs');
+function requestHarness(response) {
+    let request;
+    const context = {
+        module: {exports: {}}, isAPIKeyConfigured: () => true,
+        getAPIKey: () => 'synthetic-secret', getWorkspaceId: () => 'test-workspace',
+        API_CONFIG: {MODEL: 'claude-sonnet-5'},
+        sendAnthropicRequest: async value => { request = value; return response; },
+        getAITextContent: value => value.content[0].text
+    };
+    vm.runInNewContext(fs.readFileSync(require.resolve('../observation-extraction.js'), 'utf8'), context);
+    return {run: () => context.module.exports.extract('Door has a dent', components, 'Elevations'), request: () => request};
+}
+
+test('auto-fill request uses supported model defaults without sampling overrides', async () => {
+    const harness = requestHarness({ok:true,json:async()=>({content:[{text:'{"multipleObservations":false,"fields":{}}'}]})});
+    await harness.run();
+    assert.equal(harness.request().payload.model, 'claude-sonnet-5');
+    for (const key of ['temperature', 'top_p', 'top_k']) assert.equal(key in harness.request().payload, false);
+});
+test('API errors show provider details and redact credentials', async () => {
+    const harness = requestHarness({ok:false,status:400,json:async()=>({error:{message:'Unsupported temperature for key synthetic-secret sk-example-token'}})});
+    await assert.rejects(harness.run(), error => {
+        assert.match(error.message, /API 400.*Unsupported temperature/);
+        assert.doesNotMatch(error.message, /synthetic-secret|sk-example-token/);
+        assert.match(error.message, /note and selections are unchanged/);
+        return true;
+    });
+});
+test('non-JSON API errors still produce an actionable message', async () => {
+    const harness = requestHarness({ok:false,status:503,json:async()=>{throw new Error('HTML response');}});
+    await assert.rejects(harness.run(), /Auto-fill unavailable \(API 503\).*note and selections are unchanged/);
+});
 
 test('validates supported transcript fields, including spoken counts', () => {
     const note = 'Front elevation, window screen. Moderate wear. Two screens affected.';
