@@ -2,63 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-            <title>APEX - Damage Documentation</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="refined-theme.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEX — Property inspections</title>
+    <link rel="stylesheet" href="home.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1 class="title">APEX</h1>
-            <p class="subtitle">AI-Powered Damage Documentation System</p>
+    <div class="home-shell">
+        <header class="home-header">
+            <a class="home-brand" href="index.html" aria-label="APEX home">APEX<span class="brand-dot"></span></a>
+            <span class="home-header-label">PROPERTY INSPECTIONS</span>
         </header>
         
-        <main class="main-content">
-            <div class="hero-section">
-                <div class="hero-content">
-                    <h2 class="hero-title">Document Damage with AI Precision</h2>
-                    <p class="hero-description">
-                        Capture, analyze, and document property damage using advanced AI technology. 
-                        Inspect in any order, capture photos, and keep consistent field notes together.
-                    </p>
-                    
-                    <div class="features">
-                        <div class="feature">
-                            <div class="feature-icon">📸</div>
-                            <h3>Smart Photography</h3>
-                            <p>AI-guided photo capture for optimal documentation</p>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon">🤖</div>
-                            <h3>AI Analysis</h3>
-                            <p>Automatic damage assessment and categorization</p>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon">📋</div>
-                            <h3>Professional Reports</h3>
-                            <p>Generate comprehensive inspection reports</p>
-                        </div>
+        <main>
+            <section class="home-hero" aria-labelledby="home-title">
+                <div class="home-intro">
+                    <p class="home-eyebrow"><span></span> BUILT FOR THE FIELD</p>
+                    <h1 id="home-title">Every detail.<br>One clear <em>picture.</em></h1>
+                    <p class="home-description">A simpler way to document a property. Capture photos, record what you see, and bring it all together—at your own pace.</p>
+                    <div class="home-actions">
+                        <a class="home-action home-primary" href="inspection-workspace.html">Open workspace <span aria-hidden="true">→</span></a>
+                        <a class="home-action home-secondary" href="inspection-review.html">Review inspection <span aria-hidden="true">↗</span></a>
                     </div>
-                    
-                    <button class="start-button" onclick="startInspection()">
-                        <span class="button-text">OPEN INSPECTION WORKSPACE</span>
-                        <span class="button-arrow">→</span>
-                    </button>
-                    <button class="start-button secondary-start" onclick="window.location.href='inspection-review.html'">
-                        <span class="button-text">REVIEW INSPECTION</span>
-                    </button>
+                    <p class="home-caption">Start anywhere. Pick up where you left off.</p>
                 </div>
-            </div>
+                <div class="home-visual" aria-hidden="true">
+                    <div class="visual-top"><span>THE PROPERTY RECORD</span><span class="visual-mark">A /</span></div>
+                    <svg class="house-drawing" viewBox="0 0 400 300" fill="none">
+                        <path d="M53 135 179 57 347 111 224 193Z" fill="#e9e7e3" stroke="#292c30" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="m53 135 171 58v91L53 224Z" fill="#fafaf8" stroke="#292c30" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="m224 193 123-82v92l-123 81Z" fill="#eeede9" stroke="#292c30" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="m179 57 45 136M84 116l171 58M117 96l169 58M149 76l168 58" stroke="#9d9f9f" stroke-width="1.2"/>
+                        <path d="m83 167 39 13v39l-39-14Zm66 23 36 12v69l-36-13Z" fill="#e4e4df" stroke="#292c30" stroke-width="1.6"/>
+                        <path d="m250 199 29-19v34l-29 19Zm48-33 27-18v34l-27 18Z" fill="#fafaf8" stroke="#292c30" stroke-width="1.6"/>
+                        <path d="m67 253 136 47M356 228l-105 68" stroke="#c9c9c3" stroke-dasharray="4 6"/>
+                        <circle cx="220" cy="132" r="20" fill="#fff" stroke="#d51a23" stroke-width="1.5"/>
+                        <path d="m212 132 5 5 11-11" stroke="#d51a23" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div class="visual-note"><span class="visual-note-icon">↗</span><div><strong>A place for every observation</strong><span>Photos · Field notes · Property details</span></div></div>
+                </div>
+            </section>
+            <section class="home-features" aria-label="Inspection tools">
+                <article><span class="feature-number">01 / CAPTURE</span><h2>See the whole story.</h2><p>Keep property photos organized, from the first elevation to the final detail.</p></article>
+                <article><span class="feature-number">02 / DOCUMENT</span><h2>Say it. Save it.</h2><p>Type or dictate your observations, with consistent damage selections.</p></article>
+                <article><span class="feature-number">03 / REVIEW</span><h2>Bring it together.</h2><p>Review your photos and notes in one organized, printable property record.</p></article>
+            </section>
         </main>
         
-        <footer class="footer">
-            <p>&copy; 2024 Inspection Wizard. Professional damage documentation made simple.</p>
+        <footer class="home-footer">
+            <span>APEX / FIELD DOCUMENTATION</span><span>More clarity. Less backtracking.</span>
         </footer>
     </div>
     
-    <script src="inspection-store.js"></script>
-    <script src="api-config.js?v=8"></script>
-    <script src="script.js"></script>
 </body>
 </html>

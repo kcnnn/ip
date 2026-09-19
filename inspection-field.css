@@ -66,3 +66,56 @@
 @media(max-width:900px) { .field-sections { grid-template-columns:repeat(2,minmax(0,1fr)); } .field-property { grid-template-columns:1fr; } }
 @media(max-width:580px) { .field-shell { padding:20px 16px 40px; } .field-sections,.field-form-grid { grid-template-columns:1fr; } .field-note-panel { padding:20px 16px; } .field-header { align-items:flex-start; } .field-saved-note { flex-direction:column; } }
 @media print { .field-toolbar,.field-save-error { display:none; } }
+
+/* Compact, touch-friendly field navigation. Scoped to the notebook/workspace. */
+.field-page { background:#f7f7f4; -webkit-font-smoothing:antialiased; }
+.field-button { border-radius:9px; font-weight:600; padding:12px 17px; }
+.field-primary { background:#d51a23; border-color:#d51a23; box-shadow:0 3px 8px #9d101414; }
+.field-section-card { border-color:#e0e2df; border-radius:14px; box-shadow:0 2px 4px #1b262604; }
+.field-section-card h2 { margin-top:20px; }
+.field-card-details { margin-top:auto; }
+.field-card-details summary { display:flex; align-items:center; justify-content:space-between; min-height:44px; border-top:1px solid #eceeeb; color:#73797c; font-size:12px; cursor:pointer; list-style:none; }
+.field-card-details summary::-webkit-details-marker { display:none; }
+.field-card-details summary span { font-size:18px; font-weight:400; }
+.field-card-details[open] summary span { transform:rotate(45deg); }
+.field-property { border-color:#e0e2df; }
+.field-form input:not([type=checkbox]),.field-form select,.field-form textarea { border-radius:8px; border-color:#d0d4d4; }
+.field-chips label:has(input:checked) { background:#fff1f1; border-color:#d51a23; color:#ad151b; }
+#fieldNoteMount { scroll-margin-top:24px; }
+@media(max-width:580px) {
+    .field-shell { padding:22px 22px 40px; }
+    .field-header { align-items:center; padding-bottom:20px; gap:20px; }
+    .field-brand { font-size:27px; } .field-brand span { font-size:8px; letter-spacing:1.4px; }
+    .field-header > .field-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; }
+    .field-header .field-button { min-height:48px; font-size:13px; padding:12px; }
+    .field-intro { padding:28px 0 22px; }
+    .field-intro h1 { font-size:37px; letter-spacing:-1.5px; margin:14px 0; }
+    .field-intro > p:not(.field-eyebrow) { font-size:14px; line-height:1.65; }
+    .field-eyebrow { font-size:9px; letter-spacing:1.3px; }
+    .field-count { font-size:12px; }
+    .field-property { padding:18px; gap:14px; }
+    .field-property label,.field-form label { font-size:12px; }
+    .field-property input,.field-form input:not([type=checkbox]),.field-form select,.field-form textarea,.field-toolbar select { font-size:16px; min-height:46px; }
+    .field-section-heading { margin:28px 0 14px; gap:8px; }
+    .field-section-heading h2 { font-size:21px; }
+    .field-section-heading > span { font-size:11px; }
+    .field-sections { gap:12px; }
+    .field-section-card { padding:17px 19px 4px; }
+    .field-section-card h2 { font-size:19px; margin:12px 0 6px; }
+    .field-section-card > p { margin:0 0 10px; font-size:12px; }
+    .field-card-top { gap:8px; }
+    .field-status { font-size:10px; padding:4px 8px; }
+    .field-card-details[open] { padding-bottom:16px; }
+    .field-step-links a { min-height:44px; align-items:center; box-sizing:border-box; }
+    .field-note-panel { padding:22px 18px; margin-top:24px; }
+    .field-form { gap:18px; }
+    .field-form .field-actions { display:grid; grid-template-columns:1fr; gap:10px; }
+    .field-form .field-actions .field-button { width:100%; min-height:48px; }
+    .field-chips { gap:8px; } .field-chips label { min-height:44px; box-sizing:border-box; font-size:12px; }
+    .field-toolbar { padding:16px; }
+    .field-toolbar nav { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .field-toolbar nav label { grid-column:1/-1; justify-content:space-between; }
+    .field-toolbar nav label select { max-width:65%; }
+    .field-toolbar .field-form { margin-top:16px; }
+    .field-help { font-size:12px; }
+}
