@@ -46,3 +46,14 @@ a { color:inherit; }
     .home-footer { padding:20px 0; flex-direction:column; gap:8px; font-size:8px; }
 }
 @media(prefers-reduced-motion:reduce) { .home-action { transition:none; } }
+.home-dialog { width:min(480px,calc(100vw - 32px)); box-sizing:border-box; padding:32px; border:1px solid #dedfdc; border-radius:18px; background:#fafaf8; color:#25272b; box-shadow:0 20px 70px #0002; }
+.home-dialog::backdrop { background:#18202680; }
+.home-dialog h2 { font-size:27px; letter-spacing:-.7px; margin:12px 0; }
+.home-dialog > p:not(.home-eyebrow) { font-size:13px; line-height:1.7; color:#62686c; }
+.home-dialog .home-eyebrow { margin-top:12px; }
+.home-dialog-close { position:absolute; top:12px; right:12px; border:0; background:transparent; font-size:25px; width:40px; height:40px; cursor:pointer; }
+.home-dialog-actions { display:grid; gap:12px; margin:24px 0 18px; }
+.home-dialog-actions button { width:100%; font-family:inherit; cursor:pointer; }
+.home-dialog .home-dialog-warning { font-size:11px; }
+.home-dialog-warning a { text-decoration:underline; }
+@media(max-width:480px) { .home-dialog { padding:26px 20px; }.home-dialog h2 { font-size:24px; }.home-dialog-actions button { font-size:13px; } }

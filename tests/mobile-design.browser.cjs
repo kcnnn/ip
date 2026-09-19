@@ -11,14 +11,14 @@ const { chromium } = require('playwright');
             await page.setViewportSize({ width, height: 900 });
             await page.goto('http://127.0.0.1:8000/index.html');
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-            const primary = await page.locator('.home-primary').boundingBox();
-            const secondary = await page.locator('.home-secondary').boundingBox();
+            const primary = await page.locator('.home-intro .home-primary').boundingBox();
+            const secondary = await page.locator('.home-intro .home-secondary').boundingBox();
             assert.ok(primary.height >= 44 && secondary.height >= 44);
             if (width <= 640) {
                 assert.equal(primary.width, secondary.width);
                 assert.ok(secondary.y >= primary.y + primary.height + 8);
             }
-            assert.equal(await page.locator('.home-primary').getAttribute('href'), 'inspection-workspace.html');
+            assert.equal(await page.locator('.home-intro .home-primary').getAttribute('href'), 'inspection-workspace.html');
             await page.screenshot({ path: `/tmp/apex-home-${width}.png`, fullPage: width >= 768 });
         }
         await page.setViewportSize({ width: 390, height: 900 });

@@ -53,5 +53,19 @@
         </footer>
     </div>
     
+    <dialog id="workspaceChoice" aria-labelledby="workspaceChoiceTitle" class="home-dialog">
+        <button type="button" id="workspaceCancel" class="home-dialog-close" aria-label="Close">×</button>
+        <p class="home-eyebrow">YOUR INSPECTION</p>
+        <h2 id="workspaceChoiceTitle">Pick up or start fresh?</h2>
+        <p id="workspaceCurrent"></p>
+        <div class="home-dialog-actions">
+            <button type="button" id="workspaceContinue" class="home-action home-primary">Continue current workspace <span aria-hidden="true">→</span></button>
+            <button type="button" id="workspaceNew" class="home-action home-secondary">Start a new workspace <span aria-hidden="true">+</span></button>
+        </div>
+        <p class="home-dialog-warning">Starting a new workspace replaces the current inspection on this browser. <a href="inspection-review.html">Review or print your current record</a> first if you need to keep it. Your API settings will stay unchanged.</p>
+        <p id="workspaceError" role="alert"></p>
+    </dialog>
+    <script src="inspection-store.js"></script>
+    <script src="home.js"></script>
 </body>
 </html>
