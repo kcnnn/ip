@@ -7,7 +7,7 @@ test('includes saved findings, absences, measurements and reported discussion, n
         observations:{a:{section:'Elevations',details:'Window screen has moderate wear.'},b:{section:'Roof edge',details:'Inspector-confirmed gutter size: 5 inches.'}},
         absences:{a:{section:'Roof edge',label:'Other component',note:'Not present'}},notes:{fieldDraft:{details:'DRAFT OMITTED'},insuredInterview:{damageNotes:'Insured reports staining.',zellePhone:'PRIVATE OMITTED'}}},sections,n=>n.details);
     assert.match(text,/Window screen has moderate wear/); assert.match(text,/5 inches/); assert.match(text,/reported.*Insured reports staining/);
-    assert.doesNotMatch(text,/DRAFT OMITTED|PRIVATE OMITTED/); assert.match(text,/Inspector review: Not reviewed/);
+    assert.doesNotMatch(text,/DRAFT OMITTED|PRIVATE OMITTED|Inspector review:|Not reviewed/);
 });
 test('photos without observations do not become negative damage findings', () => {
     const text = build({photos:{a:{section:'Elevations',label:'Front Elevation'}}},sections,n=>n.details);

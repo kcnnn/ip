@@ -31,7 +31,14 @@
         return parts.join(' ');
     };
     const currentSection = () => sections.find(section => location.pathname.endsWith(section[1]))?.[0] || 'Elevations';
-    window.InspectionField = { sections, escape, narrative, currentSection };
+    const sectionProgress = (record, section) => {
+        const hasPhoto = Object.values(record.photos || {}).some(photo => photo.section === section && !['saving', 'failed'].includes(photo.storageStatus));
+        const hasNote = Object.values(record.observations || {}).some(note => note.section === section);
+        const hasAbsence = Object.values(record.absences || {}).some(item => item.section === section);
+        const hasInterview = section === 'Interview' && !!record.notes?.insuredInterview;
+        return hasPhoto || hasNote || hasAbsence || hasInterview ? 'In progress' : 'Not started';
+    };
+    window.InspectionField = { sections, escape, narrative, currentSection, sectionProgress };
 
     function formMarkup() {
         return `<form id="fieldNoteForm" class="field-form">
@@ -402,13 +409,13 @@
                 document.getElementById('fieldSections').innerHTML = sections.map(([name, url, items], i) => {
                     const count = photos.filter(photo => photo.section === name).length;
                     const notes = Object.values(record.observations).filter(note => note.section === name).length;
-                    const status = record.sectionStates[name]?.status || 'Not reviewed';
+                    const status = sectionProgress(record, name);
                     const open = expanded.has(name) ? expanded.get(name) : !matchMedia('(max-width:580px)').matches;
                     return `<article class="field-section-card"><div class="field-card-top"><span class="field-number">${String(i + 1).padStart(2, '0')}</span><span class="field-status">${escape(status)}</span></div><h2><a href="${url}">${escape(name)} <span aria-hidden="true">↗</span></a></h2><p>${count} photos · ${notes} notes</p><details class="field-card-details" data-section-details="${escape(name)}" ${open ? 'open' : ''}><summary>Steps & observations<span aria-hidden="true">+</span></summary><div class="field-step-links">${items.map((label, index) => {
                         const present = record.photos[`${name}:${label}`];
                         const absent = record.absences[`${name}:${label}`] || record.absences[`${name}:${label.toLowerCase()}`];
                         return `<a href="${url}?item=${index}">${escape(label)}<span>${present?.storageStatus === 'failed' ? 'Save failed' : present ? 'Captured' : absent ? 'Not present' : 'No photo'}</span></a>`;
-                    }).join('')}</div><button class="field-text-button" data-note-section="${escape(name)}">+ Add observation</button><label class="field-review-label">Inspector review<select data-review-section="${escape(name)}">${['Not reviewed', 'In progress', 'Reviewed'].map(value => `<option ${status === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label></details></article>`;
+                    }).join('')}</div><button class="field-text-button" data-note-section="${escape(name)}">+ Add observation</button></details></article>`;
                 }).join('');
                 const notes = Object.values(record.observations).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
                 document.getElementById('fieldSavedNotes').innerHTML = notes.length ? notes.map(note => `<article class="field-saved-note"><div><span class="field-eyebrow">${escape(note.section)} · INSPECTOR NOTE</span><p>${escape(narrative(note))}</p><small>${new Date(note.updatedAt).toLocaleString()}${note.dictated ? ' · Includes dictated text' : ''}</small></div><button class="field-button" data-edit-note="${escape(note.id)}">Edit</button></article>`).join('') : '<p class="field-help">No saved observations yet. Add a note as you inspect; you can return and edit it later.</p>';
@@ -422,9 +429,6 @@
                     if (InspectionStore.get().notes.fieldDraft && !confirm('Start a new draft here? The existing draft will be replaced; saved observations are kept.')) return;
                     window.InspectionField.editNote({ section: add.dataset.noteSection }); update();
                 }
-            });
-            document.getElementById('fieldSections').addEventListener('change', event => {
-                if (event.target.dataset.reviewSection) InspectionStore.sectionState(event.target.dataset.reviewSection, event.target.value);
             });
             document.getElementById('fieldExport').addEventListener('click', async () => {
                 await InspectionStore.flush();

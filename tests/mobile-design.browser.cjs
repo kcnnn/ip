@@ -27,7 +27,7 @@ const { chromium } = require('playwright');
         await page.screenshot({ path: '/tmp/apex-workspace-polished-mobile.png' });
         await page.locator('.field-card-details summary').first().click();
         assert.equal(await page.locator('.field-card-details[open]').count(), 1);
-        await page.locator('[data-review-section="Elevations"]').selectOption('In progress');
+        await page.evaluate(() => InspectionStore.note('testRender', 'refresh'));
         assert.equal(await page.locator('.field-card-details[open]').count(), 1, 'Expansion survives saving');
         await page.locator('.field-card-details a').filter({ hasText: 'Rear Elevation' }).click();
         await page.waitForFunction(() => document.querySelector('#elevationTitle')?.textContent === 'Rear Elevation');

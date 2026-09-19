@@ -16,9 +16,8 @@ function buildClaimNotes(record, sections, narrative) {
         const sectionNotes = notes.filter(n => n.section === section);
         const sectionAbsences = absences.filter(a => a.section === section);
         const interview = section === 'Interview' ? record.notes?.insuredInterview?.damageNotes : '';
-        const status = record.sectionStates?.[section]?.status || 'Not reviewed';
         lines.push('', `${section.toUpperCase()}`);
-        lines.push(`${sectionPhotos.length} photo records. Inspector review: ${status}.`);
+        lines.push(`${sectionPhotos.length} photo records.`);
         if (section === 'Elevations') for (const key of ['front', 'right', 'rear', 'left']) {
             const count = sectionPhotos.filter(photo => photo.elevationKey === key).length;
             if (count) lines.push(`${key.charAt(0).toUpperCase() + key.slice(1)} elevation: ${count} additional detail photo${count === 1 ? '' : 's'}.`);
