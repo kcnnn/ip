@@ -41,8 +41,8 @@
                 <h3>Start with a photo.</h3>
                 <p class="field-help">One detail, one story. Take a photo where you are, or choose one already saved.</p>
                 <div class="field-actions"><button type="button" class="field-button field-primary" id="fieldCamera">Take a photo</button><button type="button" class="field-button" id="fieldUpload">Upload photo</button></div>
-                <input type="file" id="fieldCameraInput" accept="image/*" capture="environment" hidden>
-                <input type="file" id="fieldUploadInput" accept="image/*" hidden>
+                <input type="file" id="fieldCameraInput" accept="image/*,.heic,.heif" capture="environment" hidden>
+                <input type="file" id="fieldUploadInput" accept="image/*,.heic,.heif" hidden>
                 <label>Photo for this observation<select name="photoId"><option value="">No photo — text-only note</option></select></label>
                 <img id="fieldPhotoPreview" alt="Photo linked to this observation" hidden>
                 <p id="fieldPhotoStatus" role="status" class="field-help"></p>
@@ -248,22 +248,28 @@
                 const file = input.files[0];
                 if (!file || capturing) return;
                 const status = document.getElementById('fieldPhotoStatus');
-                if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 20 * 1024 * 1024) { status.textContent = 'Choose a JPEG, PNG or WebP photo under 20 MB.'; input.value = ''; return; }
                 capturing = true;
                 const generation = fillGeneration;
                 status.textContent = 'Saving your photo…';
                 form.querySelector('[type="submit"]').disabled = true;
+                document.getElementById('fieldFill').disabled = true;
+                for (const name of ['Camera', 'Upload']) document.getElementById(`field${name}`).disabled = true;
                 try {
-                    const data = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
-                    // Bound the AI image size; store the original for reports and later review.
+                    const { preparePhoto } = await import('./photo-import.js');
+                    const prepared = await preparePhoto(file, message => { if (generation === fillGeneration) status.textContent = message; });
+                    if (generation !== fillGeneration) return;
                     const id = `observation-photo:${Date.now()}:${Math.random().toString(36).slice(2)}`;
-                    const ok = await InspectionStore.recordPhoto(field('section').value, `Field photo · ${file.name}`, data, { id });
+                    const ok = await InspectionStore.recordPhoto(field('section').value, `Field photo · ${file.name}`, prepared.dataUrl, { id, convertedFrom: prepared.convertedFrom, sourceName: prepared.sourceName });
                     if (!ok) throw new Error('Photo could not be saved. Please try again.');
                     if (generation !== fillGeneration) return;
                     refreshPhotos(); field('photoId').value = id; aiReview = null; renderReview(); update(); await previewPhoto();
                     field('details').focus({ preventScroll: true });
-                } catch (error) { status.textContent = error.message || 'Photo could not be opened. Try a JPEG or PNG.'; }
-                finally { capturing = false; input.value = ''; form.querySelector('[type="submit"]').disabled = filling || listening; }
+                } catch (error) { if (generation === fillGeneration) status.textContent = error.message || 'Photo could not be opened. Please try again.'; }
+                finally {
+                    capturing = false; input.value = ''; form.querySelector('[type="submit"]').disabled = filling || listening;
+                    document.getElementById('fieldFill').disabled = filling;
+                    for (const name of ['Camera', 'Upload']) document.getElementById(`field${name}`).disabled = false;
+                }
             });
         }
         form.addEventListener('input', event => {
