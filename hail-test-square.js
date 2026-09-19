@@ -187,6 +187,7 @@ function displayPhotoPreview(imageData) {
             closeupPhotos[2] = imageData;
             break;
     }
+    window.InspectionStore?.recordPhoto('Hail documentation', photoTitle.textContent, imageData);
     
     // Update UI
     updateStepDisplay();
@@ -213,6 +214,7 @@ function retakePhoto() {
             closeupPhotos[2] = undefined;
             break;
     }
+    window.InspectionStore?.removePhoto('Hail documentation', photoTitle.textContent);
     
     // Update UI
     updateStepDisplay();

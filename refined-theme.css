@@ -119,6 +119,7 @@ button, .action-btn, .nav-btn, .camera-btn, .start-button, .accessory-btn, .comp
 
 button:hover:not(:disabled), .accessory-btn:hover { background: #f6f6f6 !important; border-color: #6b6d71 !important; transform: none; }
 .start-button:hover, .camera-btn.primary:hover, .action-btn.primary:hover, .nav-btn.primary:hover, .complete-btn:hover, .confirm-btn:hover, #nextBtn:not(:disabled):hover, button.primary:hover { background: var(--trv-red-dark) !important; border-color: var(--trv-red-dark) !important; }
+.secondary-start { margin-left: .75rem; background: #fff !important; border: 1px solid #272a2d !important; color: #272a2d !important; }
 button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid #99d3f7; outline-offset: 2px; }
 button:disabled { opacity: .45; }
 

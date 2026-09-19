@@ -157,6 +157,7 @@ function displayPhotoPreview(imageData) {
     
     // Store the photo data
     capturedPhotos[elevations[currentElevationIndex].key] = imageData;
+    window.InspectionStore?.recordPhoto('Elevations', elevations[currentElevationIndex].name, imageData);
     
     // Update UI
     updateElevationDisplay();
@@ -170,6 +171,7 @@ function retakePhoto() {
     
     // Clear stored photo
     delete capturedPhotos[elevations[currentElevationIndex].key];
+    window.InspectionStore?.removePhoto('Elevations', elevations[currentElevationIndex].name);
     
     // Update UI
     updateElevationDisplay();

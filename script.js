@@ -2,6 +2,10 @@
 
 // Function to start the inspection process
 function startInspection() {
+    if (window.InspectionStore && !confirm('Start a new inspection? This clears the saved photo review record on this device.')) {
+        return;
+    }
+    window.InspectionStore?.startNew();
     // Add loading state to button
     const startButton = document.querySelector('.start-button');
     const originalText = startButton.innerHTML;

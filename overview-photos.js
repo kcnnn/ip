@@ -194,6 +194,7 @@ function displayPhotoPreview(imageData) {
     
     // Store the photo data
     capturedPhotos[overviewPhotos[currentPhotoIndex].key] = imageData;
+    window.InspectionStore?.recordPhoto('Roof overview', overviewPhotos[currentPhotoIndex].name, imageData);
     
     // Update UI
     updatePhotoDisplay();
@@ -208,6 +209,7 @@ function retakePhoto() {
     
     // Clear stored photo
     delete capturedPhotos[overviewPhotos[currentPhotoIndex].key];
+    window.InspectionStore?.removePhoto('Roof overview', overviewPhotos[currentPhotoIndex].name);
     
     // Update UI
     updatePhotoDisplay();

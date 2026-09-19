@@ -243,6 +243,8 @@ function displayPhotoPreview(imageData) {
     
     // Store the photo data
     capturedPhotos[currentAccessoryIndex].photoData = imageData;
+    const accessory = capturedPhotos[currentAccessoryIndex];
+    window.InspectionStore?.recordPhoto('Accessories', accessory.type?.name || 'Roof accessory', imageData);
     
     // Update UI
     updatePhotoDisplay();
@@ -256,6 +258,8 @@ function retakePhoto() {
     
     // Clear stored photo
     capturedPhotos[currentAccessoryIndex].photoData = null;
+    const accessory = capturedPhotos[currentAccessoryIndex];
+    window.InspectionStore?.removePhoto('Accessories', accessory.type?.name || 'Roof accessory');
     
     // Update UI
     updatePhotoDisplay();

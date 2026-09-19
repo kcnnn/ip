@@ -241,6 +241,7 @@ function completeInspection() {
     
     // Store interview data
     localStorage.setItem('insured_interview_data', JSON.stringify(interviewData));
+    window.InspectionStore?.note('insuredInterview', interviewData);
     
     // Show loading and generate AI report
     showReportGeneration(interviewData);

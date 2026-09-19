@@ -139,6 +139,7 @@ function displayPhotoPreview(imageData) {
     
     // Store the photo data
     capturedPhotos[inspections[currentInspectionIndex].key] = imageData;
+    window.InspectionStore?.recordPhoto('Ridge', inspections[currentInspectionIndex].name, imageData);
     
     // Update UI
     updateInspectionDisplay();
@@ -152,6 +153,7 @@ function retakePhoto() {
     
     // Clear stored photo
     delete capturedPhotos[inspections[currentInspectionIndex].key];
+    window.InspectionStore?.removePhoto('Ridge', inspections[currentInspectionIndex].name);
     
     // Update UI
     updateInspectionDisplay();
