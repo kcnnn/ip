@@ -9,6 +9,15 @@
         ['Hail documentation', 'hail-test-square.html', ['Test Square Full View', 'Hail Hit Closeup 1', 'Hail Hit Closeup 2', 'Hail Hit Closeup 3']],
         ['Interview', 'insured-interview.html', []]
     ];
+    const componentsBySection = {
+        'Elevations': ['Siding', 'Window', 'Window screen', 'Door', 'Overhead door', 'Downspout', 'Trim', 'Fascia', 'Soffit', 'Brick / masonry', 'Stucco', 'Exterior light', 'Exterior vent', 'Other'],
+        'Roof edge': ['Gutter', 'Downspout', 'Drip edge', 'Underlayment', 'Fascia', 'Soffit', 'Flashing', 'Shingles', 'Other'],
+        'Ridge': ['Ridge shingles / caps', 'Ridge vent', 'Underlayment', 'Flashing', 'Other'],
+        'Roof overview': ['Shingles', 'Roof covering', 'Ridge', 'Valley', 'Flashing', 'Vent', 'Chimney', 'Other'],
+        'Accessories': ['Vent', 'Pipe boot', 'Rain cap', 'Rain diverter', 'Satellite dish', 'Chimney', 'Skylight', 'Flashing', 'Other'],
+        'Hail documentation': ['Shingles', 'Roof covering', 'Ridge shingles / caps', 'Metal roof panel', 'Flashing', 'Vent', 'Other'],
+        'Interview': ['General property', 'Roof', 'Exterior wall', 'Gutter', 'Downspout', 'Window', 'Door', 'Interior', 'Other']
+    };
     const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const options = values => values.map(value => `<option>${escape(value)}</option>`).join('');
     const narrative = note => {
@@ -30,7 +39,7 @@
             <div class="field-form-grid">
                 <label>Section<select name="section">${options(sections.map(s => s[0]))}</select></label>
                 <label>Location / slope<input name="location" maxlength="120" placeholder="e.g. Back slope, east corner" required></label>
-                <label>Component<select name="component">${options(['Shingles', 'Gutter', 'Downspout', 'Drip edge', 'Underlayment', 'Ridge', 'Vent', 'Flashing', 'Siding', 'Chimney', 'Other'])}</select></label>
+                <label>Component<select name="component" required><option value="">Select a component…</option></select></label>
                 <label>Observation<select name="condition">${options(['Not inspected', 'Observed damage', 'Suspected damage', 'No visible damage', 'Not present'])}</select></label>
             </div>
             <fieldset id="fieldDamageChoices"><legend>Damage selections</legend><div class="field-chips">${['Hail / impact', 'Wind / lifted shingle', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'].map(type => `<label><input type="checkbox" name="damageType" value="${escape(type)}"><span>${escape(type)}</span></label>`).join('')}</div></fieldset>
@@ -69,6 +78,16 @@
         document.getElementById('fieldNoteMount').innerHTML = formMarkup();
         const form = document.getElementById('fieldNoteForm');
         const field = name => form.elements.namedItem(name);
+        function refreshComponents(selected = '', preserveSaved = false) {
+            const choices = componentsBySection[field('section').value] || ['Other'];
+            field('component').innerHTML = '<option value="">Select a component…</option>' + options(choices);
+            // Keep historical observations intact, without offering roof items for new wall notes.
+            if (selected && preserveSaved && !choices.includes(selected)) {
+                field('component').add(new Option(`${selected} (previously saved)`, selected));
+            }
+            field('component').value = choices.includes(selected) || preserveSaved ? selected : '';
+            field('location').placeholder = field('section').value === 'Elevations' ? 'e.g. Front wall, right of entry door' : 'e.g. Back slope, east corner';
+        }
         let recognition, listening = false, dictated = false, voiceSession = 0;
         const readForm = () => ({
             id: field('id').value || undefined, section: field('section').value,
@@ -110,6 +129,7 @@
             form.reset(); dictated = !!note.dictated;
             refreshPhotos();
             field('section').value = note.section || currentSection();
+            refreshComponents(note.component || '', true);
             for (const key of ['id', 'location', 'component', 'condition', 'severity', 'quantity', 'unit', 'details', 'photoId']) {
                 if (note[key] !== undefined) field(key).value = note[key];
             }
@@ -123,7 +143,10 @@
         };
         refreshPhotos();
         loadNote(InspectionStore.get().notes.fieldDraft || {});
-        form.addEventListener('input', () => update());
+        form.addEventListener('input', event => {
+            if (event.target === field('section')) refreshComponents(field('component').value);
+            update();
+        });
         form.addEventListener('submit', event => {
             event.preventDefault();
             const note = readForm();
