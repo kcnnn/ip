@@ -120,7 +120,7 @@ function skipGutterMeasurement() {
     if (inspections[currentInspectionIndex].key !== 'gutter') return;
 
     skippedInspections.gutter = true;
-    window.InspectionStore?.markNotPresent('Roof edge', 'Gutter measurement', 'No gutters on this property');
+    window.InspectionStore?.markNotPresent('Roof edge', 'Gutter Measurement', 'No gutters on this property');
     delete capturedPhotos.gutter;
     photoActions.style.display = 'none';
     aiAnalysis.style.display = 'none';
@@ -156,6 +156,7 @@ function handleFileSelect(event) {
 }
 
 function displayPhotoPreview(imageData) {
+    delete skippedInspections[inspections[currentInspectionIndex].key];
     // Hide camera preview, show photo preview
     cameraPreview.style.display = 'none';
     photoActions.style.display = 'block';

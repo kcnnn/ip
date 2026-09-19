@@ -183,6 +183,8 @@ function editAccessory(index) {
 
 function deleteAccessory(index) {
     if (confirm('Are you sure you want to delete this accessory photo?')) {
+        const removed = capturedPhotos[index];
+        window.InspectionStore?.removePhoto('Accessories', removed.type.name, removed.recordId || `Accessories:${removed.id}`);
         capturedPhotos.splice(index, 1);
         
         // Adjust current index
@@ -234,6 +236,10 @@ function handleFileSelect(event) {
 }
 
 function displayPhotoPreview(imageData) {
+    if (!capturedPhotos[currentAccessoryIndex]) {
+        if (!selectedAccessoryType) { alert('Select an accessory type first.'); return; }
+        addNewAccessory();
+    }
     // Hide camera preview, show photo preview
     cameraPreview.style.display = 'none';
     photoActions.style.display = 'block';
@@ -244,7 +250,10 @@ function displayPhotoPreview(imageData) {
     // Store the photo data
     capturedPhotos[currentAccessoryIndex].photoData = imageData;
     const accessory = capturedPhotos[currentAccessoryIndex];
-    window.InspectionStore?.recordPhoto('Accessories', accessory.type?.name || 'Roof accessory', imageData);
+    accessory.recordId ||= `Accessories:${accessory.id}`;
+    window.InspectionStore?.recordPhoto('Accessories', accessory.type?.name || 'Roof accessory', imageData, {
+        id: accessory.recordId, accessoryId: accessory.id, accessoryType: accessory.type
+    });
     
     // Update UI
     updatePhotoDisplay();
@@ -259,7 +268,7 @@ function retakePhoto() {
     // Clear stored photo
     capturedPhotos[currentAccessoryIndex].photoData = null;
     const accessory = capturedPhotos[currentAccessoryIndex];
-    window.InspectionStore?.removePhoto('Accessories', accessory.type?.name || 'Roof accessory');
+    window.InspectionStore?.removePhoto('Accessories', accessory.type?.name || 'Roof accessory', accessory.recordId || `Accessories:${accessory.id}`);
     
     // Update UI
     updatePhotoDisplay();

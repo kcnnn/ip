@@ -41,10 +41,34 @@ const phoneChecklistItem = document.getElementById('phoneChecklistItem');
 document.addEventListener('DOMContentLoaded', function() {
     checkForSatelliteDish();
     setupEventListeners();
+    restoreInterviewDraft();
     updateProgress();
     updateSummary();
     updateChecklist();
 });
+
+function restoreInterviewDraft() {
+    const saved = window.InspectionStore?.get().notes.insuredInterviewDraft;
+    if (saved) {
+        damageNotesTextarea.value = saved.damageNotes || '';
+        satelliteNotesTextarea.value = saved.satelliteNotes || '';
+        zelleNotesTextarea.value = saved.zelleNotes || '';
+        zellePhoneInput.value = zellePhone = saved.zellePhone || '';
+        satelliteInUse = saved.satelliteInUse || null;
+        hasZelle = saved.hasZelle || null;
+        satelliteYes.checked = satelliteInUse === 'yes'; satelliteNo.checked = satelliteInUse === 'no';
+        zelleYes.checked = hasZelle === 'yes'; zelleNo.checked = hasZelle === 'no';
+        toggleZellePhone();
+    }
+    const save = event => {
+        if (!['damageNotes', 'satelliteNotes', 'zelleNotes', 'zellePhone', 'satelliteYes', 'satelliteNo', 'zelleYes', 'zelleNo'].includes(event.target.id)) return;
+        window.InspectionStore?.note('insuredInterviewDraft', {
+            damageNotes: damageNotesTextarea.value, satelliteNotes: satelliteNotesTextarea.value,
+            zelleNotes: zelleNotesTextarea.value, zellePhone: zellePhoneInput.value, satelliteInUse, hasZelle
+        });
+    };
+    document.addEventListener('input', save); document.addEventListener('change', save);
+}
 
 function setupEventListeners() {
     // Text area changes
@@ -83,10 +107,8 @@ function setupEventListeners() {
 }
 
 function checkForSatelliteDish() {
-    // Check if satellite dish was documented in roof accessories
-    // This would typically check stored data from previous steps
-    // For now, we'll simulate checking for satellite dish
-    const hasSatellite = Math.random() > 0.5; // Simulate 50% chance of satellite dish
+    const hasSatellite = Object.values(window.InspectionStore?.get().photos || {}).some(photo =>
+        photo.section === 'Accessories' && (photo.accessoryType?.name || photo.label) === 'Satellite Dish');
     
     if (hasSatellite) {
         hasSatelliteDish = true;
@@ -112,18 +134,11 @@ function updateProgress() {
 }
 
 function updateSummary() {
-    // Update photo counts (these would typically come from stored data)
-    // For now, using default values
-    elevationCount.textContent = '4';
-    roofEdgeCount.textContent = '2';
-    ridgeCount.textContent = '2';
-    overviewCount.textContent = '4';
-    accessoryCount.textContent = '5'; // Simulated count
-    hailTestCount.textContent = '4';
-    
-    // Calculate total
-    const total = 4 + 2 + 2 + 4 + 5 + 4;
-    totalPhotos.textContent = total;
+    const photos = Object.values(window.InspectionStore?.get().photos || {});
+    [[elevationCount, 'Elevations'], [roofEdgeCount, 'Roof edge'], [ridgeCount, 'Ridge'],
+     [overviewCount, 'Roof overview'], [accessoryCount, 'Accessories'], [hailTestCount, 'Hail documentation']]
+        .forEach(([element, section]) => { element.textContent = photos.filter(photo => photo.section === section).length; });
+    totalPhotos.textContent = photos.length;
 }
 
 function updateChecklist() {
@@ -243,8 +258,8 @@ function completeInspection() {
     localStorage.setItem('insured_interview_data', JSON.stringify(interviewData));
     window.InspectionStore?.note('insuredInterview', interviewData);
     
-    // Show loading and generate AI report
-    showReportGeneration(interviewData);
+    // Review actual recorded evidence and inspector notes, without invented report counts.
+    window.location.href = 'inspection-review.html';
 }
 
 function showReportGeneration(data) {

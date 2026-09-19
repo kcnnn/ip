@@ -2,29 +2,8 @@
 
 // Function to start the inspection process
 function startInspection() {
-    if (window.InspectionStore && !confirm('Start a new inspection? This clears the saved photo review record on this device.')) {
-        return;
-    }
-    window.InspectionStore?.startNew();
-    // Add loading state to button
-    const startButton = document.querySelector('.start-button');
-    const originalText = startButton.innerHTML;
-    
-    startButton.innerHTML = `
-        <span class="button-text">STARTING...</span>
-        <span class="button-arrow">⏳</span>
-    `;
-    startButton.disabled = true;
-    
-    // Simulate loading and then navigate to elevation photos
-    setTimeout(() => {
-        // Check if API key is configured, if not, go to setup first
-        if (typeof isAPIKeyConfigured === 'function' && !isAPIKeyConfigured()) {
-            window.location.href = 'api-setup.html';
-        } else {
-            window.location.href = 'elevation-photos.html';
-        }
-    }, 1500);
+    // Opening the workspace resumes the record. Never clear an inspection to navigate.
+    window.location.href = 'inspection-workspace.html';
 }
 
 // Add some interactive effects
