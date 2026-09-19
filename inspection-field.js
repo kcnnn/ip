@@ -36,18 +36,30 @@
     function formMarkup() {
         return `<form id="fieldNoteForm" class="field-form">
             <input type="hidden" name="id">
+            <section class="field-dictation-first field-photo-first" aria-label="Observation photo">
+                <span class="field-eyebrow">01 / CAPTURE THE DETAIL</span>
+                <h3>Start with a photo.</h3>
+                <p class="field-help">One detail, one story. Take a photo where you are, or choose one already saved.</p>
+                <div class="field-actions"><button type="button" class="field-button field-primary" id="fieldCamera">Take a photo</button><button type="button" class="field-button" id="fieldUpload">Upload photo</button></div>
+                <input type="file" id="fieldCameraInput" accept="image/*" capture="environment" hidden>
+                <input type="file" id="fieldUploadInput" accept="image/*" hidden>
+                <label>Photo for this observation<select name="photoId"><option value="">No photo — text-only note</option></select></label>
+                <img id="fieldPhotoPreview" alt="Photo linked to this observation" hidden>
+                <p id="fieldPhotoStatus" role="status" class="field-help"></p>
+            </section>
             <section class="field-dictation-first" aria-label="Dictate your observation">
-                <span class="field-eyebrow">01 / SAY WHAT YOU SEE</span>
-                <h3>Start with your observation.</h3>
-                <p class="field-help">One component and location at a time. Speak naturally—we’ll organize the details below when you stop.</p>
+                <span class="field-eyebrow">02 / TELL THE STORY</span>
+                <h3>Describe what you’re looking at.</h3>
+                <p class="field-help">Speak naturally. Include the location, component, damage or lack of damage, and any measurement. Your words stay intact.</p>
                 <div class="field-recall" aria-label="Things to cover"><span>Where is it?</span><span>Which component?</span><span>Damage or no damage?</span><span>How severe?</span><span>Size or count?</span></div>
                 <p class="field-help">For example: “Front elevation, window screen. Moderate wear and deterioration. Two screens affected.”</p>
                 <div class="field-voice"><button type="button" id="fieldDictate" class="field-button field-primary">Start dictation</button><span id="fieldVoiceStatus" role="status"></span></div>
                 <label>Your observation<textarea name="details" rows="4" maxlength="12000" placeholder="Dictate or type what you see. Your original words stay here."></textarea></label>
-                <div class="field-voice"><button type="button" id="fieldFill" class="field-button">Fill fields from note</button><span id="fieldFillStatus" role="status"></span></div>
-                <p class="field-help" id="fieldVoiceHelp">Dictation uses your browser’s speech service. Auto-fill sends this note to your configured AI provider when dictation ends or you click Fill fields. Nothing is saved as a completed observation until you review and save.</p>
+                <div class="field-voice"><button type="button" id="fieldFill" class="field-button field-primary">Analyze photo &amp; note</button><span id="fieldFillStatus" role="status"></span></div>
+                <p class="field-help" id="fieldVoiceHelp">Dictation uses your browser’s speech service. Analyze sends the selected photo and your note to your configured AI provider. Without a photo, only your words are organized. Review the result, then add it to your report.</p>
             </section>
-            <div class="field-extraction-heading"><span class="field-eyebrow">02 / REVIEW THE DETAILS</span><p class="field-help">Auto-filled fields are suggestions from your words. Check them, add anything missing, and link a photo if needed.</p></div>
+            <div class="field-extraction-heading"><span class="field-eyebrow">03 / REVIEW &amp; ADD TO REPORT</span><p class="field-help">Your words become consistent fields. AI photo findings are kept separately so you can see what agrees and what needs attention.</p></div>
+            <div id="fieldPhotoReview" class="field-preview" hidden role="status"></div>
             <div class="field-form-grid">
                 <label>Section<select name="section">${options(sections.map(s => s[0]))}</select></label>
                 <label>Location / slope<input name="location" maxlength="120" placeholder="e.g. Back slope, east corner" required></label>
@@ -57,12 +69,11 @@
             <fieldset id="fieldDamageChoices"><legend>Damage selections</legend><div class="field-chips">${['Hail / impact', 'Wind / lifted shingle', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'].map(type => `<label><input type="checkbox" name="damageType" value="${escape(type)}"><span>${escape(type)}</span></label>`).join('')}</div></fieldset>
             <div class="field-form-grid">
                 <label>Severity<select name="severity">${options(['Not assessed', 'Minor', 'Moderate', 'Severe'])}</select></label>
-                <label>Link to a saved photo<select name="photoId"><option value="">No photo linked</option></select></label>
                 <label>Measurement or count<input name="quantity" type="number" min="0" step="any" placeholder="e.g. 6"></label>
                 <label>Unit<select name="unit"><option value="">Not measured</option>${options(['inches', 'feet', 'square feet', 'marked hits', 'items', 'mm', 'cm'])}</select></label>
             </div>
             <div class="field-preview"><span class="field-eyebrow">CONSISTENT NOTE PREVIEW</span><p id="fieldNarrative"></p></div>
-            <div class="field-actions"><button type="submit" class="field-button field-primary">Save observation</button><button type="button" id="fieldNewNote" class="field-button">New / clear draft</button><span id="fieldSaveStatus" role="status"></span></div>
+            <div class="field-actions"><button type="submit" class="field-button field-primary">Add to report</button><button type="button" id="fieldNewNote" class="field-button">New / clear draft</button><span id="fieldSaveStatus" role="status"></span></div>
         </form>`;
     }
 
@@ -98,18 +109,35 @@
             field('location').placeholder = field('section').value === 'Elevations' ? 'e.g. Front wall, right of entry door' : 'e.g. Back slope, east corner';
         }
         let recognition, listening = false, dictated = false, voiceSession = 0;
-        let fillGeneration = 0, filling = false, manualFields = false;
+        let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false;
+        const renderReview = () => {
+            const panel = document.getElementById('fieldPhotoReview');
+            panel.hidden = !aiReview;
+            const labels = { supports_note: 'Photo supports your note', needs_detail: 'More detail would help', conflicts_with_note: 'Photo and note may disagree', unable_to_assess: 'Photo could not be assessed' };
+            panel.innerHTML = aiReview ? `<strong>AI photo review · ${escape(labels[aiReview.status])}</strong><p>${escape(aiReview.summary)}</p><ul>${aiReview.checks.map(item => `<li>${escape(item)}</li>`).join('')}</ul>` : '';
+        };
+        async function previewPhoto() {
+            const generation = ++photoGeneration;
+            const id = field('photoId').value;
+            const img = document.getElementById('fieldPhotoPreview');
+            img.hidden = true;
+            document.getElementById('fieldFill').textContent = id ? 'Analyze photo & note' : 'Fill fields from note';
+            const photo = id ? await InspectionStore.getPhoto(id).catch(() => null) : null;
+            if (generation !== photoGeneration) return;
+            if (photo) { img.src = photo; img.hidden = false; }
+            document.getElementById('fieldPhotoStatus').textContent = id ? (photo ? 'Photo ready. Describe it below.' : 'Original photo unavailable. Upload it again to analyze.') : 'A photo is optional for text-only observations.';
+        }
         const readForm = () => ({
             id: field('id').value || undefined, section: field('section').value,
             location: field('location').value.trim(), component: field('component').value,
             condition: field('condition').value, severity: field('severity').value,
             damageTypes: [...form.querySelectorAll('[name="damageType"]:checked')].map(input => input.value),
             quantity: field('quantity').value, unit: field('unit').value,
-            details: field('details').value, photoId: field('photoId').value, dictated
+            details: field('details').value, photoId: field('photoId').value, dictated, aiReview
         });
         const refreshPhotos = () => {
             const selected = field('photoId').value;
-            field('photoId').innerHTML = '<option value="">No photo linked</option>' + Object.entries(InspectionStore.get().photos).map(([id, photo]) => `<option value="${escape(id)}">${escape(photo.section)} · ${escape(photo.label)}</option>`).join('');
+            field('photoId').innerHTML = '<option value="">No photo — text-only note</option>' + Object.entries(InspectionStore.get().photos).map(([id, photo]) => `<option value="${escape(id)}">${escape(photo.section)} · ${escape(photo.label)}</option>`).join('');
             if ([...field('photoId').options].some(option => option.value === selected)) field('photoId').value = selected;
             else if (selected) {
                 field('photoId').add(new Option('Previously linked photo — removed', selected));
@@ -131,7 +159,8 @@
             }
         };
         async function fillFromNote(automatic = false) {
-            if (filling || listening) return;
+            if (filling || listening || capturing) return;
+            if (automatic && field('photoId').value) return;
             const status = document.getElementById('fieldFillStatus');
             const text = field('details').value.trim();
             if (!text) { status.textContent = 'Dictate or type an observation first.'; return; }
@@ -145,16 +174,23 @@
             document.getElementById('fieldFill').disabled = true;
             document.getElementById('fieldDictate').disabled = true;
             form.querySelector('[type="submit"]').disabled = true;
-            status.textContent = 'Organizing your note…';
+            status.textContent = field('photoId').value ? 'Reviewing the photo and organizing your note…' : 'Organizing your note…';
             let timeout;
             try {
-                const extracted = await Promise.race([
-                    ObservationExtraction.extract(text, componentsBySection, field('section').value),
-                    new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Auto-fill timed out. Your note is kept; retry or fill the fields manually.')), 25000); })
+                const photoId = field('photoId').value;
+                const revision = InspectionStore.get().photos[photoId]?.revision;
+                const photo = photoId ? await InspectionStore.getPhoto(photoId) : null;
+                if (photoId && !photo) throw new Error('Original photo unavailable. Upload it again; your note is kept.');
+                const result = await Promise.race([
+                    ObservationExtraction.extract(text, componentsBySection, field('section').value, photo),
+                    new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('AI review timed out. Your photo and note are kept; retry.')), 60000); })
                 ]);
                 if (generation !== fillGeneration) return;
+                if (photoId && InspectionStore.get().photos[photoId]?.revision !== revision) throw new Error('The photo changed during analysis. Analyze again.');
                 if (JSON.stringify(readForm()) !== snapshot) { status.textContent = 'You changed this note while it was being organized. Your changes were kept; click Fill fields to try again.'; return; }
-                if (!Object.keys(extracted).length) { status.textContent = 'No clear fields found. Add the location, component and what you observed, or choose them below.'; return; }
+                const extracted = photo ? result.fields : result;
+                aiReview = photo ? { ...result.review, photoId, revision, transcript: field('details').value, reviewedAt: new Date().toISOString() } : null;
+                renderReview();
                 field('section').value = extracted.section || field('section').value;
                 refreshComponents(extracted.component || '');
                 for (const key of ['location', 'condition', 'severity', 'quantity', 'unit']) field(key).value = extracted[key] || (key === 'severity' ? 'Not assessed' : '');
@@ -187,6 +223,7 @@
             form.querySelector('[type="submit"]').disabled = false;
             document.getElementById('fieldDictate').textContent = 'Start dictation';
             form.reset(); dictated = !!note.dictated;
+            aiReview = note.aiReview || null; renderReview();
             refreshPhotos();
             field('section').value = note.section || currentSection();
             refreshComponents(note.component || '', true);
@@ -195,6 +232,7 @@
             }
             form.querySelectorAll('[name="damageType"]').forEach(input => { input.checked = (note.damageTypes || []).includes(input.value); });
             update(false);
+            previewPhoto();
         }
         window.InspectionField.editNote = note => {
             loadNote(note);
@@ -203,7 +241,35 @@
         };
         refreshPhotos();
         loadNote(InspectionStore.get().notes.fieldDraft || {});
+        for (const kind of ['Camera', 'Upload']) {
+            const input = document.getElementById(`field${kind}Input`);
+            document.getElementById(`field${kind}`).addEventListener('click', () => input.click());
+            input.addEventListener('change', async () => {
+                const file = input.files[0];
+                if (!file || capturing) return;
+                const status = document.getElementById('fieldPhotoStatus');
+                if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 20 * 1024 * 1024) { status.textContent = 'Choose a JPEG, PNG or WebP photo under 20 MB.'; input.value = ''; return; }
+                capturing = true;
+                const generation = fillGeneration;
+                status.textContent = 'Saving your photo…';
+                form.querySelector('[type="submit"]').disabled = true;
+                try {
+                    const data = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+                    // Bound the AI image size; store the original for reports and later review.
+                    const id = `observation-photo:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+                    const ok = await InspectionStore.recordPhoto(field('section').value, `Field photo · ${file.name}`, data, { id });
+                    if (!ok) throw new Error('Photo could not be saved. Please try again.');
+                    if (generation !== fillGeneration) return;
+                    refreshPhotos(); field('photoId').value = id; aiReview = null; renderReview(); update(); await previewPhoto();
+                    field('details').focus({ preventScroll: true });
+                } catch (error) { status.textContent = error.message || 'Photo could not be opened. Try a JPEG or PNG.'; }
+                finally { capturing = false; input.value = ''; form.querySelector('[type="submit"]').disabled = filling || listening; }
+            });
+        }
         form.addEventListener('input', event => {
+            if (!event.target.name) return;
+            if (['details', 'photoId'].includes(event.target.name)) { aiReview = null; renderReview(); }
+            if (event.target.name === 'photoId') previewPhoto();
             if (!['details', 'section', 'photoId'].includes(event.target.name)) manualFields = true;
             if (event.target === field('section')) refreshComponents(field('component').value);
             update();
@@ -211,14 +277,16 @@
         document.getElementById('fieldFill').addEventListener('click', () => fillFromNote());
         form.addEventListener('submit', event => {
             event.preventDefault();
+            if (filling || capturing || listening) return;
             const note = readForm();
+            if (note.aiReview && (note.aiReview.transcript !== note.details || note.aiReview.revision !== InspectionStore.get().photos[note.photoId]?.revision)) { aiReview = null; renderReview(); note.aiReview = null; }
             if (!!note.quantity !== !!note.unit) {
                 document.getElementById('fieldSaveStatus').textContent = 'Enter both a measurement/count and its unit, or leave both empty.'; return;
             }
             recognition?.stop();
             try {
                 const id = InspectionStore.saveObservation(note); field('id').value = id;
-                document.getElementById('fieldSaveStatus').textContent = 'Observation saved on this device';
+                document.getElementById('fieldSaveStatus').textContent = 'Added to report. Your photo, note and any AI review are linked.';
             } catch { document.getElementById('fieldSaveStatus').textContent = 'Observation not saved'; }
         });
         document.getElementById('fieldNewNote').addEventListener('click', () => {
@@ -242,7 +310,7 @@
                     const text = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
                         receivedSpeech = true;
-                        field('details').value = `${field('details').value.trim()} ${text}`.trim(); dictated = true; update();
+                        field('details').value = `${field('details').value.trim()} ${text}`.trim(); dictated = true; aiReview = null; renderReview(); update();
                     } else interim += text;
                 }
                 voice.textContent = interim || 'Listening…';

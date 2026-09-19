@@ -126,3 +126,10 @@
 .field-recall span { font-size:12px; color:#52595e; background:white; padding:9px 12px; border:1px solid #dedfdc; border-radius:20px; }
 .field-extraction-heading { border-top:1px solid #e6e8e4; padding-top:20px; }
 @media(max-width:580px) { .field-dictation-first { padding:17px 14px; margin:0 -5px; }.field-dictation-first .field-voice { align-items:stretch; flex-direction:column; }.field-dictation-first .field-button { min-height:48px; }.field-recall { gap:6px; }.field-recall span { font-size:11px; padding:7px 9px; } }
+.field-photo-first { margin-bottom: 18px; }
+#fieldPhotoPreview { display: block; width: 100%; max-height: 420px; object-fit: contain; background: #eee; border-radius: 16px; margin-top: 18px; }
+#fieldPhotoPreview[hidden], #fieldPhotoReview[hidden] { display: none; }
+#fieldPhotoReview { border-left: 4px solid #65786b; margin-bottom: 24px; }
+#fieldPhotoReview li { margin-bottom: 8px; }
+.field-photo-first input[hidden] { display: none; }
+@media (max-width: 600px) { #fieldPhotoPreview { max-height: 300px; } .field-photo-first .field-actions { display: grid; grid-template-columns: 1fr 1fr; } }

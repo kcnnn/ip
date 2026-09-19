@@ -53,7 +53,7 @@ const { chromium } = require('playwright');
         assert.equal(await page.locator('[name=details]').inputValue(),'Back gutter is five inches');
         assert.equal(await page.locator('#fieldNoteForm [type=submit]').isDisabled(),false);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false);
-        await page.locator('.field-dictation-first').evaluate(element => element.scrollIntoView({block:'start'}));
+        await page.locator('.field-dictation-first[aria-label="Dictate your observation"]').evaluate(element => element.scrollIntoView({block:'start'}));
         await page.screenshot({path:'/tmp/apex-dictation-first-mobile.png'});
         assert.deepEqual(errors,[]);
         console.log('PASS: dictation-first order, mocked auto-fill, review-before-save, transcript preservation, late-response protection, missing-key fallback and mobile width.');

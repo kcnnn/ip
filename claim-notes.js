@@ -20,7 +20,10 @@ function buildClaimNotes(record, sections, narrative) {
         lines.push('', `${section.toUpperCase()}`);
         lines.push(`${sectionPhotos.length} photo records. Inspector review: ${status}.`);
         sectionAbsences.forEach(item => lines.push(`${item.label}: ${item.note || 'Not present'}.`));
-        sectionNotes.forEach(note => lines.push(`Inspector observation: ${narrative(note)}`));
+        sectionNotes.forEach(note => {
+            lines.push(`Inspector observation: ${narrative(note)}`);
+            if (note.aiReview) lines.push(`AI photo review (${note.aiReview.status.replaceAll('_', ' ')}): ${note.aiReview.summary}`, ...(note.aiReview.checks || []).map(item => `AI review detail: ${item}`));
+        });
         if (interview) lines.push(`Insured discussion (reported): ${interview}`);
         if (!sectionNotes.length && !interview) lines.push('No findings recorded for this section.');
         const expected = sections.find(s => s[0] === section)?.[2] || [];

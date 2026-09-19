@@ -1,0 +1,46 @@
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright');
+(async () => {
+ const browser = await chromium.launch({channel:'chrome',headless:true});
+ try {
+  const page = await browser.newPage({viewport:{width:390,height:844}});
+  const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:8000/inspection-workspace.html');
+  const png = await page.evaluate(()=>{const c=document.createElement('canvas');c.width=600;c.height=400;c.getContext('2d').fillRect(0,0,600,400);return c.toDataURL().split(',')[1];});
+  await page.locator('#fieldUploadInput').setInputFiles({name:'door.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
+  await page.waitForFunction(()=>document.getElementById('fieldPhotoStatus').textContent.startsWith('Photo ready'));
+  await page.locator('[name=details]').fill('Rear elevation door has a minor dent. Not hail.');
+  await page.evaluate(()=>localStorage.setItem('claude_api_key','synthetic-key'));
+  const result={multipleObservations:false,fields:{section:{value:'Elevations',evidence:'elevation'},location:{value:'Rear elevation',evidence:'Rear elevation'},component:{value:'Door',evidence:'door'},condition:{value:'Observed damage',evidence:'dent'},severity:{value:'Minor',evidence:'minor'},damageTypes:{value:['Dent / deformation'],evidence:'dent'}},photoReview:{status:'needs_detail',summary:'The damage cannot be assessed from this test image.',checks:['Provide a detailed view of the dent.']}};
+  let sent;
+  await page.route('https://api.anthropic.com/**',async route=>{sent=route.request().postDataJSON();await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({content:[{type:'text',text:JSON.stringify(result)}]})});});
+  await page.locator('#fieldFill').click();
+  await page.waitForFunction(()=>document.getElementById('fieldFillStatus').textContent.startsWith('Details filled'));
+  assert.equal(sent.messages[0].content[0].type,'image');
+  assert.ok(sent.messages[0].content[0].source.data.length>100);
+  assert.equal(sent.temperature,undefined);
+  assert.match(await page.locator('#fieldPhotoReview').innerText(),/More detail would help/);
+  assert.equal(await page.locator('[name=component]').inputValue(),'Door');
+  assert.equal(await page.evaluate(()=>Object.keys(InspectionStore.get().observations).length),0);
+  await page.locator('#fieldNoteForm [type=submit]').click();
+  const note=await page.evaluate(()=>Object.values(InspectionStore.get().observations)[0]);
+  assert.ok(note.photoId); assert.equal(note.aiReview.status,'needs_detail');
+  await page.screenshot({path:'/tmp/apex-photo-observation-mobile.png',fullPage:true});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await page.goto('http://127.0.0.1:8000/inspection-review.html');
+  assert.match(await page.locator('#reviewContent').innerText(),/AI PHOTO REVIEW/);
+  await page.goto('http://127.0.0.1:8000/inspection-workspace.html');
+  await page.evaluate(note=>InspectionField.editNote(note),note);
+  await page.locator('[name=details]').fill('Rear elevation door has a dent.');
+  assert.ok(await page.locator('#fieldPhotoReview').isHidden());
+  await page.unroute('https://api.anthropic.com/**');
+  await page.route('https://api.anthropic.com/**',route=>route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({error:{message:'Mock failure'}})}));
+  page.on('dialog',dialog=>dialog.accept());
+  await page.locator('#fieldFill').click();
+  await page.waitForFunction(()=>document.getElementById('fieldFillStatus').textContent.includes('API 400'));
+  assert.ok(await page.locator('#fieldPhotoReview').isHidden());
+  assert.equal(await page.locator('[name=details]').inputValue(),'Rear elevation door has a dent.');
+  assert.deepEqual(errors,[]);
+  console.log('Photo capture, multimodal request, separate findings, report, invalidation, API error and mobile checks passed.');
+ } finally {await browser.close();}
+})().catch(e=>{console.error(e);process.exit(1)});
