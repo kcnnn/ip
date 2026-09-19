@@ -21,7 +21,7 @@
     const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const options = values => values.map(value => `<option>${escape(value)}</option>`).join('');
     const narrative = note => {
-        const parts = [`${note.section} / ${note.location || 'Location unspecified'} — ${note.component || 'Component unspecified'}: ${note.condition}.`];
+        const parts = [`${note.section} / ${note.location || 'Location unspecified'} — ${note.component || 'Component unspecified'}: ${note.condition || 'Observation unspecified'}.`];
         if (['Observed damage', 'Suspected damage'].includes(note.condition)) {
             if (note.damageTypes?.length) parts.push(`Damage type: ${note.damageTypes.join(', ')}.`);
             if (note.severity && note.severity !== 'Not assessed') parts.push(`Severity: ${note.severity.toLowerCase()}.`);
@@ -36,22 +36,31 @@
     function formMarkup() {
         return `<form id="fieldNoteForm" class="field-form">
             <input type="hidden" name="id">
+            <section class="field-dictation-first" aria-label="Dictate your observation">
+                <span class="field-eyebrow">01 / SAY WHAT YOU SEE</span>
+                <h3>Start with your observation.</h3>
+                <p class="field-help">One component and location at a time. Speak naturally—we’ll organize the details below when you stop.</p>
+                <div class="field-recall" aria-label="Things to cover"><span>Where is it?</span><span>Which component?</span><span>Damage or no damage?</span><span>How severe?</span><span>Size or count?</span></div>
+                <p class="field-help">For example: “Front elevation, window screen. Moderate wear and deterioration. Two screens affected.”</p>
+                <div class="field-voice"><button type="button" id="fieldDictate" class="field-button field-primary">Start dictation</button><span id="fieldVoiceStatus" role="status"></span></div>
+                <label>Your observation<textarea name="details" rows="4" maxlength="12000" placeholder="Dictate or type what you see. Your original words stay here."></textarea></label>
+                <div class="field-voice"><button type="button" id="fieldFill" class="field-button">Fill fields from note</button><span id="fieldFillStatus" role="status"></span></div>
+                <p class="field-help" id="fieldVoiceHelp">Dictation uses your browser’s speech service. Auto-fill sends this note to your configured AI provider when dictation ends or you click Fill fields. Nothing is saved as a completed observation until you review and save.</p>
+            </section>
+            <div class="field-extraction-heading"><span class="field-eyebrow">02 / REVIEW THE DETAILS</span><p class="field-help">Auto-filled fields are suggestions from your words. Check them, add anything missing, and link a photo if needed.</p></div>
             <div class="field-form-grid">
                 <label>Section<select name="section">${options(sections.map(s => s[0]))}</select></label>
                 <label>Location / slope<input name="location" maxlength="120" placeholder="e.g. Back slope, east corner" required></label>
                 <label>Component<select name="component" required><option value="">Select a component…</option></select></label>
-                <label>Observation<select name="condition">${options(['Not inspected', 'Observed damage', 'Suspected damage', 'No visible damage', 'Not present', 'Measurement recorded'])}</select></label>
+                <label>Observation<select name="condition" required><option value="">Select observation…</option>${options(['Not inspected', 'Observed damage', 'Suspected damage', 'No visible damage', 'Not present', 'Measurement recorded'])}</select></label>
             </div>
             <fieldset id="fieldDamageChoices"><legend>Damage selections</legend><div class="field-chips">${['Hail / impact', 'Wind / lifted shingle', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'].map(type => `<label><input type="checkbox" name="damageType" value="${escape(type)}"><span>${escape(type)}</span></label>`).join('')}</div></fieldset>
             <div class="field-form-grid">
                 <label>Severity<select name="severity">${options(['Not assessed', 'Minor', 'Moderate', 'Severe'])}</select></label>
                 <label>Link to a saved photo<select name="photoId"><option value="">No photo linked</option></select></label>
                 <label>Measurement or count<input name="quantity" type="number" min="0" step="any" placeholder="e.g. 6"></label>
-                <label>Unit<select name="unit"><option value="">Not measured</option>${options(['inches', 'feet', 'square feet', 'marked hits', 'items'])}</select></label>
+                <label>Unit<select name="unit"><option value="">Not measured</option>${options(['inches', 'feet', 'square feet', 'marked hits', 'items', 'mm', 'cm'])}</select></label>
             </div>
-            <label>Field notes<textarea name="details" rows="4" maxlength="12000" placeholder="Describe what you observed. Type or dictate; review the wording before saving."></textarea></label>
-            <div class="field-voice"><button type="button" id="fieldDictate" class="field-button">Start dictation</button><span id="fieldVoiceStatus" role="status"></span></div>
-            <p class="field-help" id="fieldVoiceHelp">Dictation uses your browser’s speech service and may send audio to that provider. Starts only when you click; you can also type or use your device’s keyboard microphone.</p>
             <div class="field-preview"><span class="field-eyebrow">CONSISTENT NOTE PREVIEW</span><p id="fieldNarrative"></p></div>
             <div class="field-actions"><button type="submit" class="field-button field-primary">Save observation</button><button type="button" id="fieldNewNote" class="field-button">New / clear draft</button><span id="fieldSaveStatus" role="status"></span></div>
         </form>`;
@@ -89,6 +98,7 @@
             field('location').placeholder = field('section').value === 'Elevations' ? 'e.g. Front wall, right of entry door' : 'e.g. Back slope, east corner';
         }
         let recognition, listening = false, dictated = false, voiceSession = 0;
+        let fillGeneration = 0, filling = false, manualFields = false;
         const readForm = () => ({
             id: field('id').value || undefined, section: field('section').value,
             location: field('location').value.trim(), component: field('component').value,
@@ -120,7 +130,57 @@
                 catch { document.getElementById('fieldSaveStatus').textContent = 'Draft not saved'; }
             }
         };
+        async function fillFromNote(automatic = false) {
+            if (filling || listening) return;
+            const status = document.getElementById('fieldFillStatus');
+            const text = field('details').value.trim();
+            if (!text) { status.textContent = 'Dictate or type an observation first.'; return; }
+            if (manualFields) {
+                if (automatic) { status.textContent = 'Your existing selections were kept. Click Fill fields from note to replace them with this dictation.'; return; }
+                if (!confirm('Replace the current detail selections using this note? Your transcript and photo link will be kept.')) return;
+            }
+            const generation = ++fillGeneration;
+            const snapshot = JSON.stringify(readForm());
+            filling = true;
+            document.getElementById('fieldFill').disabled = true;
+            document.getElementById('fieldDictate').disabled = true;
+            form.querySelector('[type="submit"]').disabled = true;
+            status.textContent = 'Organizing your note…';
+            let timeout;
+            try {
+                const extracted = await Promise.race([
+                    ObservationExtraction.extract(text, componentsBySection, field('section').value),
+                    new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Auto-fill timed out. Your note is kept; retry or fill the fields manually.')), 25000); })
+                ]);
+                if (generation !== fillGeneration) return;
+                if (JSON.stringify(readForm()) !== snapshot) { status.textContent = 'You changed this note while it was being organized. Your changes were kept; click Fill fields to try again.'; return; }
+                if (!Object.keys(extracted).length) { status.textContent = 'No clear fields found. Add the location, component and what you observed, or choose them below.'; return; }
+                field('section').value = extracted.section || field('section').value;
+                refreshComponents(extracted.component || '');
+                for (const key of ['location', 'condition', 'severity', 'quantity', 'unit']) field(key).value = extracted[key] || (key === 'severity' ? 'Not assessed' : '');
+                form.querySelectorAll('[name="damageType"]').forEach(input => { input.checked = (extracted.damageTypes || []).includes(input.value); });
+                manualFields = false;
+                update();
+                const missing = ['location', 'component', 'condition'].filter(key => !field(key).value);
+                status.textContent = `Details filled from your note. Review before saving.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}`;
+            } catch (error) {
+                if (generation === fillGeneration) status.textContent = error.message || 'Auto-fill unavailable. Your note is kept.';
+            } finally {
+                clearTimeout(timeout);
+                if (generation === fillGeneration) {
+                    filling = false;
+                    document.getElementById('fieldFill').disabled = false;
+                    document.getElementById('fieldDictate').disabled = !(window.SpeechRecognition || window.webkitSpeechRecognition);
+                    form.querySelector('[type="submit"]').disabled = listening;
+                }
+            }
+        }
         function loadNote(note = {}) {
+            fillGeneration++; filling = false;
+            manualFields = !!(note.id || note.location || note.component || note.condition || note.quantity);
+            document.getElementById('fieldFill').disabled = false;
+            document.getElementById('fieldFillStatus').textContent = '';
+            document.getElementById('fieldDictate').disabled = !(window.SpeechRecognition || window.webkitSpeechRecognition);
             voiceSession++;
             recognition?.abort();
             listening = false;
@@ -139,14 +199,16 @@
         window.InspectionField.editNote = note => {
             loadNote(note);
             const notebook = document.getElementById('fieldNotebook'); if (notebook) notebook.open = true;
-            form.scrollIntoView({ behavior: 'smooth', block: 'start' }); field('location').focus();
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' }); field('details').focus({ preventScroll: true });
         };
         refreshPhotos();
         loadNote(InspectionStore.get().notes.fieldDraft || {});
         form.addEventListener('input', event => {
+            if (!['details', 'section', 'photoId'].includes(event.target.name)) manualFields = true;
             if (event.target === field('section')) refreshComponents(field('component').value);
             update();
         });
+        document.getElementById('fieldFill').addEventListener('click', () => fillFromNote());
         form.addEventListener('submit', event => {
             event.preventDefault();
             const note = readForm();
@@ -170,6 +232,7 @@
         dictate.addEventListener('click', () => {
             if (listening) { recognition.stop(); return; }
             const session = ++voiceSession;
+            let receivedSpeech = false, speechFailed = false;
             recognition = new Speech(); recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = true;
             recognition.onstart = () => { listening = true; form.querySelector('[type="submit"]').disabled = true; dictate.textContent = 'Stop dictation'; voice.textContent = 'Listening… Stop dictation before saving.'; };
             recognition.onresult = event => {
@@ -178,6 +241,7 @@
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const text = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
+                        receivedSpeech = true;
                         field('details').value = `${field('details').value.trim()} ${text}`.trim(); dictated = true; update();
                     } else interim += text;
                 }
@@ -185,6 +249,7 @@
             };
             recognition.onerror = event => {
                 if (session !== voiceSession) return;
+                speechFailed = true;
                 listening = false; form.querySelector('[type="submit"]').disabled = false; dictate.textContent = 'Start dictation';
                 voice.textContent = `Dictation stopped (${event.error}). Your typed notes are kept; try again or type.`;
             };
@@ -192,6 +257,9 @@
                 if (session !== voiceSession) return;
                 listening = false; form.querySelector('[type="submit"]').disabled = false; dictate.textContent = 'Start dictation';
                 if (!voice.textContent.startsWith('Dictation stopped')) voice.textContent = 'Stopped. Review the text before saving.';
+                const shouldFill = receivedSpeech && !speechFailed && !document.hidden;
+                receivedSpeech = false;
+                if (shouldFill) fillFromNote(true);
             };
             listening = true; dictate.textContent = 'Stop dictation'; form.querySelector('[type="submit"]').disabled = true;
             try { recognition.start(); } catch {
@@ -200,7 +268,7 @@
             }
         });
         document.addEventListener('visibilitychange', () => { if (document.hidden) recognition?.stop(); });
-        window.addEventListener('pagehide', () => recognition?.abort());
+        window.addEventListener('pagehide', () => { voiceSession++; fillGeneration++; recognition?.abort(); });
         window.addEventListener('inspection-record-changed', refreshPhotos);
         window.addEventListener('storage', refreshPhotos);
         // Internal navigation waits for original-photo storage, not for an AI response.
