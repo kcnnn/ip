@@ -282,6 +282,9 @@
         });
         refreshPhotos();
         loadNote(InspectionStore.get().notes.fieldDraft || {});
+        import('./jev-assistant.js').then(({mountJevAssistant}) => mountJevAssistant(form, readForm)).catch(() => {
+            // The optional integration must never block capture or note saving.
+        });
         for (const kind of ['Camera', 'Upload']) {
             const input = document.getElementById(`field${kind}Input`);
             document.getElementById(`field${kind}`).addEventListener('click', () => input.click());
