@@ -193,6 +193,22 @@
     justify-content: center;
 }
 
+.no-gutters-btn {
+    display: none;
+    margin: 0.85rem auto 0;
+    padding: 0.65rem 1rem;
+    border: 1px solid #aeb3b9;
+    background: #fff;
+    color: #272a2d;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.no-gutters-btn:hover {
+    border-color: #e01719;
+    color: #af1214;
+}
+
 .camera-btn {
     padding: 0.8rem 1.5rem;
     border: none;

@@ -21,6 +21,7 @@ const inspections = [
 // Current state
 let currentInspectionIndex = 0;
 let capturedPhotos = {};
+let skippedInspections = {};
 let stream = null;
 let isAnalyzing = false;
 
@@ -43,6 +44,7 @@ const aiResults = document.getElementById('aiResults');
 const nextBtn = document.getElementById('nextBtn');
 const progressFill = document.getElementById('progressFill');
 const progressText = document.getElementById('progressText');
+const noGuttersBtn = document.getElementById('noGuttersBtn');
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -57,6 +59,7 @@ function setupEventListeners() {
     switchCameraBtn.addEventListener('click', switchCamera);
     retakeBtn.addEventListener('click', retakePhoto);
     confirmBtn.addEventListener('click', confirmPhoto);
+    noGuttersBtn.addEventListener('click', skipGutterMeasurement);
     fileInput.addEventListener('change', handleFileSelect);
 }
 
@@ -68,12 +71,18 @@ function updateInspectionDisplay() {
     
     // Update status
     const statusBadge = inspectionStatus.querySelector('.status-badge');
-    if (capturedPhotos[currentInspection.key]) {
+    if (skippedInspections[currentInspection.key]) {
+        statusBadge.textContent = 'Not Present';
+        statusBadge.className = 'status-badge completed';
+        noGuttersBtn.style.display = 'none';
+    } else if (capturedPhotos[currentInspection.key]) {
         statusBadge.textContent = 'Completed';
         statusBadge.className = 'status-badge completed';
+        noGuttersBtn.style.display = currentInspection.key === 'gutter' ? 'inline-flex' : 'none';
     } else {
         statusBadge.textContent = 'Pending';
         statusBadge.className = 'status-badge pending';
+        noGuttersBtn.style.display = currentInspection.key === 'gutter' ? 'inline-flex' : 'none';
     }
 }
 
@@ -94,6 +103,9 @@ function updateChecklist() {
         if (index === currentInspectionIndex) {
             item.classList.add('current');
             statusIcon.textContent = '📷';
+        } else if (skippedInspections[inspectionKey]) {
+            item.classList.add('completed');
+            statusIcon.textContent = '—';
         } else if (capturedPhotos[inspectionKey]) {
             item.classList.add('completed');
             statusIcon.textContent = '✅';
@@ -102,6 +114,19 @@ function updateChecklist() {
             statusIcon.textContent = '⏳';
         }
     });
+}
+
+function skipGutterMeasurement() {
+    if (inspections[currentInspectionIndex].key !== 'gutter') return;
+
+    skippedInspections.gutter = true;
+    delete capturedPhotos.gutter;
+    photoActions.style.display = 'none';
+    aiAnalysis.style.display = 'none';
+    cameraPreview.style.display = 'block';
+    fileInput.value = '';
+
+    proceedToNextInspection();
 }
 
 function openCamera() {
@@ -236,7 +261,7 @@ async function analyzeRoofEdgeWithChatGPT(imageData, inspectionType, inspectionN
 1. Measurement Visibility:
    - Is the tape measure clearly visible in the photo?
    - Are the measurement numbers readable?
-   - Is the gutter size clearly shown?
+   - State the gutter size shown by the tape measure (for example, 5 inches or 6 inches). Do not estimate a size when the tape markings are not readable; return "unreadable" instead.
 
 2. Photo Quality:
    - Is the image clear and in focus?
@@ -257,6 +282,7 @@ Please respond in JSON format with the following structure:
   "overallQuality": "good" | "needs_improvement" | "poor",
   "confidence": number (0-100),
   "measurementReadable": boolean,
+  "gutterSize": "exact size shown by the tape measure, such as 5 inches or 6 inches; otherwise unreadable",
   "issues": [
     {
       "type": "measurement" | "clarity" | "lighting" | "composition" | "technical",
@@ -381,6 +407,7 @@ function parseTextResponse(text, inspectionType) {
     // Add type-specific properties
     if (inspectionType === 'measurement') {
         analysis.measurementReadable = false;
+        analysis.gutterSize = 'unreadable';
     } else if (inspectionType === 'inspection') {
         analysis.dripEdgeDetected = false;
         analysis.dripEdgeCondition = 'unclear';
@@ -456,6 +483,7 @@ function simulateRoofEdgeAnalysis() {
             overallQuality: Math.random() > 0.3 ? 'good' : 'needs_improvement',
             confidence: Math.floor(Math.random() * 30) + 70,
             measurementReadable: Math.random() > 0.3,
+            gutterSize: 'unreadable',
             issues: issues,
             recommendations: recommendations,
             shouldRetake: Math.random() > 0.8
@@ -522,6 +550,7 @@ function displayAIResults(results) {
         html += `<div class="measurement-analysis ${measurementClass}">
             <h4>📏 Measurement Analysis</h4>
             <p>Measurement Readable: ${results.measurementReadable ? 'Yes' : 'No'}</p>
+            <p>Gutter Size: ${results.gutterSize || 'Unreadable'}</p>
         </div>`;
     }
     
