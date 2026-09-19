@@ -230,7 +230,7 @@ async function analyzePhotoWithAI() {
         }
         
         // Resize image for API efficiency
-        const resizedImageData = await resizeImageForAPI(photoData);
+        const resizedImageData = await resizeImageForAPI(photoData, 1600, 1600);
         
         // Call ChatGPT API with specialized prompts
         const analysisResults = await analyzeRoofEdgeWithChatGPT(resizedImageData, inspectionType, currentInspection.name);
@@ -240,7 +240,8 @@ async function analyzePhotoWithAI() {
         console.error('AI Analysis Error:', error);
         
         // Fallback to simulated analysis if API fails
-        const fallbackResults = simulateRoofEdgeAnalysis();
+        const fallbackResults = inspections[currentInspectionIndex].type === 'measurement'
+            ? GutterMeasurement.unavailable() : simulateRoofEdgeAnalysis();
         fallbackResults.apiError = error.message;
         displayAIResults(fallbackResults);
     }
@@ -264,7 +265,9 @@ async function analyzeRoofEdgeWithChatGPT(imageData, inspectionType, inspectionN
 1. Measurement Visibility:
    - Is the tape measure clearly visible in the photo?
    - Are the measurement numbers readable?
-   - State the gutter size shown by the tape measure (for example, 5 inches or 6 inches). Do not estimate a size when the tape markings are not readable; return "unreadable" instead.
+   - State the gutter size shown by the tape measure. Do not estimate a size when the tape markings are not readable; return null instead.
+   - Read the width across the gutter opening, accounting for the tape's start and end readings. Return the numeric size with units in gutterSize. Do not infer a standard gutter size from appearance.
+   - measurementReadable may be true ONLY if gutterSize contains the actual measurement with units. If it cannot be determined, return measurementReadable false and gutterSize null. Explain the specific missing measurement evidence in recommendations.
 
 2. Photo Quality:
    - Is the image clear and in focus?
@@ -285,7 +288,7 @@ Please respond in JSON format with the following structure:
   "overallQuality": "good" | "needs_improvement" | "poor",
   "confidence": number (0-100),
   "measurementReadable": boolean,
-  "gutterSize": "exact size shown by the tape measure, such as 5 inches or 6 inches; otherwise unreadable",
+  "gutterSize": "numeric measurement with units, or null if unavailable",
   "issues": [
     {
       "type": "measurement" | "clarity" | "lighting" | "composition" | "technical",
@@ -297,7 +300,8 @@ Please respond in JSON format with the following structure:
     "Specific recommendation text"
   ],
   "shouldRetake": boolean
-}`;
+}
+Return only the JSON object. gutterSize must contain a measurement such as "5 inches", "5 1/2 inches", or "125 mm", or the JSON value null. Examples describe formatting only; use the uploaded photo to determine the value.`;
     } else if (inspectionType === 'inspection') {
         prompt = `Analyze this ${inspectionName} photo for roof inspection purposes. Please evaluate:
 
@@ -381,6 +385,9 @@ Please respond in JSON format with the following structure:
 
         const data = await response.json();
         const analysisText = getAITextContent(data);
+        if (inspectionType === 'measurement') {
+            return removeBlurFindings(GutterMeasurement.parse(analysisText));
+        }
         
         // Parse the JSON response
         try {
@@ -399,6 +406,7 @@ Please respond in JSON format with the following structure:
 
 // Fallback function to parse text response if JSON parsing fails
 function parseTextResponse(text, inspectionType) {
+    if (inspectionType === 'measurement') return GutterMeasurement.parse(text);
     const analysis = {
         overallQuality: 'needs_improvement',
         confidence: 70,
@@ -523,6 +531,9 @@ function simulateRoofEdgeAnalysis() {
 }
 
 function displayAIResults(results) {
+    if (inspections[currentInspectionIndex].type === 'measurement') {
+        results = GutterMeasurement.normalize(results);
+    }
     aiLoading.style.display = 'none';
     aiResults.style.display = 'block';
     
@@ -533,7 +544,7 @@ function displayAIResults(results) {
         html += `<div class="api-error">
             <h4>⚠️ API Error</h4>
             <p>${results.apiError}</p>
-            <p><small>Using fallback analysis instead.</small></p>
+            <p><small>Photo retained. No AI measurement was recorded.</small></p>
         </div>`;
     }
     
@@ -544,7 +555,7 @@ function displayAIResults(results) {
     
     html += `<div class="quality-indicator ${qualityClass}">
         <h4>Photo Quality: ${qualityText}</h4>
-        <p>Confidence: ${results.confidence}%</p>
+        <p>${results.confidence == null ? 'Analysis unavailable' : `Confidence: ${results.confidence}%`}</p>
     </div>`;
     
     // Special analysis for measurement photos
@@ -553,7 +564,8 @@ function displayAIResults(results) {
         html += `<div class="measurement-analysis ${measurementClass}">
             <h4>📏 Measurement Analysis</h4>
             <p>Measurement Readable: ${results.measurementReadable ? 'Yes' : 'No'}</p>
-            <p>Gutter Size: ${results.gutterSize || 'Unreadable'}</p>
+            <p><strong>Gutter size: ${results.gutterSize || 'Not determined from this photo'}</strong></p>
+            ${results.measurementReadable ? '' : '<p>Capture the tape’s starting point and gutter-width reading together to record the size.</p>'}
         </div>`;
     }
     
@@ -763,7 +775,8 @@ function proceedWithoutAPI() {
     }
     
     // Continue with fallback analysis
-    const fallbackResults = simulateRoofEdgeAnalysis();
+    const fallbackResults = inspections[currentInspectionIndex].type === 'measurement'
+        ? GutterMeasurement.unavailable() : simulateRoofEdgeAnalysis();
     displayAIResults(fallbackResults);
 }
 
