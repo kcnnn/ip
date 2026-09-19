@@ -264,6 +264,7 @@ async function analyzeRoofEdgeWithChatGPT(imageData, inspectionType, inspectionN
         prompt = `Analyze this ${inspectionName} photo for roof inspection purposes. Please evaluate:
 
 1. Measurement Visibility:
+   ${GutterMeasurement.readingInstructions}
    - Is the tape measure clearly visible in the photo?
    - Are the measurement numbers readable?
    - State the gutter size shown by the tape measure. Do not estimate a size when the tape markings are not readable; return null instead.
@@ -566,8 +567,16 @@ function displayAIResults(results) {
             <h4>📏 Measurement Analysis</h4>
             <p>Measurement Readable: ${results.measurementReadable ? 'Yes' : 'No'}</p>
             <p><strong>Gutter size: ${results.gutterSize || 'Not determined from this photo'}</strong></p>
-            ${results.measurementReadable ? '' : '<p>Capture the tape’s starting point and gutter-width reading together to record the size.</p>'}
+            ${results.measurementReadable ? '' : '<p>AI could not establish a measurement. Review its explanation below, or record your own verified reading without retaking the photo.</p>'}
         </div>`;
+        html += `<form id="gutterConfirmation" class="field-form" style="margin:20px 0;padding:20px;border:1px solid #d7dadd;border-radius:10px">
+            <h4>Inspector-confirmed gutter size</h4>
+            <p>This records your measurement separately; it does not change the AI result.</p>
+            <div class="field-form-grid"><label>Size<input name="size" type="number" min="0.01" step="any" placeholder="Enter measured size" required></label>
+            <label>Unit<select name="unit"><option value="inches">Inches</option><option value="mm">Millimeters</option><option value="cm">Centimeters</option></select></label></div>
+            <label><input type="checkbox" name="verified" required> I verified this measurement from the tape or on site.</label>
+            <button type="submit" class="field-button">Save inspector measurement</button><p id="gutterConfirmationStatus" role="status"></p>
+        </form>`;
     }
     
     // Special analysis for drip edge detection
@@ -618,6 +627,33 @@ function displayAIResults(results) {
     html += '</div>';
     
     aiResults.innerHTML = html;
+    const confirmation = document.getElementById('gutterConfirmation');
+    if (confirmation) {
+        const photoId = 'Roof edge:Gutter Measurement';
+        const revision = window.InspectionStore?.get().photos[photoId]?.revision;
+        confirmation.addEventListener('submit', async event => {
+            event.preventDefault();
+            const status = document.getElementById('gutterConfirmationStatus');
+            const size = confirmation.elements.size.value;
+            const unit = confirmation.elements.unit.value;
+            const reading = GutterMeasurement.normalize({ measurementReadable: true, gutterSize: `${size} ${unit}` });
+            if (!reading.measurementReadable || !confirmation.elements.verified.checked) return;
+            try {
+                await InspectionStore.flush();
+                const photo = InspectionStore.get().photos[photoId];
+                if (!photo || photo.revision !== revision || photo.storageStatus === 'failed') {
+                    status.textContent = 'Save the current gutter photo before confirming its measurement.'; return;
+                }
+                InspectionStore.saveObservation({
+                    id: `gutter-measurement:${revision || photo.capturedAt}`, section: 'Roof edge',
+                    location: 'Gutter measurement photo', component: 'Gutter', condition: 'Measurement recorded',
+                    quantity: size, unit, photoId, damageTypes: [], severity: 'Not assessed',
+                    details: `Inspector-confirmed gutter size: ${reading.gutterSize}. Verified by the inspector, not an AI finding.`
+                }, { clearDraft: false });
+                status.textContent = `Saved: inspector-confirmed gutter size ${reading.gutterSize}. Included in the inspection review.`;
+            } catch { status.textContent = 'Measurement could not be saved. Please try again.'; }
+        });
+    }
     
     // Update status
     const statusBadge = inspectionStatus.querySelector('.status-badge');

@@ -112,11 +112,11 @@ window.InspectionStore = {
     },
     flush() { return Promise.all([...pendingInspectionSaves]); },
     isSaving() { return pendingInspectionSaves.size > 0; },
-    saveObservation(value) {
+    saveObservation(value, { clearDraft = true } = {}) {
         const record = readInspectionRecord();
         const id = value.id || inspectionId();
         record.observations[id] = { ...value, id, source: 'Inspector note', updatedAt: new Date().toISOString() };
-        delete record.notes.fieldDraft;
+        if (clearDraft) delete record.notes.fieldDraft;
         writeInspectionRecord(record);
         return id;
     },

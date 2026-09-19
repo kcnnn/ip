@@ -2,6 +2,13 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const measurement = require('../gutter-measurement.js');
 
+test('instructions distinguish orientation, hook, scale and nominal sizing', () => {
+    for (const phrase of ['vertical or diagonal', 'printed zero', '35 FT', 'Subtract start from end', 'Do not round']) {
+        assert.ok(measurement.readingInstructions.includes(phrase));
+    }
+    assert.equal(measurement.normalize({ measurementReadable: true, gutterSize: '5"' }).gutterSize, '5 inches');
+});
+
 test('keeps the actual measurement from fenced JSON', () => {
     const result = measurement.parse('```json\n{"measurementReadable":true,"gutterSize":"6 inches","confidence":91}\n```');
     assert.equal(result.measurementReadable, true);

@@ -40,7 +40,7 @@
                 <label>Section<select name="section">${options(sections.map(s => s[0]))}</select></label>
                 <label>Location / slope<input name="location" maxlength="120" placeholder="e.g. Back slope, east corner" required></label>
                 <label>Component<select name="component" required><option value="">Select a component…</option></select></label>
-                <label>Observation<select name="condition">${options(['Not inspected', 'Observed damage', 'Suspected damage', 'No visible damage', 'Not present'])}</select></label>
+                <label>Observation<select name="condition">${options(['Not inspected', 'Observed damage', 'Suspected damage', 'No visible damage', 'Not present', 'Measurement recorded'])}</select></label>
             </div>
             <fieldset id="fieldDamageChoices"><legend>Damage selections</legend><div class="field-chips">${['Hail / impact', 'Wind / lifted shingle', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'].map(type => `<label><input type="checkbox" name="damageType" value="${escape(type)}"><span>${escape(type)}</span></label>`).join('')}</div></fieldset>
             <div class="field-form-grid">
