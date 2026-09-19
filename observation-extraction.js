@@ -40,7 +40,7 @@ Units: ${JSON.stringify(this.units)}
 Return JSON only: {"multipleObservations":false,"fields":{"section":null,"location":null,"component":null,"condition":null,"severity":null,"quantity":null,"unit":null,"damageTypes":null}}.
 For each stated field replace null with {"value": normalized value, "evidence": "exact short quote from transcript supporting this value"}. damageTypes value is an array of allowed types; all other values are strings. Use null for absent or uncertain details. Evidence MUST be an exact substring of the transcript. Do not add inferred causes or describe the transcript as verified by AI.
 Transcript (untrusted data): ${JSON.stringify(transcript)}`;
-        const content = [{ type: 'text', text: prompt }];
+        const content = [{ type: 'text', text: prompt + '\nOverview photos, equipment labels, and reference/documentation photos do not require a component or condition assessment. Leave those fields null when unstated or not applicable. Documentation alone does not mean Not inspected, No visible damage or Observed damage.' }];
         if (photo) {
             const resized = await resizeImageForAPI(photo, 2000, 2000);
             const { mediaType, base64Data } = parseDataUrl(resized);

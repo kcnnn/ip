@@ -21,7 +21,13 @@
     const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const options = values => values.map(value => `<option>${escape(value)}</option>`).join('');
     const narrative = note => {
-        const parts = [`${note.section} / ${note.elevationKey ? `${note.elevationKey} elevation · ` : ''}${note.location || 'Location unspecified'} — ${note.component || 'Component unspecified'}: ${note.condition || 'Observation unspecified'}.`];
+        const elevation = note.elevationKey ? `${note.elevationKey} elevation` : '';
+        const location = note.location?.trim() || '';
+        const place = [elevation, location.toLowerCase() === elevation.toLowerCase() ? '' : location].filter(Boolean).join(' · ');
+        const context = [note.section, place].filter(Boolean).join(' / ');
+        const assessment = [note.component, note.condition].filter(Boolean).join(': ');
+        const heading = [context, assessment].filter(Boolean).join(' — ');
+        const parts = heading ? [`${heading}.`] : [];
         if (['Observed damage', 'Suspected damage'].includes(note.condition)) {
             if (note.damageTypes?.length) parts.push(`Damage type: ${note.damageTypes.join(', ')}.`);
             if (note.severity && note.severity !== 'Not assessed') parts.push(`Severity: ${note.severity.toLowerCase()}.`);
@@ -58,7 +64,7 @@
             <section class="field-dictation-first" aria-label="Dictate your observation">
                 <span class="field-eyebrow">02 / TELL THE STORY</span>
                 <h3>Describe what you’re looking at.</h3>
-                <p class="field-help">Speak naturally. Include the location, component, damage or lack of damage, and any measurement. Your words stay intact.</p>
+                <p class="field-help">Describe the photo naturally. Mention a component, condition or measurement only when relevant—overview and reference photos do not need a damage assessment.</p>
                 <div class="field-recall" aria-label="Things to cover"><span>Where is it?</span><span>Which component?</span><span>Damage or no damage?</span><span>How severe?</span><span>Size or count?</span></div>
                 <p class="field-help">For example: “Front elevation, window screen. Moderate wear and deterioration. Two screens affected.”</p>
                 <div class="field-voice"><button type="button" id="fieldDictate" class="field-button field-primary">Start dictation</button><span id="fieldVoiceStatus" role="status"></span></div>
@@ -71,8 +77,8 @@
             <div class="field-form-grid">
                 <label>Section<select name="section">${options(sections.map(s => s[0]))}</select></label>
                 <label>Location / slope<input name="location" maxlength="120" placeholder="e.g. Back slope, east corner" required></label>
-                <label>Component<select name="component" required><option value="">Select a component…</option></select></label>
-                <label>Observation<select name="condition" required><option value="">Select observation…</option>${options(['Not inspected', 'Observed damage', 'Suspected damage', 'No visible damage', 'Not present', 'Measurement recorded'])}</select></label>
+                <label>Component (optional)<select name="component"><option value="">Not specified / not applicable</option></select></label>
+                <label>Condition / observation (optional)<select name="condition"><option value="">No assessment recorded</option>${options(['Not inspected', 'Observed damage', 'Suspected damage', 'No visible damage', 'Not present', 'Measurement recorded'])}</select></label>
             </div>
             <fieldset id="fieldDamageChoices"><legend>Damage selections</legend><div class="field-chips">${['Hail / impact', 'Wind / lifted shingle', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'].map(type => `<label><input type="checkbox" name="damageType" value="${escape(type)}"><span>${escape(type)}</span></label>`).join('')}</div></fieldset>
             <div class="field-form-grid">
@@ -109,7 +115,7 @@
         const field = name => form.elements.namedItem(name);
         function refreshComponents(selected = '', preserveSaved = false) {
             const choices = componentsBySection[field('section').value] || ['Other'];
-            field('component').innerHTML = '<option value="">Select a component…</option>' + options(choices);
+            field('component').innerHTML = '<option value="">Not specified / not applicable</option>' + options(choices);
             // Keep historical observations intact, without offering roof items for new wall notes.
             if (selected && preserveSaved && !choices.includes(selected)) {
                 field('component').add(new Option(`${selected} (previously saved)`, selected));
@@ -215,7 +221,7 @@
                 form.querySelectorAll('[name="damageType"]').forEach(input => { input.checked = (extracted.damageTypes || []).includes(input.value); });
                 manualFields = false;
                 update();
-                const missing = ['location', 'component', 'condition'].filter(key => !field(key).value);
+                const missing = ['location'].filter(key => !field(key).value);
                 status.textContent = `Details filled from your note. Review before saving.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}`;
                 if (elevationKey && !missing.length) {
                     const id = InspectionStore.saveObservation(readForm()); field('id').value = id;
@@ -330,6 +336,9 @@
             event.preventDefault();
             if (filling || capturing || listening) return;
             const note = readForm();
+            if (!note.photoId && !note.details.trim() && !note.condition && !note.component && !note.quantity) {
+                document.getElementById('fieldSaveStatus').textContent = 'Add a photo, a note or an observation before saving.'; return;
+            }
             if (note.aiReview && (note.aiReview.transcript !== note.details || note.aiReview.revision !== InspectionStore.get().photos[note.photoId]?.revision)) { aiReview = null; renderReview(); note.aiReview = null; }
             if (!!note.quantity !== !!note.unit) {
                 document.getElementById('fieldSaveStatus').textContent = 'Enter both a measurement/count and its unit, or leave both empty.'; return;
