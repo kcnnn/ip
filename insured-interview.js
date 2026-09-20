@@ -57,11 +57,14 @@ function restoreInterviewDraft() {
         satelliteInUse = saved.satelliteInUse || null;
         hasZelle = saved.hasZelle || null;
         satelliteYes.checked = satelliteInUse === 'yes'; satelliteNo.checked = satelliteInUse === 'no';
+        document.getElementById('satelliteAbsent').checked = satelliteInUse === 'not_present';
+        document.getElementById('satelliteUnknown').checked = satelliteInUse === 'unknown';
+        if (satelliteInUse) hasSatelliteDish = satelliteInUse !== 'not_present';
         zelleYes.checked = hasZelle === 'yes'; zelleNo.checked = hasZelle === 'no';
         toggleZellePhone();
     }
     const save = event => {
-        if (!['damageNotes', 'satelliteNotes', 'zelleNotes', 'zellePhone', 'satelliteYes', 'satelliteNo', 'zelleYes', 'zelleNo'].includes(event.target.id)) return;
+        if (!['damageNotes', 'satelliteNotes', 'zelleNotes', 'zellePhone', 'satelliteYes', 'satelliteNo', 'satelliteAbsent', 'satelliteUnknown', 'zelleYes', 'zelleNo'].includes(event.target.id)) return;
         window.InspectionStore?.note('insuredInterviewDraft', {
             damageNotes: damageNotesTextarea.value, satelliteNotes: satelliteNotesTextarea.value,
             zelleNotes: zelleNotesTextarea.value, zellePhone: zellePhoneInput.value, satelliteInUse, hasZelle
@@ -71,6 +74,9 @@ function restoreInterviewDraft() {
 }
 
 function setupEventListeners() {
+    document.querySelectorAll('[name="satelliteInUse"]').forEach(input=>input.addEventListener('change',()=>{
+        satelliteInUse=input.value;hasSatelliteDish=input.value!=='not_present';updateChecklist();
+    }));
     // Text area changes
     damageNotesTextarea.addEventListener('input', updateChecklist);
     satelliteNotesTextarea.addEventListener('input', updateChecklist);
@@ -107,6 +113,8 @@ function setupEventListeners() {
 }
 
 function checkForSatelliteDish() {
+    satelliteSection.style.display = 'block';
+    satelliteChecklistItem.style.display = 'flex';
     const hasSatellite = Object.values(window.InspectionStore?.get().photos || {}).some(photo =>
         photo.section === 'Accessories' && (photo.accessoryType?.name || photo.label) === 'Satellite Dish');
     
@@ -155,7 +163,7 @@ function updateChecklist() {
     }
     
     // Update satellite verification (if applicable)
-    if (hasSatelliteDish) {
+    if (satelliteSection) {
         const satelliteItem = document.querySelector('[data-item="satellite-verification"]');
         if (satelliteInUse !== null) {
             satelliteItem.classList.remove('pending', 'current');
@@ -540,9 +548,9 @@ IMPORTANT: This inspection included hail test square documentation with closeup 
 
 SATELLITE DISH VERIFICATION:
 ${inspectionData.hasSatelliteDish ? 
-    `Satellite dish found: ${inspectionData.satelliteInUse === 'yes' ? 'Currently in use' : 'Not in use'}
+    `Satellite dish found: ${inspectionData.satelliteInUse === 'yes' ? 'Currently in use' : inspectionData.satelliteInUse === 'no' ? 'Not in use' : 'Unknown / not confirmed'}
     Notes: ${inspectionData.satelliteNotes || 'No additional notes'}` : 
-    'No satellite dish documented'}
+    inspectionData.satelliteInUse === 'not_present' ? 'Insured reports no satellite dish' : 'Satellite dish status not confirmed'}
 
 ZELLE PAYMENT INFORMATION:
 ${inspectionData.hasZelle === 'yes' ? 
@@ -852,8 +860,8 @@ OVERVIEW DOCUMENTATION:
 
 ${interviewData.hasSatelliteDish ? `ACCESSORY DOCUMENTATION:
 - Satellite dish documented and verified
-- Satellite dish status: ${interviewData.satelliteInUse === 'yes' ? 'Currently in use' : 'Not in use'}
-- Additional notes: ${interviewData.satelliteNotes || 'None provided'}` : 'ACCESSORY DOCUMENTATION: No satellite dish found'}
+- Satellite dish status: ${interviewData.satelliteInUse === 'yes' ? 'Currently in use' : interviewData.satelliteInUse === 'no' ? 'Not in use' : 'Unknown / not confirmed'}
+- Additional notes: ${interviewData.satelliteNotes || 'None provided'}` : interviewData.satelliteInUse === 'not_present' ? 'ACCESSORY DOCUMENTATION: Insured reports no satellite dish' : 'ACCESSORY DOCUMENTATION: Satellite dish status not confirmed'}
 
 HAIL DAMAGE ASSESSMENT:
 - 10'x10' test square performed

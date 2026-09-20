@@ -14,6 +14,11 @@
     <link rel="stylesheet" href="interview-styles.css">
     <link rel="stylesheet" href="refined-theme.css">
     <link rel="stylesheet" href="inspection-field.css">
+    <style>
+        .header .page-title { margin-inline:auto; max-width:none; text-align:center; }
+        .safety-reminder { background:#fff4e5; color:#4b3417; border-left-color:#b86b00; box-shadow:none; }
+        .safety-reminder .safety-content h3,.safety-reminder .safety-content p { color:#4b3417; }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -78,7 +83,7 @@
                     
                     <div class="section-content">
                         <div class="satellite-info">
-                            <p>A satellite dish was documented during the roof inspection. Please verify with the insured if this satellite dish is currently in use.</p>
+                            <p>Ask the insured whether they are still using their satellite dish. This question is available even if no dish photo was recorded.</p>
                         </div>
                         
                         <div class="satellite-question">
@@ -94,6 +99,8 @@
                                     <span class="radio-custom"></span>
                                     <span class="radio-label">No, not in use</span>
                                 </label>
+                                <label class="radio-option"><input type="radio" name="satelliteInUse" value="not_present" id="satelliteAbsent"><span class="radio-custom"></span><span class="radio-label">No satellite dish</span></label>
+                                <label class="radio-option"><input type="radio" name="satelliteInUse" value="unknown" id="satelliteUnknown"><span class="radio-custom"></span><span class="radio-label">Unknown / not confirmed</span></label>
                             </div>
                         </div>
                         
