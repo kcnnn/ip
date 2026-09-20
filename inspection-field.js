@@ -131,7 +131,7 @@
             field('component').value = choices.includes(selected) || preserveSaved ? selected : '';
             field('location').placeholder = field('section').value === 'Elevations' ? 'e.g. Front wall, right of entry door' : 'e.g. Back slope, east corner';
         }
-        let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null, accessoryResearch = null, photoTitle = null;
+        let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null, accessoryResearch = null, photoTitle = null, brittleTest = null;
         let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false, elevationKey = null;
         const elevationName = key => `${key.charAt(0).toUpperCase()}${key.slice(1)} Elevation`;
         const renderReview = () => {
@@ -161,7 +161,8 @@
             photoTitle: photoTitle?.transcript === field('details').value && photoTitle?.photoId === field('photoId').value ? photoTitle : null,
             equipmentResearch: equipmentResearch?.photoId === field('photoId').value && equipmentResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? equipmentResearch : null,
             accessoryResearch: accessoryResearch?.photoId === field('photoId').value && accessoryResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? accessoryResearch : null,
-            parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null
+            parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null,
+            brittleTest: field('section').value === 'Shingles' ? brittleTest : null
         });
         const refreshPhotos = () => {
             const selected = field('photoId').value;
@@ -261,6 +262,7 @@
             }
         }
         function loadNote(note = {}) {
+            brittleTest = note.brittleTest || (location.pathname.endsWith('brittle-test.html') && !note.id && (!note.section || note.section === 'Shingles') ? {method:'photo-and-dictation'} : null);
             fillGeneration++; filling = false;
             manualFields = !!(note.id || note.location || note.component || note.condition || note.quantity);
             document.getElementById('fieldFill').disabled = false;
