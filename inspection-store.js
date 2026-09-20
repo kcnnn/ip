@@ -34,6 +34,15 @@ function readInspectionRecord() {
         if (!record.id) { record.id = inspectionId(); localStorage.setItem(INSPECTION_STORE_KEY, JSON.stringify(record)); }
         record.observations ||= {};
         record.sectionStates ||= {};
+        // Rename presentation metadata, not IDs or IndexedDB keys referenced by notes.
+        const renameSection = value => {
+            if (!value || typeof value !== 'object') return;
+            if (value.section === 'Ridge') value.section = 'Shingles';
+            Object.values(value).forEach(child => { if (child && typeof child === 'object') renameSection(child); });
+        };
+        renameSection(record);
+        if (record.sectionStates.Ridge && !record.sectionStates.Shingles) record.sectionStates.Shingles = record.sectionStates.Ridge;
+        delete record.sectionStates.Ridge;
         // Presentation labels for detail photos come from saved inspection words,
         // never filenames. Keep stable IDs/original keys and sourceName intact.
         const linked = new Map();
@@ -108,7 +117,7 @@ window.InspectionStore = {
     },
     recordPhoto(section, label, dataUrl, details = {}) {
         const record = readInspectionRecord();
-        const id = details.id || `${section}:${label}`;
+        const id = details.id || (section === 'Shingles' && record.photos[`Ridge:${label}`] ? `Ridge:${label}` : `${section}:${label}`);
         const revision = inspectionId();
         record.photos[id] = {
             ...details, section, label, capturedAt: new Date().toISOString(), revision,
@@ -185,6 +194,7 @@ window.InspectionStore = {
     property(value) { const record = readInspectionRecord(); record.property = value; writeInspectionRecord(record); },
     removePhoto(section, label, id = `${section}:${label}`) {
         const record = readInspectionRecord();
+        if (section === 'Shingles' && record.photos[`Ridge:${label}`]) id = `Ridge:${label}`;
         delete record.photos[id];
         writeInspectionRecord(record);
     },

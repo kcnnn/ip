@@ -690,10 +690,10 @@ function proceedToNextInspection() {
 function allInspectionsCompleted() {
     // Enable next button
     nextBtn.disabled = false;
-    nextBtn.innerHTML = '<span class="btn-text">Continue to Ridge Inspection</span><span class="btn-icon">→</span>';
+    nextBtn.innerHTML = '<span class="btn-text">Continue to Shingles</span><span class="btn-icon">→</span>';
     
     // Show completion message
-    alert('Roof edge inspection completed! Ready to proceed to ridge inspection.');
+    alert('Roof edge inspection completed! Ready to proceed to Shingles.');
 }
 
 function switchCamera() {

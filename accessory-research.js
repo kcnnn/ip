@@ -34,7 +34,7 @@ export function mountAccessoryResearch(form,readState,accept) {
     const stamp=()=>{const n=readState(),r=InspectionStore.get();return JSON.stringify([r.id,n.id,n.photoId,r.photos[n.photoId]?.revision]);};
     let selected=stamp();
     const features=()=>({description:$('accessoryDescription').value.trim(),markings:$('accessoryMarkings').value.trim(),measurements:$('accessoryMeasurements').value.trim()});
-    const visible=()=>{const n=readState();panel.hidden=!(['Accessories','Roof edge','Ridge','Roof overview','Hail documentation'].includes(n.section)||/\b(vent|pipe boot|rain cap|roof accessory|box vent)\b/i.test(`${n.details} ${n.component} ${n.aiReview?.summary || ''}`));};
+    const visible=()=>{const n=readState();panel.hidden=!(['Accessories','Roof edge','Shingles','Roof overview','Hail documentation'].includes(n.section)||/\b(vent|pipe boot|rain cap|roof accessory|box vent)\b/i.test(`${n.details} ${n.component} ${n.aiReview?.summary || ''}`));};
     const clear=()=>{generation++;controller?.abort();reading=null;searched=null;$('accessoryFeatures').hidden=true;$('accessoryResults').replaceChildren();$('accessoryStatus').textContent='';$('accessoryRead').disabled=false;$('accessorySearch').disabled=false;$('accessoryCancel').hidden=true;selected=stamp();};
     async function run(action) {
         controller?.abort();controller=new AbortController();const active=controller,token=++generation,start=stamp();

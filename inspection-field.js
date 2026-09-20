@@ -3,7 +3,7 @@
     const sections = [
         ['Elevations', 'elevation-photos.html', ['Front Elevation', 'Right Elevation', 'Rear Elevation', 'Left Elevation']],
         ['Roof edge', 'roof-edge.html', ['Gutter Measurement', 'Underlayment Inspection']],
-        ['Ridge', 'ridge-inspection.html', ['Ridge Closeup', 'Under-Ridge Inspection']],
+        ['Shingles', 'ridge-inspection.html', ['Ridge Closeup', 'Under-Ridge Inspection', 'Brittle test']],
         ['Roof overview', 'roof-overview.html', ['Front Overview', 'Right Overview', 'Rear Overview', 'Left Overview']],
         ['Accessories', 'roof-accessories.html', []],
         ['Hail documentation', 'hail-test-square.html', ['Test Square Full View', 'Hail Hit Closeup 1', 'Hail Hit Closeup 2', 'Hail Hit Closeup 3']],
@@ -13,8 +13,8 @@
     const componentsBySection = {
         'Elevations': ['Siding', 'Window', 'Window screen', 'Door', 'Overhead door', 'Downspout', 'Trim', 'Fascia', 'Soffit', 'Brick / masonry', 'Stucco', 'Exterior light', 'Exterior vent', 'Other'],
         'Roof edge': ['Gutter', 'Downspout', 'Drip edge', 'Underlayment', 'Fascia', 'Soffit', 'Flashing', 'Shingles', 'Other'],
-        'Ridge': ['Ridge shingles / caps', 'Ridge vent', 'Underlayment', 'Flashing', 'Other'],
-        'Roof overview': ['Shingles', 'Roof covering', 'Ridge', 'Valley', 'Flashing', 'Vent', 'Chimney', 'Other'],
+        'Shingles': ['Shingles', 'Ridge shingles / caps', 'Ridge vent', 'Underlayment', 'Flashing', 'Other'],
+        'Roof overview': ['Shingles', 'Roof covering', 'Shingles', 'Valley', 'Flashing', 'Vent', 'Chimney', 'Other'],
         'Accessories': ['Vent', 'Pipe boot', 'Rain cap', 'Rain diverter', 'Satellite dish', 'Chimney', 'Skylight', 'Flashing', 'Other'],
         'Hail documentation': ['Shingles', 'Roof covering', 'Ridge shingles / caps', 'Metal roof panel', 'Flashing', 'Vent', 'Other'],
         'Interview': ['General property', 'Roof', 'Exterior wall', 'Gutter', 'Downspout', 'Window', 'Door', 'Interior', 'Other'],
@@ -38,7 +38,7 @@
         if (note.details?.trim()) parts.push(note.details.trim());
         return parts.join(' ');
     };
-    const currentSection = () => sections.find(section => location.pathname.endsWith(section[1]))?.[0] || 'Elevations';
+    const currentSection = () => location.pathname.endsWith('brittle-test.html') ? 'Shingles' : sections.find(section => location.pathname.endsWith(section[1]))?.[0] || 'Elevations';
     const sectionProgress = (record, section) => {
         const hasPhoto = Object.values(record.photos || {}).some(photo => photo.section === section && !['saving', 'failed'].includes(photo.storageStatus));
         const hasNote = Object.values(record.observations || {}).some(note => note.section === section);
@@ -487,9 +487,10 @@
                     const status = sectionProgress(record, name);
                     const open = expanded.has(name) ? expanded.get(name) : !matchMedia('(max-width:580px)').matches;
                     return `<article class="field-section-card"><div class="field-card-top"><span class="field-number">${String(i + 1).padStart(2, '0')}</span><span class="field-status">${escape(status)}</span></div><h2><a href="${url}">${escape(name)} <span aria-hidden="true">↗</span></a></h2><p>${count} photos · ${notes} notes</p><details class="field-card-details" data-section-details="${escape(name)}" ${open ? 'open' : ''}><summary>Steps & observations<span aria-hidden="true">+</span></summary><div class="field-step-links">${items.map((label, index) => {
-                        const present = record.photos[`${name}:${label}`];
+                        const present = Object.values(record.photos).find(photo => photo.section === name && photo.label === label);
+                        const testRecorded = label === 'Brittle test' && Object.values(record.observations).some(note => note.section === name && note.brittleTest);
                         const absent = record.absences[`${name}:${label}`] || record.absences[`${name}:${label.toLowerCase()}`];
-                        return `<a href="${url}?item=${index}">${escape(label)}<span>${present?.storageStatus === 'failed' ? 'Save failed' : present ? 'Captured' : absent ? 'Not present' : 'No photo'}</span></a>`;
+                        return `<a href="${label === 'Brittle test' ? 'brittle-test.html' : `${url}?item=${index}`}">${escape(label)}<span>${present?.storageStatus === 'failed' ? 'Save failed' : present ? 'Captured' : testRecorded ? 'Recorded' : label === 'Brittle test' ? 'Not recorded' : absent ? 'Not present' : 'No photo'}</span></a>`;
                     }).join('')}</div><button class="field-text-button" data-note-section="${escape(name)}">+ Add observation</button></details></article>`;
                 }).join('');
                 const notes = Object.values(record.observations).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));

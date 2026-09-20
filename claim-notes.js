@@ -40,7 +40,7 @@ function buildDetailedClaimNotes(record, sections, narrative) {
         if (interview) lines.push(`Insured discussion (reported): ${interview}`);
         if (!sectionNotes.length && !interview) lines.push('No findings recorded for this section.');
         const expected = sections.find(s => s[0] === section)?.[2] || [];
-        const missing = expected.filter(label => !sectionPhotos.some(p => p.label === label) && !sectionAbsences.some(a => a.label.toLowerCase() === label.toLowerCase()));
+        const missing = expected.filter(label => label !== 'Brittle test' && !sectionPhotos.some(p => p.label === label) && !sectionAbsences.some(a => a.label.toLowerCase() === label.toLowerCase()));
         if (missing.length) lines.push(`Photos not recorded: ${missing.join(', ')}.`);
     }
     return lines.join('\n');
@@ -96,7 +96,7 @@ function buildClaimNotes(record, sections, narrative, options = {}) {
     if(options.gaps!==false) {
         const missing=[];
         for(const [section,,expected] of sections) {
-            const labels=expected.filter(label=>!photos.some(p=>p.section===section&&p.label===label)&&!absences.some(a=>a.section===section&&a.label.toLowerCase()===label.toLowerCase()));
+            const labels=expected.filter(label=>label!=='Brittle test'&&!photos.some(p=>p.section===section&&p.label===label)&&!absences.some(a=>a.section===section&&a.label.toLowerCase()===label.toLowerCase()));
             if(labels.length)missing.push(`${section}: ${labels.join(', ')}.`);
         }
         if(missing.length)lines.push('','DOCUMENTATION GAPS — NOT A STATEMENT THAT AREAS WERE UNINSPECTED',...missing);

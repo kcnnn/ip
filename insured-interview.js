@@ -135,7 +135,7 @@ function updateProgress() {
 
 function updateSummary() {
     const photos = Object.values(window.InspectionStore?.get().photos || {});
-    [[elevationCount, 'Elevations'], [roofEdgeCount, 'Roof edge'], [ridgeCount, 'Ridge'],
+    [[elevationCount, 'Elevations'], [roofEdgeCount, 'Roof edge'], [ridgeCount, 'Shingles'],
      [overviewCount, 'Roof overview'], [accessoryCount, 'Accessories'], [hailTestCount, 'Hail documentation']]
         .forEach(([element, section]) => { element.textContent = photos.filter(photo => photo.section === section).length; });
     totalPhotos.textContent = photos.length;

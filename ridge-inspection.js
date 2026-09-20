@@ -12,7 +12,7 @@ const inspections = [
     {
         name: 'Under-Ridge Inspection',
         icon: '🔍',
-        instructions: 'Lift up a corner of the ridge shingle to expose the area underneath. Take a clear photo showing the under-ridge area and any visible damage or issues.',
+        instructions: 'Document the under-ridge area only when safely accessible during an authorized inspection by a qualified roofer. Do not force sealed shingles or create damage to obtain a photo; record access limitations instead.',
         key: 'under-ridge',
         type: 'under-ridge'
     }
@@ -61,6 +61,7 @@ function setupEventListeners() {
 }
 
 function updateInspectionDisplay() {
+    if (currentInspectionIndex === 2) { location.href = 'brittle-test.html'; return; }
     const currentInspection = inspections[currentInspectionIndex];
     inspectionTitle.textContent = currentInspection.name;
     inspectionIcon.textContent = currentInspection.icon;
@@ -139,7 +140,7 @@ function displayPhotoPreview(imageData) {
     
     // Store the photo data
     capturedPhotos[inspections[currentInspectionIndex].key] = imageData;
-    window.InspectionStore?.recordPhoto('Ridge', inspections[currentInspectionIndex].name, imageData);
+    window.InspectionStore?.recordPhoto('Shingles', inspections[currentInspectionIndex].name, imageData);
     
     // Update UI
     updateInspectionDisplay();
@@ -153,7 +154,7 @@ function retakePhoto() {
     
     // Clear stored photo
     delete capturedPhotos[inspections[currentInspectionIndex].key];
-    window.InspectionStore?.removePhoto('Ridge', inspections[currentInspectionIndex].name);
+    window.InspectionStore?.removePhoto('Shingles', inspections[currentInspectionIndex].name);
     
     // Update UI
     updateInspectionDisplay();
@@ -644,12 +645,7 @@ function proceedToNextInspection() {
 }
 
 function allInspectionsCompleted() {
-    // Enable next button
-    nextBtn.disabled = false;
-    nextBtn.innerHTML = '<span class="btn-text">Continue to Roof Overview</span><span class="btn-icon">→</span>';
-    
-    // Show completion message
-    alert('Ridge inspection completed! Ready to proceed to roof overview photos.');
+    location.href = 'brittle-test.html';
 }
 
 function switchCamera() {

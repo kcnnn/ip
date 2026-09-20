@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const section = InspectionField.currentSection();
     const definition = InspectionField.sections.find(item => item[0] === section);
     if (section === 'Interview') return;
+    if (section === 'Shingles' && new URLSearchParams(location.search).get('item') === '2') { location.replace('brittle-test.html'); return; }
     const record = InspectionStore.get();
     const toolbar = document.querySelector('.field-toolbar nav');
     const status = document.createElement('span'); status.className = 'field-help'; status.setAttribute('role', 'status');
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         case 'Roof edge':
             if (record.absences['Roof edge:Gutter Measurement'] || record.absences['Roof edge:Gutter measurement']) skippedInspections.gutter = true;
             restoreMap(inspections, value => { currentInspectionIndex = value; }, updateInspectionDisplay); break;
-        case 'Ridge': restoreMap(inspections, value => { currentInspectionIndex = value; }, updateInspectionDisplay); break;
+        case 'Shingles': restoreMap(inspections, value => { currentInspectionIndex = value; }, updateInspectionDisplay); break;
         case 'Roof overview': restoreMap(overviewPhotos, value => { currentPhotoIndex = value; }, updatePhotoDisplay); updateCompass(); break;
         case 'Hail documentation':
             values.forEach(({ photo, data }) => {
@@ -70,12 +71,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     select.addEventListener('change', async () => {
         const saves = await InspectionStore.flush();
         if (saves.some(value => value === false)) return;
-        location.href = `${definition[1]}?item=${select.value}`;
+        location.href = section === 'Shingles' && select.value === '2' ? 'brittle-test.html' : `${definition[1]}?item=${select.value}`;
     });
     // Existing next/back controls still work; keep the new jump selector in sync.
     const title = document.querySelector('#elevationTitle,#inspectionTitle,#photoTitle');
     if (title) new MutationObserver(() => {
-        const index = section === 'Elevations' ? currentElevationIndex : ['Roof edge', 'Ridge'].includes(section) ? currentInspectionIndex : section === 'Roof overview' ? currentPhotoIndex : section === 'Accessories' ? currentAccessoryIndex : currentStep === 'test-square' ? 0 : Number(currentStep.split('-')[1]);
+        const index = section === 'Elevations' ? currentElevationIndex : ['Roof edge', 'Shingles'].includes(section) ? currentInspectionIndex : section === 'Roof overview' ? currentPhotoIndex : section === 'Accessories' ? currentAccessoryIndex : currentStep === 'test-square' ? 0 : Number(currentStep.split('-')[1]);
         select.value = index;
     }).observe(title, { childList: true });
 });
