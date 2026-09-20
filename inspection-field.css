@@ -53,6 +53,9 @@
 .field-saved-note { display:flex; gap:20px; align-items:flex-start; justify-content:space-between; padding:24px; background:white; border:1px solid #dcdfe1; border-radius:10px; margin-bottom:12px; }
 .field-saved-note p { font-size:14px; line-height:1.65; white-space:pre-wrap; overflow-wrap:anywhere; }
 .field-saved-note small { color:#74787e; font-size:11px; }
+.field-saved-note > div:first-child { min-width:0; flex:1; }.field-saved-note > .field-actions { flex-shrink:0; }
+.field-delete-note { color:#a81320; border-color:#dfb5b8; }.field-delete-note:hover { background:#fff2f3; }
+.field-deleted-notes { margin-top:20px; }.field-deleted-notes summary { cursor:pointer; font-weight:600; padding:12px 0; }
 .field-toolbar { box-sizing:border-box; width:100%; background:white; color:#262a2e; border-bottom:1px solid #d8dce0; padding:16px max(20px,calc((100vw - 1180px)/2)); font-family:Arial,sans-serif; }
 .field-toolbar nav { display:flex; gap:20px; align-items:center; flex-wrap:wrap; font-size:13px; }
 .field-toolbar nav a { color:#b5121b; text-decoration:none; font-weight:700; }

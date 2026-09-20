@@ -457,10 +457,26 @@
                     }).join('')}</div><button class="field-text-button" data-note-section="${escape(name)}">+ Add observation</button></details></article>`;
                 }).join('');
                 const notes = Object.values(record.observations).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-                document.getElementById('fieldSavedNotes').innerHTML = notes.length ? notes.map(note => `<article class="field-saved-note"><div><span class="field-eyebrow">${escape(note.section)} · INSPECTOR NOTE</span><p>${escape(narrative(note))}</p><small>${new Date(note.updatedAt).toLocaleString()}${note.dictated ? ' · Includes dictated text' : ''}</small></div><button class="field-button" data-edit-note="${escape(note.id)}">Edit</button></article>`).join('') : '<p class="field-help">No saved observations yet. Add a note as you inspect; you can return and edit it later.</p>';
+                document.getElementById('fieldSavedNotes').innerHTML = notes.length ? notes.map(note => `<article class="field-saved-note"><div><span class="field-eyebrow">${escape(note.section)} · INSPECTOR NOTE</span><p>${escape(narrative(note))}</p><small>${new Date(note.updatedAt).toLocaleString()}${note.dictated ? ' · Includes dictated text' : ''}</small></div><div class="field-actions"><button type="button" class="field-button" data-edit-note="${escape(note.id)}">Edit</button><button type="button" class="field-button field-delete-note" data-delete-note="${escape(note.id)}">Delete observation</button></div></article>`).join('') : '<p class="field-help">No saved observations yet. Add a note as you inspect; you can return and edit it later.</p>';
+                const deleted=Object.entries(record.deletedItems || {}).filter(([,entry])=>entry.kind==='observations');
+                if(deleted.length) document.getElementById('fieldSavedNotes').insertAdjacentHTML('beforeend',`<details class="field-deleted-notes"><summary>Deleted observations (${deleted.length}) · Restore</summary>${deleted.map(([token,entry])=>`<article class="field-saved-note"><p>${escape(narrative(entry.item))}</p><button type="button" class="field-button" data-restore-note="${escape(token)}">Restore observation</button></article>`).join('')}</details>`);
             };
+            const deleteStatus=document.createElement('p');deleteStatus.className='field-help';deleteStatus.id='fieldDeleteNoteStatus';deleteStatus.setAttribute('role','status');deleteStatus.tabIndex=-1;
+            document.getElementById('fieldSavedNotes').before(deleteStatus);
             render(); window.addEventListener('inspection-record-changed', render); window.addEventListener('storage', render);
             workspace.addEventListener('click', event => {
+                const remove=event.target.closest('[data-delete-note]'), restore=event.target.closest('[data-restore-note]');
+                if(remove || restore) {
+                    try {
+                        if(restore) {InspectionStore.restoreReviewItem(restore.dataset.restoreNote);deleteStatus.textContent='Observation restored.';}
+                        else {
+                            if(!confirm('Delete this observation and its attached AI findings/research? Its photo will stay. You can restore it under Deleted observations.')) return;
+                            InspectionStore.deleteReviewItem('observations',remove.dataset.deleteNote);
+                            deleteStatus.textContent='Observation deleted. Its photo was kept. Use Deleted observations below to undo.';
+                        }
+                    } catch(error) {deleteStatus.textContent=error.message || 'The change could not be saved.';}
+                    deleteStatus.focus();return;
+                }
                 const edit = event.target.closest('[data-edit-note]');
                 if (edit) window.InspectionField.editNote(InspectionStore.get().observations[edit.dataset.editNote]);
                 const add = event.target.closest('[data-note-section]');
@@ -472,7 +488,8 @@
             document.getElementById('fieldExport').addEventListener('click', async () => {
                 await InspectionStore.flush();
                 const record = InspectionStore.get();
-                const blob = new Blob([JSON.stringify({ ...record, exportNote: 'Metadata and inspector notes only. Original photos remain on this device.' }, null, 2)], { type: 'application/json' });
+                const {deletedItems, ...activeRecord} = record;
+                const blob = new Blob([JSON.stringify({ ...activeRecord, exportNote: 'Active metadata and inspector notes only. Deleted items are excluded. Original photos remain on this device.' }, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'apex-inspection-notes.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
             });
         }
