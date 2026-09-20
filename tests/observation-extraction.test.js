@@ -82,3 +82,13 @@ test('one unsupported label field does not discard valid location and title',()=
     assert.deepEqual(result,{location:'Garage',photoTitle:'Water heater rating plate'});
     assert.deepEqual(omitted.sort(),['component','condition']);
 });
+test('photo review tolerates absent checks and preserves actual visual notes',()=>{
+    assert.deepEqual(extraction.normalizePhotoReview({status:'supports_note',summary:'Water heater label visible.'}).review,{status:'supports_note',summary:'Water heater label visible.',checks:[]});
+    assert.deepEqual(extraction.normalizePhotoReview({status:'needs_detail',summary:'Label visible.',checks:'Serial partly obscured.'}).review.checks,['Serial partly obscured.']);
+    const unknown=extraction.normalizePhotoReview({status:'documentation_only',summary:'Rating plate visible.',checks:[null,'Check model']});
+    assert.equal(unknown.review.status,'unable_to_assess');assert.match(unknown.reviewNotice,/not as photo approval/);
+    assert.equal(extraction.normalizePhotoReview({status:'supports_note',checks:[]}).review,null);
+    assert.equal(extraction.normalizePhotoReview(null).review,null);
+    const bounded=extraction.normalizePhotoReview({status:'needs_detail',summary:'x'.repeat(4000),checks:Array(9).fill('x'.repeat(2000))}).review;
+    assert.equal(bounded.summary.length,3000);assert.equal(bounded.checks.length,6);assert.equal(bounded.checks[0].length,1000);
+});

@@ -210,13 +210,13 @@
                 if (JSON.stringify(readForm()) !== snapshot) { status.textContent = 'You changed this note while it was being organized. Your changes were kept; click Fill fields to try again.'; return; }
                 const extracted = photo ? result.fields : result;
                 const omittedFields = result.omittedFields || [];
-                const omissions = omittedFields.length ? ` Some suggestions were not supported by your note or available choices and were left blank.${photo ? ' Your photo review is still available.' : ''}` : '';
+                const omissions = (omittedFields.length ? ` Some suggestions were not supported by your note or available choices and were left blank.${photo && result.review ? ' Your photo review is still available.' : ''}` : '') + (result.reviewNotice ? ` ${result.reviewNotice}` : '');
                 photoTitle = extracted.photoTitle ? {value:extracted.photoTitle,transcript:field('details').value,photoId} : null;
                 if (elevationKey && extracted.location) {
                     const otherElevation = /\b(front|right|rear|back|left)\s+(?:elevation|wall)\b/i.exec(extracted.location)?.[1]?.toLowerCase();
                     if (otherElevation && (otherElevation === 'back' ? 'rear' : otherElevation) !== elevationKey) throw new Error('The location in your note is a different elevation. Check the note or open the correct elevation before saving.');
                 }
-                aiReview = photo ? { ...result.review, photoId, revision, transcript: field('details').value, reviewedAt: new Date().toISOString() } : null;
+                aiReview = photo && result.review ? { ...result.review, photoId, revision, transcript: field('details').value, reviewedAt: new Date().toISOString() } : null;
                 renderReview();
                 if (elevationKey && extracted.section && extracted.section !== 'Elevations') throw new Error('Your note describes a different inspection section. Check the note before saving this elevation detail.');
                 field('section').value = elevationKey ? 'Elevations' : extracted.section || field('section').value;
@@ -230,8 +230,8 @@
                 status.textContent = `Details filled from your note. Review before saving.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}${omissions}`;
                 if (elevationKey && !missing.length) {
                     const id = InspectionStore.saveObservation(readForm()); field('id').value = id;
-                    status.textContent = `Saved to ${elevationName(elevationKey)}. Review the AI findings below; you can edit this note or add another detail photo.${omissions}`;
-                    document.getElementById('fieldSaveStatus').textContent = 'Photo, dictation and AI review added to the report.';
+                    status.textContent = `Saved to ${elevationName(elevationKey)}.${aiReview ? ' Review the AI findings below;' : ''} You can edit this note or add another detail photo.${omissions}`;
+                    document.getElementById('fieldSaveStatus').textContent = aiReview ? 'Photo, dictation and AI review added to the report.' : 'Photo and dictation added to the report. No AI photo assessment was recorded.';
                 }
             } catch (error) {
                 if (generation === fillGeneration) status.textContent = error.message || 'Auto-fill unavailable. Your note is kept.';

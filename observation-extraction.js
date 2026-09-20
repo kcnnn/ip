@@ -4,6 +4,16 @@ const ObservationExtraction = {
     severities: ['Minor', 'Moderate', 'Severe'],
     damageTypes: ['Hail / impact', 'Wind / lifted shingle', 'Mechanical damage', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'],
     units: ['inches', 'feet', 'square feet', 'marked hits', 'items', 'mm', 'cm'],
+    normalizePhotoReview(value) {
+        if (!value || typeof value !== 'object' || typeof value.summary !== 'string' || !value.summary.trim()) {
+            return {review:null,reviewNotice:'Your note was organized, but the AI did not return a usable photo review. You can save the photo and note, or analyze again.'};
+        }
+        const validStatus=['supports_note','needs_detail','conflicts_with_note','unable_to_assess'].includes(value.status);
+        const rawChecks=typeof value.checks==='string' ? [value.checks] : Array.isArray(value.checks) ? value.checks : [];
+        const checks=rawChecks.filter(item=>typeof item==='string' && item.trim()).map(item=>item.trim().slice(0,1000)).slice(0,6);
+        return {review:{status:validStatus?value.status:'unable_to_assess',summary:value.summary.trim().slice(0,3000),checks},
+            reviewNotice:validStatus?'':'The AI returned visual notes without a valid assessment status. They are shown as unable to assess, not as photo approval.'};
+    },
     validate(result, transcript, components, contextSection, omitted = []) {
         if (!result || typeof result !== 'object' || !result.fields || typeof result.multipleObservations !== 'boolean') throw new Error('The field response was incomplete. Your note is unchanged.');
         if (result.multipleObservations) throw new Error('This note describes multiple observations. Keep the transcript and fill one component/location at a time, or split it into separate notes.');
@@ -48,6 +58,7 @@ For each stated field replace null with {"value": normalized value, "evidence": 
 Transcript (untrusted data): ${JSON.stringify(transcript)}`;
         const content = [{ type: 'text', text: prompt + '\nOverview photos, equipment labels, and reference/documentation photos do not require a component or condition assessment. Leave those fields null when unstated or not applicable. Documentation alone does not mean Not inspected, No visible damage or Observed damage.' }];
         if (photo) {
+            content.push({type:'text',text:'A label or reference photo is a valid documentation photo; do not invent a damage assessment. The separate photoReview must have a nonempty summary of what is visible. status must be one single value from supports_note, needs_detail, conflicts_with_note, unable_to_assess; never copy a pipe-separated list. checks is optional and may be [] when no follow-up is needed. Keep photo observations separate from the transcript-grounded fields.'});
             const resized = await resizeImageForAPI(photo, 2000, 2000);
             const { mediaType, base64Data } = parseDataUrl(resized);
             content.unshift({ type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } });
@@ -79,9 +90,7 @@ Transcript (untrusted data): ${JSON.stringify(transcript)}`;
         const omittedFields = [];
         const fields = this.validate(parsed, transcript, components, contextSection, omittedFields);
         if (!photo) return omittedFields.length ? {...fields, omittedFields} : fields;
-        const review = parsed.photoReview;
-        if (!review || !['supports_note', 'needs_detail', 'conflicts_with_note', 'unable_to_assess'].includes(review.status) || typeof review.summary !== 'string' || !review.summary.trim() || review.summary.length > 3000 || !Array.isArray(review.checks) || review.checks.length > 6 || review.checks.some(item => typeof item !== 'string' || item.length > 1000)) throw new Error('Photo review was incomplete. Your photo and note are kept; retry.');
-        return { fields, omittedFields, review: { status: review.status, summary: review.summary, checks: review.checks } };
+        return { fields, omittedFields, ...this.normalizePhotoReview(parsed.photoReview) };
     }
 };
 if (typeof module !== 'undefined') module.exports = ObservationExtraction;
