@@ -224,7 +224,7 @@
                 const photo = photoId ? await InspectionStore.getPhoto(photoId) : null;
                 if (photoId && !photo) throw new Error('Original photo unavailable. Upload it again; your note is kept.');
                 const result = await Promise.race([
-                    ObservationExtraction.extract(text, componentsBySection, field('section').value, photo),
+                    ObservationExtraction.extract(text, componentsBySection, field('section').value, photo, false, {brittlePhase: InspectionStore.get().photos[photoId]?.brittlePhase}),
                     new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('AI review timed out. Your photo and note are kept; retry.')), 60000); })
                 ]);
                 if (generation !== fillGeneration) return;

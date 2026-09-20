@@ -38,12 +38,25 @@ function requestHarness(response) {
         module: {exports: {}}, isAPIKeyConfigured: () => true,
         getAPIKey: () => 'synthetic-secret', getWorkspaceId: () => 'test-workspace',
         API_CONFIG: {MODEL: 'claude-sonnet-5'},
+        resizeImageForAPI: async value => value,
+        parseDataUrl: () => ({mediaType:'image/png',base64Data:'synthetic'}),
         sendAnthropicRequest: async value => { request = value; return response; },
         getAITextContent: value => value.content[0].text
     };
     vm.runInNewContext(fs.readFileSync(require.resolve('../observation-extraction.js'), 'utf8'), context);
-    return {run: () => context.module.exports.extract('Door has a dent', components, 'Elevations'), request: () => request};
+    return {run: (...args) => context.module.exports.extract(...(args.length ? args : ['Door has a dent', components, 'Elevations'])), request: () => request};
 }
+test('before-test photo review receives baseline purpose and normal-joint guidance',async()=>{
+    const h=requestHarness({ok:true,json:async()=>({content:[{text:JSON.stringify({multipleObservations:false,fields:{},photoReview:{status:'supports_note',summary:'Baseline shingle photo.',checks:[]}})}]})});
+    await h.run('Front slope',components,'Roof overview','synthetic-photo',false,{brittlePhase:'before'});
+    const text=h.request().payload.messages[0].content.filter(c=>c.type==='text').map(c=>c.text).join('\n');
+    assert.match(text,/Normal straight shingle edges/);
+    assert.match(text,/Before brittle test: baseline documentation/);
+    assert.match(text,/A location-only note is valid/);
+    assert.match(text,/Do not suppress genuine visible damage/);
+    await h.run('Roof photo',components,'Roof overview','synthetic-photo',false,{brittlePhase:'invented context'});
+    assert.doesNotMatch(h.request().payload.messages[0].content.map(c=>c.text||'').join('\n'),/PHOTO PURPOSE:/);
+});
 
 test('auto-fill request uses supported model defaults without sampling overrides', async () => {
     const harness = requestHarness({ok:true,json:async()=>({content:[{text:'{"multipleObservations":false,"fields":{}}'}]})});
