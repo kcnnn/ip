@@ -123,7 +123,7 @@
             field('component').value = choices.includes(selected) || preserveSaved ? selected : '';
             field('location').placeholder = field('section').value === 'Elevations' ? 'e.g. Front wall, right of entry door' : 'e.g. Back slope, east corner';
         }
-        let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null;
+        let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null, photoTitle = null;
         let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false, elevationKey = null;
         const elevationName = key => `${key.charAt(0).toUpperCase()}${key.slice(1)} Elevation`;
         const renderReview = () => {
@@ -150,6 +150,7 @@
             damageTypes: [...form.querySelectorAll('[name="damageType"]:checked')].map(input => input.value),
             quantity: field('quantity').value, unit: field('unit').value,
             details: field('details').value, photoId: field('photoId').value, dictated, aiReview, elevationKey,
+            photoTitle: photoTitle?.transcript === field('details').value && photoTitle?.photoId === field('photoId').value ? photoTitle : null,
             equipmentResearch: equipmentResearch?.photoId === field('photoId').value && equipmentResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? equipmentResearch : null,
             parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null
         });
@@ -208,6 +209,7 @@
                 if (photoId && InspectionStore.get().photos[photoId]?.revision !== revision) throw new Error('The photo changed during analysis. Analyze again.');
                 if (JSON.stringify(readForm()) !== snapshot) { status.textContent = 'You changed this note while it was being organized. Your changes were kept; click Fill fields to try again.'; return; }
                 const extracted = photo ? result.fields : result;
+                photoTitle = extracted.photoTitle ? {value:extracted.photoTitle,transcript:field('details').value,photoId} : null;
                 if (elevationKey && extracted.location) {
                     const otherElevation = /\b(front|right|rear|back|left)\s+(?:elevation|wall)\b/i.exec(extracted.location)?.[1]?.toLowerCase();
                     if (otherElevation && (otherElevation === 'back' ? 'rear' : otherElevation) !== elevationKey) throw new Error('The location in your note is a different elevation. Check the note or open the correct elevation before saving.');
@@ -261,6 +263,7 @@
             document.getElementById('fieldElevationContext').textContent = elevationKey ? `${elevationName(elevationKey)} · Detail photo. Analyze saves your photo, original note and separate AI findings together. Check any disagreements before relying on the result.` : '';
             document.getElementById('fieldElevationActions').hidden = !elevationKey;
             equipmentResearch = note.equipmentResearch || null;
+            photoTitle = note.photoTitle || null;
             aiReview = note.aiReview || null; renderReview();
             refreshPhotos();
             field('section').value = elevationKey ? 'Elevations' : note.section || currentSection();
@@ -324,7 +327,7 @@
                     const prepared = await preparePhoto(file, message => { if (generation === fillGeneration) status.textContent = message; });
                     if (generation !== fillGeneration) return;
                     const id = `observation-photo:${Date.now()}:${Math.random().toString(36).slice(2)}`;
-                    const label = elevationKey ? `${elevationName(elevationKey)} · Detail · ${file.name}` : `Field photo · ${file.name}`;
+                    const label = elevationKey ? `${elevationName(elevationKey)} · Detail photo` : 'Inspection detail photo';
                     const ok = await InspectionStore.recordPhoto(field('section').value, label, prepared.dataUrl, { id, elevationKey, parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null, convertedFrom: prepared.convertedFrom, sourceName: prepared.sourceName });
                     if (!ok) throw new Error('Photo could not be saved. Please try again.');
                     if (generation !== fillGeneration) return;

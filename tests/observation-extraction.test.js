@@ -71,3 +71,8 @@ test('accepts explicitly dictated mechanical damage and exposes matching UI sele
     const ui=fs.readFileSync(require.resolve('../inspection-field.js'),'utf8');
     assert.match(ui, /'Mechanical damage'/);
 });
+test('photo titles require transcript evidence and a bounded title', () => {
+    assert.equal(extraction.validate({multipleObservations:false,fields:{photoTitle:field('HVAC serial number label','hvac serial number label')}},'Front elevation hvac serial number label',components,'Elevations').photoTitle,'HVAC serial number label');
+    assert.throws(()=>extraction.validate({multipleObservations:false,fields:{photoTitle:field('Roof damage','roof')}},'hvac label',components,'Elevations'));
+    assert.throws(()=>extraction.validate({multipleObservations:false,fields:{photoTitle:field('x'.repeat(101),'hvac')}},'hvac label',components,'Elevations'));
+});

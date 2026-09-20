@@ -34,6 +34,18 @@ function readInspectionRecord() {
         if (!record.id) { record.id = inspectionId(); localStorage.setItem(INSPECTION_STORE_KEY, JSON.stringify(record)); }
         record.observations ||= {};
         record.sectionStates ||= {};
+        // Presentation labels for detail photos come from saved inspection words,
+        // never filenames. Keep stable IDs/original keys and sourceName intact.
+        const linked = new Map();
+        Object.values(record.observations).sort((a,b)=>String(a.updatedAt||'').localeCompare(String(b.updatedAt||''))).forEach(note=>linked.set(note.photoId,note));
+        for (const [id, photo] of Object.entries(record.photos || {})) {
+            if (!id.startsWith('observation-photo:')) continue;
+            const note=linked.get(id);
+            const generated=note?.photoTitle;
+            const title=generated?.photoId===id && generated?.transcript===note.details && typeof generated.value==='string' ? generated.value.trim().slice(0,100) : String(note?.details || '').trim().replace(/\s+/g,' ').slice(0,100);
+            const prefix=photo.elevationKey ? `${photo.elevationKey.charAt(0).toUpperCase()+photo.elevationKey.slice(1)} Elevation` : '';
+            photo.label=[prefix,title || 'Detail photo'].filter(Boolean).join(' · ');
+        }
         return record;
     } catch {
         return { id: inspectionId(), startedAt: new Date().toISOString(), photos: {}, absences: {}, notes: {}, observations: {}, sectionStates: {} };

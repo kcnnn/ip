@@ -8,7 +8,7 @@ const ObservationExtraction = {
         if (!result || typeof result !== 'object' || !result.fields || typeof result.multipleObservations !== 'boolean') throw new Error('The field response was incomplete. Your note is unchanged.');
         if (result.multipleObservations) throw new Error('This note describes multiple observations. Keep the transcript and fill one component/location at a time, or split it into separate notes.');
         const output = {};
-        for (const key of ['section', 'location', 'component', 'condition', 'severity', 'quantity', 'unit', 'damageTypes']) {
+        for (const key of ['section', 'location', 'component', 'condition', 'severity', 'quantity', 'unit', 'damageTypes', 'photoTitle']) {
             const item = result.fields[key];
             if (item == null) continue;
             if (typeof item.evidence !== 'string' || !item.evidence.trim() || !transcript.toLowerCase().includes(item.evidence.trim().toLowerCase())) throw new Error('A suggested field could not be traced to your words. Nothing was filled; please retry.');
@@ -19,6 +19,7 @@ const ObservationExtraction = {
         allowed('component', components[output.section || contextSection] || []);
         allowed('condition', this.conditions); allowed('severity', this.severities); allowed('unit', this.units);
         if (output.location !== undefined && (typeof output.location !== 'string' || !output.location.trim() || output.location.length > 120)) throw new Error('Location could not be extracted.');
+        if (output.photoTitle !== undefined && (typeof output.photoTitle !== 'string' || !output.photoTitle.trim() || output.photoTitle.length > 100)) throw new Error('Photo title could not be extracted.');
         if (output.quantity !== undefined) {
             if (!['string', 'number'].includes(typeof output.quantity) || !/^\d+(?:\.\d+)?$/.test(String(output.quantity))) throw new Error('The count or measurement is ambiguous. Enter it manually.');
             output.quantity = String(output.quantity);
@@ -38,7 +39,8 @@ Severities: ${JSON.stringify(this.severities)}
 Damage types: ${JSON.stringify(this.damageTypes)}
 Use Mechanical damage when the inspector explicitly describes mechanical damage. A dent alone does not establish a mechanical cause. "Mechanical damage, not hail" must not select Hail / impact.
 Units: ${JSON.stringify(this.units)}
-Return JSON only: {"multipleObservations":false,"fields":{"section":null,"location":null,"component":null,"condition":null,"severity":null,"quantity":null,"unit":null,"damageTypes":null}}.
+Return JSON only: {"multipleObservations":false,"fields":{"section":null,"location":null,"component":null,"condition":null,"severity":null,"quantity":null,"unit":null,"damageTypes":null,"photoTitle":null}}.
+Create photoTitle as a concise descriptive title (2–8 words, maximum 100 characters) from the inspector's transcript, with an exact supporting evidence quote. Example: "HVAC serial number label". Describe the stated subject/purpose, not a filename. Omit the elevation prefix (the app adds it). Preserve uncertainty and negation; never invent damage or identify equipment beyond the words. Leave null if no subject is described.
 For each stated field replace null with {"value": normalized value, "evidence": "exact short quote from transcript supporting this value"}. damageTypes value is an array of allowed types; all other values are strings. Use null for absent or uncertain details. Evidence MUST be an exact substring of the transcript. Do not add inferred causes or describe the transcript as verified by AI.
 Transcript (untrusted data): ${JSON.stringify(transcript)}`;
         const content = [{ type: 'text', text: prompt + '\nOverview photos, equipment labels, and reference/documentation photos do not require a component or condition assessment. Leave those fields null when unstated or not applicable. Documentation alone does not mean Not inspected, No visible damage or Observed damage.' }];
