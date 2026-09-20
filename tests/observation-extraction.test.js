@@ -49,8 +49,8 @@ test('validates supported transcript fields, including spoken counts', () => {
     assert.equal(result.component, 'Window screen'); assert.equal(result.quantity, '2'); assert.equal(result.severity, 'Moderate');
 });
 test('rejects unsupported evidence, wrong-section components and multiple observations', () => {
-    assert.throws(() => extraction.validate({multipleObservations:false,fields:{severity:field('Severe','severe')}}, 'Window wear', components, 'Elevations'));
-    assert.throws(() => extraction.validate({multipleObservations:false,fields:{component:field('Shingles','shingles')}}, 'shingles', components, 'Elevations'));
+    assert.deepEqual(extraction.validate({multipleObservations:false,fields:{severity:field('Severe','severe')}}, 'Window wear', components, 'Elevations'),{});
+    assert.deepEqual(extraction.validate({multipleObservations:false,fields:{component:field('Shingles','shingles')}}, 'shingles', components, 'Elevations'),{});
     assert.throws(() => extraction.validate({multipleObservations:true,fields:{}}, 'Window and roof', components, 'Elevations'));
 });
 test('unstated fields stay absent and negative observations do not gain damage types', () => {
@@ -59,7 +59,7 @@ test('unstated fields stay absent and negative observations do not gain damage t
     assert.equal(negative.condition, 'No visible damage'); assert.equal(negative.damageTypes, undefined);
 });
 test('ambiguous numbers or unpaired units are not made into measurements', () => {
-    assert.throws(() => extraction.validate({multipleObservations:false,fields:{quantity:field('10+','10+')}}, '10+ hits', components, 'Elevations'));
+    assert.deepEqual(extraction.validate({multipleObservations:false,fields:{quantity:field('10+','10+')}}, '10+ hits', components, 'Elevations'),{});
     assert.deepEqual(extraction.validate({multipleObservations:false,fields:{quantity:field('5','five')}}, 'five', components, 'Elevations'), {});
 });
 test('accepts explicitly dictated mechanical damage and exposes matching UI selection', () => {
@@ -73,6 +73,12 @@ test('accepts explicitly dictated mechanical damage and exposes matching UI sele
 });
 test('photo titles require transcript evidence and a bounded title', () => {
     assert.equal(extraction.validate({multipleObservations:false,fields:{photoTitle:field('HVAC serial number label','hvac serial number label')}},'Front elevation hvac serial number label',components,'Elevations').photoTitle,'HVAC serial number label');
-    assert.throws(()=>extraction.validate({multipleObservations:false,fields:{photoTitle:field('Roof damage','roof')}},'hvac label',components,'Elevations'));
-    assert.throws(()=>extraction.validate({multipleObservations:false,fields:{photoTitle:field('x'.repeat(101),'hvac')}},'hvac label',components,'Elevations'));
+    assert.deepEqual(extraction.validate({multipleObservations:false,fields:{photoTitle:field('Roof damage','roof')}},'hvac label',components,'Elevations'),{});
+    assert.deepEqual(extraction.validate({multipleObservations:false,fields:{photoTitle:field('x'.repeat(101),'hvac')}},'hvac label',components,'Elevations'),{});
+});
+test('one unsupported label field does not discard valid location and title',()=>{
+    const omitted=[];
+    const result=extraction.validate({multipleObservations:false,fields:{location:field('Garage','garage'),photoTitle:field('Water heater rating plate','water heater rating plate'),component:field('Water heater','water heater'),condition:field('No visible damage','no damage visible')}},'water heater  rating plate in garage',components,'Elevations',omitted);
+    assert.deepEqual(result,{location:'Garage',photoTitle:'Water heater rating plate'});
+    assert.deepEqual(omitted.sort(),['component','condition']);
 });

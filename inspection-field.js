@@ -209,6 +209,8 @@
                 if (photoId && InspectionStore.get().photos[photoId]?.revision !== revision) throw new Error('The photo changed during analysis. Analyze again.');
                 if (JSON.stringify(readForm()) !== snapshot) { status.textContent = 'You changed this note while it was being organized. Your changes were kept; click Fill fields to try again.'; return; }
                 const extracted = photo ? result.fields : result;
+                const omittedFields = result.omittedFields || [];
+                const omissions = omittedFields.length ? ` Some suggestions were not supported by your note or available choices and were left blank.${photo ? ' Your photo review is still available.' : ''}` : '';
                 photoTitle = extracted.photoTitle ? {value:extracted.photoTitle,transcript:field('details').value,photoId} : null;
                 if (elevationKey && extracted.location) {
                     const otherElevation = /\b(front|right|rear|back|left)\s+(?:elevation|wall)\b/i.exec(extracted.location)?.[1]?.toLowerCase();
@@ -225,10 +227,10 @@
                 manualFields = false;
                 update();
                 const missing = ['location'].filter(key => !field(key).value);
-                status.textContent = `Details filled from your note. Review before saving.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}`;
+                status.textContent = `Details filled from your note. Review before saving.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}${omissions}`;
                 if (elevationKey && !missing.length) {
                     const id = InspectionStore.saveObservation(readForm()); field('id').value = id;
-                    status.textContent = `Saved to ${elevationName(elevationKey)}. Review the AI findings below; you can edit this note or add another detail photo.`;
+                    status.textContent = `Saved to ${elevationName(elevationKey)}. Review the AI findings below; you can edit this note or add another detail photo.${omissions}`;
                     document.getElementById('fieldSaveStatus').textContent = 'Photo, dictation and AI review added to the report.';
                 }
             } catch (error) {

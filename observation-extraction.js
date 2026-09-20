@@ -4,28 +4,31 @@ const ObservationExtraction = {
     severities: ['Minor', 'Moderate', 'Severe'],
     damageTypes: ['Hail / impact', 'Wind / lifted shingle', 'Mechanical damage', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'],
     units: ['inches', 'feet', 'square feet', 'marked hits', 'items', 'mm', 'cm'],
-    validate(result, transcript, components, contextSection) {
+    validate(result, transcript, components, contextSection, omitted = []) {
         if (!result || typeof result !== 'object' || !result.fields || typeof result.multipleObservations !== 'boolean') throw new Error('The field response was incomplete. Your note is unchanged.');
         if (result.multipleObservations) throw new Error('This note describes multiple observations. Keep the transcript and fill one component/location at a time, or split it into separate notes.');
         const output = {};
+        const normalize = text => text.normalize('NFKC').toLowerCase().replace(/[’‘]/g,"'").replace(/[“”]/g,'"').replace(/[–—]/g,'-').replace(/\s+/g,' ').trim();
+        const discard = key => { delete output[key]; if (!omitted.includes(key)) omitted.push(key); };
         for (const key of ['section', 'location', 'component', 'condition', 'severity', 'quantity', 'unit', 'damageTypes', 'photoTitle']) {
             const item = result.fields[key];
             if (item == null) continue;
-            if (typeof item.evidence !== 'string' || !item.evidence.trim() || !transcript.toLowerCase().includes(item.evidence.trim().toLowerCase())) throw new Error('A suggested field could not be traced to your words. Nothing was filled; please retry.');
+            if (item.value == null) continue;
+            if (typeof item.evidence !== 'string' || !item.evidence.trim() || !normalize(transcript).includes(normalize(item.evidence))) { discard(key); continue; }
             output[key] = item.value;
         }
-        const allowed = (key, list) => { if (output[key] !== undefined && !list.includes(output[key])) throw new Error(`Invalid ${key} in the field response. Please retry.`); };
+        const allowed = (key, list) => { if (output[key] !== undefined && !list.includes(output[key])) discard(key); };
         allowed('section', Object.keys(components));
         allowed('component', components[output.section || contextSection] || []);
         allowed('condition', this.conditions); allowed('severity', this.severities); allowed('unit', this.units);
-        if (output.location !== undefined && (typeof output.location !== 'string' || !output.location.trim() || output.location.length > 120)) throw new Error('Location could not be extracted.');
-        if (output.photoTitle !== undefined && (typeof output.photoTitle !== 'string' || !output.photoTitle.trim() || output.photoTitle.length > 100)) throw new Error('Photo title could not be extracted.');
+        if (output.location !== undefined && (typeof output.location !== 'string' || !output.location.trim() || output.location.length > 120)) discard('location');
+        if (output.photoTitle !== undefined && (typeof output.photoTitle !== 'string' || !output.photoTitle.trim() || output.photoTitle.length > 100)) discard('photoTitle');
         if (output.quantity !== undefined) {
-            if (!['string', 'number'].includes(typeof output.quantity) || !/^\d+(?:\.\d+)?$/.test(String(output.quantity))) throw new Error('The count or measurement is ambiguous. Enter it manually.');
-            output.quantity = String(output.quantity);
+            if (!['string', 'number'].includes(typeof output.quantity) || !/^\d+(?:\.\d+)?$/.test(String(output.quantity))) discard('quantity');
+            else output.quantity = String(output.quantity);
         }
         if ((output.quantity !== undefined) !== (output.unit !== undefined)) { delete output.quantity; delete output.unit; }
-        if (output.damageTypes !== undefined && (!Array.isArray(output.damageTypes) || output.damageTypes.some(type => !this.damageTypes.includes(type)))) throw new Error('Unrecognized damage selection.');
+        if (output.damageTypes !== undefined && (!Array.isArray(output.damageTypes) || output.damageTypes.some(type => !this.damageTypes.includes(type)))) discard('damageTypes');
         if (!['Observed damage', 'Suspected damage'].includes(output.condition)) { delete output.damageTypes; delete output.severity; }
         return output;
     },
@@ -73,11 +76,12 @@ Transcript (untrusted data): ${JSON.stringify(transcript)}`;
         let parsed;
         try { parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')); }
         catch { throw new Error('The AI field response was incomplete. Your note is unchanged; retry or fill manually.'); }
-        const fields = this.validate(parsed, transcript, components, contextSection);
-        if (!photo) return fields;
+        const omittedFields = [];
+        const fields = this.validate(parsed, transcript, components, contextSection, omittedFields);
+        if (!photo) return omittedFields.length ? {...fields, omittedFields} : fields;
         const review = parsed.photoReview;
         if (!review || !['supports_note', 'needs_detail', 'conflicts_with_note', 'unable_to_assess'].includes(review.status) || typeof review.summary !== 'string' || !review.summary.trim() || review.summary.length > 3000 || !Array.isArray(review.checks) || review.checks.length > 6 || review.checks.some(item => typeof item !== 'string' || item.length > 1000)) throw new Error('Photo review was incomplete. Your photo and note are kept; retry.');
-        return { fields, review: { status: review.status, summary: review.summary, checks: review.checks } };
+        return { fields, omittedFields, review: { status: review.status, summary: review.summary, checks: review.checks } };
     }
 };
 if (typeof module !== 'undefined') module.exports = ObservationExtraction;
