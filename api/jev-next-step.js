@@ -16,7 +16,7 @@ const messages = {
     clarify_note: 'Clarify the location, component or conflicting details in your note.',
     research_equipment: 'Look up manufacturer documentation for the recorded exact model. Automated research is not connected yet.',
     no_additional_step: 'No additional step suggested from this information. This is not confirmation of completeness or absence of damage.',
-    uncertain: 'Jev could not select a clear next step. Continue documenting what you observe.'
+    uncertain: 'Jev needs more context: describe what you want to establish (for example, equipment identity, a measurement, or a visible defect) and include any unreadable label details.'
 };
 const requests = new Map();
 function authorized(actual, expected) {
@@ -67,8 +67,10 @@ module.exports = async function handler(req, res) {
         const probability=answer.probabilities?.[answer.choice];
         if (!Number.isFinite(probability) || probability<0 || probability>1) throw new Error('Invalid probabilities');
         // Conservative initial product threshold; not a claim of domain accuracy.
-        const choice=answer.confidence>=0.7 && probability>=0.7 ? answer.choice : 'uncertain';
-        return res.status(200).json({provider:'TypeSafe Jev',choice,message:messages[choice],confidence:answer.confidence,probability,decidedAt:new Date().toISOString()});
+        const choice=answer.choice;
+        const tentative=answer.confidence<0.7 || probability<0.7;
+        const message=(tentative && choice!=='uncertain' ? 'Tentative next step — ' : '')+messages[choice];
+        return res.status(200).json({provider:'TypeSafe Jev',choice,message,tentative,confidence:answer.confidence,probability,decidedAt:new Date().toISOString()});
     } catch { return res.status(502).json({error:'Jev did not return a usable decision in time. Your photo and note are unchanged; try again.'}); }
     finally { clearTimeout(timer); }
 };

@@ -23,7 +23,9 @@ test('Jev server protects credentials, validates input and gates decisions',asyn
   assert.doesNotMatch(JSON.stringify(ok.body),/synthetic-provider-secret/);
   assert.doesNotMatch(payload.state,/do not forward/);assert.equal(payload.questions.next_step.type,'choice');
   global.fetch=async()=>({ok:true,json:async()=>({answers:{next_step:{type:'choice',choice:'research_equipment',confidence:0.2,probabilities:{research_equipment:0.5}}}})});
-  assert.equal((await call({note:'Equipment'},auth)).body.choice,'uncertain');
+  const tentative=await call({note:'Equipment'},auth);
+  assert.equal(tentative.body.choice,'research_equipment');
+  assert.equal(tentative.body.tentative,true);assert.match(tentative.body.message,/Tentative next step/);
   global.fetch=async()=>({ok:true,json:async()=>({answers:{next_step:{type:'choice',choice:'execute_code',confidence:1}}})});
   assert.equal((await call({note:'Equipment'},auth)).code,502);
   global.fetch=async()=>({ok:false,status:401,json:async()=>({error:'synthetic-provider-secret'})});
