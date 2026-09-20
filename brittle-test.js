@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     capture.querySelector('.field-actions').style.display='none';
     capture.querySelector('.field-actions').before(phases);
     phases.addEventListener('click', event=>{
+        const unlink=event.target.closest('[data-unlink-test-photo]');
+        if(unlink){form.dispatchEvent(new CustomEvent('brittle-photo-unlink',{detail:unlink.dataset.unlinkTestPhoto}));return;}
         const button=event.target.closest('[data-phase]');if(!button)return;
         if(document.getElementById('field'+button.dataset.kind).disabled)return;
         form.dispatchEvent(new CustomEvent('brittle-photo-phase',{detail:button.dataset.phase}));
@@ -26,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const photo=record.photos[id];const item=document.createElement('p');
                 item.textContent=photo ? `${phase==='before'?'Before':'After'} photo saved` : 'Linked photo was removed';
                 if(photo?.thumbnail){const img=document.createElement('img');img.src=photo.thumbnail;img.alt=`${phase} test photo`;img.style.width='100%';img.style.borderRadius='10px';item.append(img);}
+                const unlink=document.createElement('button');unlink.type='button';unlink.className='field-button';unlink.dataset.unlinkTestPhoto=id;unlink.textContent='Unlink from this test';item.append(unlink);
                 target.append(item);
             }
         }
@@ -33,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('inspection-form-updated',event=>renderPhotos(event.detail));
     renderPhotos(InspectionStore.get().notes.fieldDraft);
     const analysisNote=document.createElement('p');analysisNote.className='field-help';
-    analysisNote.textContent='The selected photo below is used for AI review; before and after photos are saved together. AI does not compare both automatically. If no test was performed, dictate why—an after photo is not required.';
+    analysisNote.textContent='AI reviews the selected photo together with your linked before and after photos, separating existing conditions from visible changes. Your dictation records the test outcome. If no test was performed, explain why—an after photo is not required.';
     phases.after(analysisNote);
     const story = form.querySelector('[aria-label="Dictate your observation"]');
     story.querySelector('h3').textContent = 'Tell us about the test.';

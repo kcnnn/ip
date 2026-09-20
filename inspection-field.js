@@ -60,6 +60,7 @@
                 <input type="file" id="fieldCameraInput" accept="image/*,.heic,.heif" capture="environment" hidden>
                 <input type="file" id="fieldUploadInput" accept="image/*,.heic,.heif" hidden>
                 <label>Photo for this observation<select name="photoId"><option value="">No photo — text-only note</option></select></label>
+                <label>Photo purpose<select name="photoPurpose"><option value="auto">Detect from note / section</option><option value="overview">Overview / reference</option><option value="measurement">Measurement</option><option value="label">Equipment label</option><option value="damage">Damage close-up</option><option value="brittle">Brittle test / before and after</option><option value="accessory">Accessory identification</option></select></label>
                 <img id="fieldPhotoPreview" alt="Photo linked to this observation" hidden>
                 <p id="fieldPhotoStatus" role="status" class="field-help"></p>
             </section>
@@ -135,13 +136,20 @@
         form.addEventListener('brittle-photo-phase', event => {
             if (['before','after'].includes(event.detail) && !capturing && !filling) brittlePhase = event.detail;
         });
-        let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false, elevationKey = null;
+        form.addEventListener('brittle-photo-unlink',event=>{
+            if(capturing || filling || listening || !brittleTest?.photos)return;
+            const id=event.detail;
+            brittleTest={...brittleTest,photos:Object.fromEntries(['before','after'].map(phase=>[phase,(brittleTest.photos[phase]||[]).filter(p=>p!==id)]))};
+            if(field('photoId').value===id)field('photoId').value=Object.values(brittleTest.photos).flat().at(-1)||'';
+            aiReview=null;renderReview();update();previewPhoto();
+        });
+        let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false, elevationKey = null, reviewCorrections = [];
         const elevationName = key => `${key.charAt(0).toUpperCase()}${key.slice(1)} Elevation`;
         const renderReview = () => {
             const panel = document.getElementById('fieldPhotoReview');
             panel.hidden = !aiReview;
             const labels = { supports_note: 'Photo supports your note', needs_detail: 'More detail would help', conflicts_with_note: 'Photo and note may disagree', unable_to_assess: 'Photo could not be assessed' };
-            panel.innerHTML = aiReview ? `<strong>AI photo review · ${escape(labels[aiReview.status])}</strong><p>${escape(aiReview.summary)}</p><ul>${aiReview.checks.map(item => `<li>${escape(item)}</li>`).join('')}</ul>` : '';
+            panel.innerHTML = aiReview ? `<strong>AI photo review · ${escape(labels[aiReview.status])}</strong><p>${escape(aiReview.summary)}</p><ul>${aiReview.checks.map(item => `<li>${escape(item)}</li>`).join('')}</ul><details><summary>Correct an AI finding</summary><p>Your correction is added to the note and sent with the photo for a new review. Save only after checking the result.</p><div class="field-actions"><button type="button" class="field-button" data-review-correction="joint">Normal shingle joint</button><button type="button" class="field-button" data-review-correction="lift">Manually lifted for test</button><button type="button" class="field-button" data-review-correction="identity">Incorrect identification</button></div></details>` : '';
         };
         async function previewPhoto() {
             const generation = ++photoGeneration;
@@ -160,7 +168,7 @@
             condition: field('condition').value, severity: field('severity').value,
             damageTypes: [...form.querySelectorAll('[name="damageType"]:checked')].map(input => input.value),
             quantity: field('quantity').value, unit: field('unit').value,
-            details: field('details').value, photoId: field('photoId').value, dictated, aiReview, elevationKey,
+            details: field('details').value, photoId: field('photoId').value, photoPurpose:field('photoPurpose').value, reviewCorrections, dictated, aiReview, elevationKey,
             photoTitle: photoTitle?.transcript === field('details').value && photoTitle?.photoId === field('photoId').value ? photoTitle : null,
             equipmentResearch: equipmentResearch?.photoId === field('photoId').value && equipmentResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? equipmentResearch : null,
             accessoryResearch: accessoryResearch?.photoId === field('photoId').value && accessoryResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? accessoryResearch : null,
@@ -223,12 +231,23 @@
                 const revision = InspectionStore.get().photos[photoId]?.revision;
                 const photo = photoId ? await InspectionStore.getPhoto(photoId) : null;
                 if (photoId && !photo) throw new Error('Original photo unavailable. Upload it again; your note is kept.');
+                const record=InspectionStore.get();
+                const pairIds=brittleTest && field('section').value==='Shingles' ? [...new Set(['before','after'].flatMap(phase=>brittleTest.photos?.[phase] || []))] : [];
+                if(pairIds.length>8) throw new Error('This note has more than 8 test photos. Split it into smaller test observations before AI review. Nothing was changed.');
+                const reviewedPhotos=[...new Set([photoId,...pairIds].filter(Boolean))].map(id=>({id,revision:record.photos[id]?.revision}));
+                const comparisons=[];
+                for(const id of pairIds.filter(id=>id!==photoId)) {
+                    const data=await InspectionStore.getPhoto(id);
+                    if(!data || !record.photos[id]) throw new Error('A linked test photo is unavailable. Restore it or remove its link before comparing.');
+                    comparisons.push({data,phase:record.photos[id].brittlePhase});
+                }
                 const result = await Promise.race([
-                    ObservationExtraction.extract(text, componentsBySection, field('section').value, photo, false, {brittlePhase: InspectionStore.get().photos[photoId]?.brittlePhase}),
+                    ObservationExtraction.extract(text, componentsBySection, field('section').value, photo, false, {brittlePhase: record.photos[photoId]?.brittlePhase, purpose:field('photoPurpose').value, comparisons}),
                     new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('AI review timed out. Your photo and note are kept; retry.')), 60000); })
                 ]);
                 if (generation !== fillGeneration) return;
                 if (photoId && InspectionStore.get().photos[photoId]?.revision !== revision) throw new Error('The photo changed during analysis. Analyze again.');
+                if(reviewedPhotos.some(p=>InspectionStore.get().photos[p.id]?.revision!==p.revision)) throw new Error('A comparison photo changed during analysis. Analyze again.');
                 if (JSON.stringify(readForm()) !== snapshot) { status.textContent = 'You changed this note while it was being organized. Your changes were kept; click Fill fields to try again.'; return; }
                 const extracted = photo ? result.fields : result;
                 const omittedFields = result.omittedFields || [];
@@ -238,7 +257,7 @@
                     const otherElevation = /\b(front|right|rear|back|left)\s+(?:elevation|wall)\b/i.exec(extracted.location)?.[1]?.toLowerCase();
                     if (otherElevation && (otherElevation === 'back' ? 'rear' : otherElevation) !== elevationKey) throw new Error('The location in your note is a different elevation. Check the note or open the correct elevation before saving.');
                 }
-                aiReview = photo && result.review ? { ...result.review, photoId, revision, transcript: field('details').value, reviewedAt: new Date().toISOString() } : null;
+                aiReview = photo && result.review ? { ...result.review, photoId, revision, reviewedPhotos, purpose:field('photoPurpose').value, transcript: field('details').value, reviewedAt: new Date().toISOString() } : null;
                 renderReview();
                 if (elevationKey && extracted.section && extracted.section !== 'Elevations') throw new Error('Your note describes a different inspection section. Check the note before saving this elevation detail.');
                 field('section').value = elevationKey ? 'Elevations' : extracted.section || field('section').value;
@@ -266,6 +285,7 @@
             }
         }
         function loadNote(note = {}) {
+            reviewCorrections = note.reviewCorrections || [];
             brittleTest = note.brittleTest || (location.pathname.endsWith('brittle-test.html') && !note.id && (!note.section || note.section === 'Shingles') ? {method:'photo-and-dictation'} : null);
             fillGeneration++; filling = false;
             manualFields = !!(note.id || note.location || note.component || note.condition || note.quantity);
@@ -294,6 +314,7 @@
             refreshPhotos();
             field('section').value = elevationKey ? 'Elevations' : note.section || currentSection();
             refreshComponents(note.component || '', true);
+            field('photoPurpose').value=note.photoPurpose || (brittleTest ? 'brittle' : 'auto');
             for (const key of ['id', 'location', 'component', 'condition', 'severity', 'quantity', 'unit', 'details', 'photoId']) {
                 if (note[key] !== undefined) field(key).value = note[key];
             }
@@ -389,7 +410,7 @@
         }
         form.addEventListener('input', event => {
             if (!event.target.name) return;
-            if (['details', 'photoId'].includes(event.target.name)) {
+            if (['details', 'photoId', 'photoPurpose'].includes(event.target.name)) {
                 aiReview = null; renderReview();
                 document.getElementById('fieldFillStatus').textContent='Photo or note changed. Analyze again to update the prepared details.';
             }
@@ -399,6 +420,15 @@
             update();
         });
         document.getElementById('fieldFill').addEventListener('click', () => fillFromNote());
+        document.getElementById('fieldPhotoReview').addEventListener('click',event=>{
+            const button=event.target.closest('[data-review-correction]');if(!button || filling || capturing || listening)return;
+            let correction=button.dataset.reviewCorrection==='joint' ? 'The lines identified as possible cracks are normal shingle edges or tab joints, not cracks.' : button.dataset.reviewCorrection==='lift' ? 'The shingle is being lifted manually for the test; its raised position is not wind damage. This correction alone does not state whether the test passed.' : prompt('What is the correct identification, or what should remain unidentified?');
+            if(!correction?.trim())return;
+            correction=correction.trim().slice(0,1000);
+            reviewCorrections=[...reviewCorrections,{at:new Date().toISOString(),photoId:field('photoId').value,correction,previousReview:aiReview}];
+            field('details').value += `\nInspector correction: ${correction}`;
+            aiReview=null;renderReview();manualFields=false;update();fillFromNote();
+        });
         document.getElementById('fieldAddLocation').onclick=()=>{document.getElementById('fieldEditDetails').open=true;field('location').focus();};
         form.addEventListener('invalid',event=>{if(document.getElementById('fieldEditDetails').contains(event.target)) document.getElementById('fieldEditDetails').open=true;},true);
         form.addEventListener('submit', event => {
@@ -408,7 +438,7 @@
             if (!note.photoId && !note.details.trim() && !note.condition && !note.component && !note.quantity) {
                 document.getElementById('fieldSaveStatus').textContent = 'Add a photo, a note or an observation before saving.'; return;
             }
-            if (note.aiReview && (note.aiReview.transcript !== note.details || note.aiReview.revision !== InspectionStore.get().photos[note.photoId]?.revision)) { aiReview = null; renderReview(); note.aiReview = null; }
+            if (note.aiReview && (note.aiReview.transcript !== note.details || note.aiReview.revision !== InspectionStore.get().photos[note.photoId]?.revision || (note.aiReview.purpose && note.aiReview.purpose !== note.photoPurpose) || note.aiReview.reviewedPhotos?.some(p=>InspectionStore.get().photos[p.id]?.revision!==p.revision))) { aiReview = null; renderReview(); note.aiReview = null; }
             if (!!note.quantity !== !!note.unit) {
                 document.getElementById('fieldSaveStatus').textContent = 'Enter both a measurement/count and its unit, or leave both empty.'; return;
             }
@@ -502,7 +532,12 @@
                     }).join('')}</div><button class="field-text-button" data-note-section="${escape(name)}">+ Add observation</button></details></article>`;
                 }).join('');
                 const notes = Object.values(record.observations).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-                document.getElementById('fieldSavedNotes').innerHTML = notes.length ? notes.map(note => `<article class="field-saved-note"><div><span class="field-eyebrow">${escape(note.section)} · INSPECTOR NOTE</span><p>${escape(narrative(note))}</p><small>${new Date(note.updatedAt).toLocaleString()}${note.dictated ? ' · Includes dictated text' : ''}</small></div><div class="field-actions"><button type="button" class="field-button" data-edit-note="${escape(note.id)}">Edit</button><button type="button" class="field-button field-delete-note" data-delete-note="${escape(note.id)}">Delete observation</button></div></article>`).join('') : '<p class="field-help">No saved observations yet. Add a note as you inspect; you can return and edit it later.</p>';
+                document.getElementById('fieldSavedNotes').innerHTML = notes.length ? notes.map(note => {
+                    const ids=[...new Set([note.photoId,...Object.values(note.brittleTest?.photos || {}).flat()].filter(Boolean))];
+                    const thumbs=ids.filter(id=>record.photos[id]?.thumbnail).slice(0,4).map(id=>`<img src="${escape(record.photos[id].thumbnail)}" alt="${escape(record.photos[id].label)}" loading="lazy">`).join('');
+                    const body=narrative(note), brief=body.length>220 ? body.slice(0,217)+'…' : body;
+                    return `<article class="field-saved-note field-compact-note"><div><span class="field-eyebrow">${escape(note.section)} · INSPECTOR NOTE</span><h3>${escape(note.location || note.component || 'Reference observation')}</h3>${thumbs ? `<div class="field-note-thumbnails">${thumbs}</div>` : ''}<p>${escape(brief)}</p><small>${new Date(note.updatedAt).toLocaleString()}</small>${body.length>220 || note.aiReview || note.reviewCorrections?.length ? `<details><summary>Full note &amp; AI details</summary><p>${escape(body)}</p>${note.aiReview ? `<p>AI review: ${escape(note.aiReview.summary)}</p><ul>${note.aiReview.checks.map(c=>`<li>${escape(c)}</li>`).join('')}</ul>` : ''}${note.reviewCorrections?.length ? `<p>${note.reviewCorrections.length} inspector correction(s) retained in note history.</p>` : ''}</details>` : ''}</div><div class="field-actions"><button type="button" class="field-button" data-edit-note="${escape(note.id)}">Edit</button><button type="button" class="field-button field-delete-note" data-delete-note="${escape(note.id)}">Delete observation</button></div></article>`;
+                }).join('') : '<p class="field-help">No saved observations yet. Add a note as you inspect; you can return and edit it later.</p>';
                 const deleted=Object.entries(record.deletedItems || {}).filter(([,entry])=>entry.kind==='observations');
                 if(deleted.length) document.getElementById('fieldSavedNotes').insertAdjacentHTML('beforeend',`<details class="field-deleted-notes"><summary>Deleted observations (${deleted.length}) · Restore</summary>${deleted.map(([token,entry])=>`<article class="field-saved-note"><p>${escape(narrative(entry.item))}</p><button type="button" class="field-button" data-restore-note="${escape(token)}">Restore observation</button></article>`).join('')}</details>`);
             };

@@ -57,6 +57,17 @@ test('before-test photo review receives baseline purpose and normal-joint guidan
     await h.run('Roof photo',components,'Roof overview','synthetic-photo',false,{brittlePhase:'invented context'});
     assert.doesNotMatch(h.request().payload.messages[0].content.map(c=>c.text||'').join('\n'),/PHOTO PURPOSE:/);
 });
+test('paired request sends both labeled images and purpose-specific guidance',async()=>{
+    const h=requestHarness({ok:true,json:async()=>({content:[{text:JSON.stringify({multipleObservations:false,fields:{},photoReview:{status:'unable_to_assess',summary:'Comparison.',checks:[]}})}]})});
+    await h.run('Test note',components,'Roof overview','after-image',false,{purpose:'brittle',brittlePhase:'after',comparisons:[{data:'before-image',phase:'before'}]});
+    const content=h.request().payload.messages[0].content;
+    assert.equal(content.filter(c=>c.type==='image').length,2);
+    const text=content.map(c=>c.text||'').join('\n');assert.match(text,/Additional before test photo/);assert.match(text,/PAIRED REVIEW/);assert.match(text,/BRITTLE TEST:/);
+    for(const [purpose,marker] of [['overview','OVERVIEW / REFERENCE:'],['measurement','MEASUREMENT:'],['label','EQUIPMENT LABEL:'],['damage','DAMAGE CLOSE-UP:'],['accessory','ACCESSORY IDENTIFICATION:']]) {
+        await h.run('Photo',components,'Roof overview','image',false,{purpose});
+        assert.ok(h.request().payload.messages[0].content.some(c=>c.text?.startsWith(marker)));
+    }
+});
 
 test('auto-fill request uses supported model defaults without sampling overrides', async () => {
     const harness = requestHarness({ok:true,json:async()=>({content:[{text:'{"multipleObservations":false,"fields":{}}'}]})});

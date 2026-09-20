@@ -19,6 +19,11 @@
 .brittle-photo-slot h4 { margin:0 0 10px; font-size:18px; }
 .brittle-photo-slot p { font-size:14px; color:#63686c; }
 .brittle-photo-slot .field-button { width:100%; margin-bottom:10px; }
+.field-compact-note h3 { margin:10px 0; font-size:20px; }
+.field-note-thumbnails { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.field-note-thumbnails img { width:88px; height:72px; object-fit:cover; border-radius:10px; }
+.field-compact-note details { margin-top:14px; line-height:1.6; }
+.field-compact-note summary { cursor:pointer; font-size:14px; color:#555; }
 @media(max-width:580px) { .brittle-photo-pair { grid-template-columns:1fr; } }
 .field-header,.field-section-heading,.field-card-top,.field-actions,.field-voice { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
 .field-header { padding-bottom:26px; border-bottom:1px solid #d8dadd; }
