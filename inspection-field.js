@@ -131,7 +131,10 @@
             field('component').value = choices.includes(selected) || preserveSaved ? selected : '';
             field('location').placeholder = field('section').value === 'Elevations' ? 'e.g. Front wall, right of entry door' : 'e.g. Back slope, east corner';
         }
-        let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null, accessoryResearch = null, photoTitle = null, brittleTest = null;
+        let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null, accessoryResearch = null, photoTitle = null, brittleTest = null, brittlePhase = 'before';
+        form.addEventListener('brittle-photo-phase', event => {
+            if (['before','after'].includes(event.detail) && !capturing && !filling) brittlePhase = event.detail;
+        });
         let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false, elevationKey = null;
         const elevationName = key => `${key.charAt(0).toUpperCase()}${key.slice(1)} Elevation`;
         const renderReview = () => {
@@ -188,6 +191,7 @@
                 try { InspectionStore.note('fieldDraft', readForm()); document.getElementById('fieldSaveStatus').textContent = 'Draft saved on this device'; }
                 catch { document.getElementById('fieldSaveStatus').textContent = 'Draft not saved'; }
             }
+            form.dispatchEvent(new CustomEvent('inspection-form-updated', {detail:readForm()}));
         };
         async function fillFromNote(automatic = false) {
             if (filling || listening || capturing) return;
@@ -357,6 +361,7 @@
                 if (!file || capturing) return;
                 const status = document.getElementById('fieldPhotoStatus');
                 capturing = true;
+                const phase = brittleTest && field('section').value === 'Shingles' && location.pathname.endsWith('brittle-test.html') ? brittlePhase : null;
                 const generation = fillGeneration;
                 status.textContent = 'Saving your photo…';
                 form.querySelector('[type="submit"]').disabled = true;
@@ -368,9 +373,10 @@
                     if (generation !== fillGeneration) return;
                     const id = `observation-photo:${Date.now()}:${Math.random().toString(36).slice(2)}`;
                     const label = elevationKey ? `${elevationName(elevationKey)} · Detail photo` : 'Inspection detail photo';
-                    const ok = await InspectionStore.recordPhoto(field('section').value, label, prepared.dataUrl, { id, elevationKey, parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null, convertedFrom: prepared.convertedFrom, sourceName: prepared.sourceName });
+                    const ok = await InspectionStore.recordPhoto(field('section').value, label, prepared.dataUrl, { id, elevationKey, brittlePhase: phase, parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null, convertedFrom: prepared.convertedFrom, sourceName: prepared.sourceName });
                     if (!ok) throw new Error('Photo could not be saved. Please try again.');
                     if (generation !== fillGeneration) return;
+                    if (phase) brittleTest = {...brittleTest, photos:{...brittleTest.photos, [phase]:[...(brittleTest.photos?.[phase] || []),id]}};
                     refreshPhotos(); field('photoId').value = id; aiReview = null; renderReview(); update(); await previewPhoto();
                     field('details').focus({ preventScroll: true });
                 } catch (error) { if (generation === fillGeneration) status.textContent = error.message || 'Photo could not be opened. Please try again.'; }

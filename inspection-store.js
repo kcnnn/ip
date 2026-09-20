@@ -46,14 +46,18 @@ function readInspectionRecord() {
         // Presentation labels for detail photos come from saved inspection words,
         // never filenames. Keep stable IDs/original keys and sourceName intact.
         const linked = new Map();
-        Object.values(record.observations).sort((a,b)=>String(a.updatedAt||'').localeCompare(String(b.updatedAt||''))).forEach(note=>linked.set(note.photoId,note));
+        Object.values(record.observations).sort((a,b)=>String(a.updatedAt||'').localeCompare(String(b.updatedAt||''))).forEach(note=>{
+            linked.set(note.photoId,note);
+            for (const ids of Object.values(note.brittleTest?.photos || {})) if(Array.isArray(ids)) ids.forEach(id=>linked.set(id,note));
+        });
         for (const [id, photo] of Object.entries(record.photos || {})) {
             if (!id.startsWith('observation-photo:')) continue;
             const note=linked.get(id);
             const generated=note?.photoTitle;
             const title=generated?.photoId===id && generated?.transcript===note.details && typeof generated.value==='string' ? generated.value.trim().slice(0,100) : String(note?.details || '').trim().replace(/\s+/g,' ').slice(0,100);
             const prefix=photo.elevationKey ? `${photo.elevationKey.charAt(0).toUpperCase()+photo.elevationKey.slice(1)} Elevation` : '';
-            photo.label=[prefix,title || 'Detail photo'].filter(Boolean).join(' · ');
+            const testPrefix = ['before','after'].includes(photo.brittlePhase) ? `Brittle test · ${photo.brittlePhase === 'before' ? 'Before test' : 'After test'}` : '';
+            photo.label=[prefix,testPrefix,title || (testPrefix ? '' : 'Detail photo')].filter(Boolean).join(' · ');
         }
         return record;
     } catch {

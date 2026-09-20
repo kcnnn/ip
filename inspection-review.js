@@ -58,6 +58,15 @@ function groupReviewCards(record) {
     });
     for(const note of Object.values(record.observations)) {
         const card=noteCards.get(note.id);if(!card)continue;
+        for(const phase of ['before','after']) {
+            for(const id of note.brittleTest?.photos?.[phase] || []) {
+                const line=document.createElement('p');
+                const button=document.createElement('button');button.type='button';button.className='review-delete';
+                button.textContent=`${phase==='before'?'Before':'After'} test photo${record.photos[id]?'':' — removed'}`;
+                if(record.photos[id]) button.dataset.openPhoto=id;else button.disabled=true;
+                line.append(button);card.append(line);
+            }
+        }
         const edit=document.createElement('button');edit.type='button';edit.className='review-delete review-manage';edit.dataset.editReviewNote=note.id;edit.textContent='Edit note';
         card.querySelector('[data-delete-kind="observations"]').before(edit);
         const photoCard=photoCards.get(note.photoId);
