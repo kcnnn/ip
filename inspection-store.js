@@ -124,6 +124,28 @@ window.InspectionStore = {
     },
     flush() { return Promise.all([...pendingInspectionSaves]); },
     isSaving() { return pendingInspectionSaves.size > 0; },
+    deleteReviewItem(kind, id) {
+        if (!['photos', 'observations'].includes(kind)) throw new Error('Unknown item type.');
+        if (pendingInspectionSaves.size) throw new Error('Wait for your photos to finish saving, then try again.');
+        const record=readInspectionRecord(), item=record[kind][id];
+        if (!item) throw new Error('This item is no longer in the record.');
+        record.deletedItems ||= {};
+        const token=inspectionId();
+        record.deletedItems[token]={kind,id,item,deletedAt:new Date().toISOString()};
+        delete record[kind][id];
+        if (kind==='observations' && record.notes.fieldDraft?.id===id) delete record.notes.fieldDraft;
+        writeInspectionRecord(record);
+        window.dispatchEvent(new CustomEvent('inspection-item-deleted',{detail:{kind,id}}));
+        return token;
+    },
+    restoreReviewItem(token) {
+        const record=readInspectionRecord(), entry=record.deletedItems?.[token];
+        if (!entry) throw new Error('This deleted item is no longer available.');
+        if (record[entry.kind][entry.id]) throw new Error('A newer item uses this location. It was not overwritten.');
+        record[entry.kind][entry.id]=entry.item;
+        delete record.deletedItems[token];
+        writeInspectionRecord(record);
+    },
     saveObservation(value, { clearDraft = true } = {}) {
         const record = readInspectionRecord();
         const id = value.id || inspectionId();

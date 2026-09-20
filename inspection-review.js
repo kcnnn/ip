@@ -4,6 +4,7 @@ function renderInspectionReview() {
     const photos = Object.entries(record.photos || {});
     const notes = Object.values(record.observations || {});
     const absences = Object.values(record.absences || {});
+    const deleteControl=(kind,id,label)=>`<button type="button" class="review-delete review-manage" data-delete-kind="${kind}" data-delete-id="${escape(id)}" aria-label="Delete ${kind==='photos'?'photo':'observation'}: ${escape(label)}">Delete ${kind==='photos'?'photo':'observation'}</button>`;
     document.getElementById('reviewDate').textContent = new Date(record.updatedAt || record.startedAt).toLocaleString();
     document.getElementById('reviewCount').textContent = `${photos.length} photos · ${notes.length} inspector observations`;
     document.getElementById('reviewProperty').textContent = [record.property?.address, record.property?.claim && `Reference: ${record.property.claim}`, record.property?.inspector && `Inspector: ${record.property.inspector}`].filter(Boolean).join(' · ');
@@ -20,8 +21,8 @@ function renderInspectionReview() {
         const missing = expected.filter(label => !sectionPhotos.some(([, p]) => p.label === label) && !sectionAbsences.some(a => a.label.toLowerCase() === label.toLowerCase()));
         return `<section class="review-section"><div class="review-heading"><h2>${escape(section)}</h2><a class="review-edit" href="${url}">Open section ↗</a></div><p class="muted">Documentation: ${escape(InspectionField.sectionProgress(record, section))}</p>
             ${missing.length ? `<p class="review-missing">No photo recorded: ${missing.map(escape).join(', ')}.</p>` : ''}
-            <div class="review-grid">${sectionPhotos.map(([id, photo]) => `<article class="review-photo">${photo.thumbnail ? `<button type="button" class="review-image" data-open-photo="${escape(id)}"><img src="${escape(photo.thumbnail)}" data-photo="${escape(id)}" alt="${escape(photo.label)}"></button>` : '<p>Photo preview unavailable</p>'}<h3>${escape(photo.label)}</h3><p>Recorded ${new Date(photo.capturedAt).toLocaleString()}</p><p>${photo.storageStatus === 'failed' ? 'Original save failed' : photo.originalKey ? 'Original stored on this device' : 'Legacy thumbnail only'}</p></article>`).join('')}${sectionAbsences.map(item => `<article class="review-absence"><h3>${escape(item.label)}</h3><p>${escape(item.note)}</p></article>`).join('')}</div>
-            ${sectionNotes.map(note => `<article class="review-note"><span class="eyebrow">INSPECTOR OBSERVATION${note.dictated ? ' · DICTATED TEXT INCLUDED' : ''}</span><p>${escape(narrative(note))}</p>${note.photoId ? `<small>Linked photo: ${escape(record.photos[note.photoId]?.label || 'No longer in record')}</small>` : ''}<p class="muted">Updated ${new Date(note.updatedAt).toLocaleString()}</p></article>`).join('')}
+            <div class="review-grid">${sectionPhotos.map(([id, photo]) => `<article class="review-photo">${photo.thumbnail ? `<button type="button" class="review-image" data-open-photo="${escape(id)}"><img src="${escape(photo.thumbnail)}" data-photo="${escape(id)}" alt="${escape(photo.label)}"></button>` : '<p>Photo preview unavailable</p>'}<h3>${escape(photo.label)}</h3><p>Recorded ${new Date(photo.capturedAt).toLocaleString()}</p><p>${photo.storageStatus === 'failed' ? 'Original save failed' : photo.originalKey ? 'Original stored on this device' : 'Legacy thumbnail only'}</p>${deleteControl('photos',id,photo.label)}</article>`).join('')}${sectionAbsences.map(item => `<article class="review-absence"><h3>${escape(item.label)}</h3><p>${escape(item.note)}</p></article>`).join('')}</div>
+            ${sectionNotes.map(note => `<article class="review-note"><span class="eyebrow">INSPECTOR OBSERVATION${note.dictated ? ' · DICTATED TEXT INCLUDED' : ''}</span><p>${escape(narrative(note))}</p>${note.photoId ? `<small>Linked photo: ${escape(record.photos[note.photoId]?.label || 'No longer in record')}</small>` : ''}<p class="muted">Updated ${new Date(note.updatedAt).toLocaleString()}</p>${deleteControl('observations',note.id,note.location || note.component || 'Inspection note')}</article>`).join('')}
             ${sectionNotes.filter(note => note.equipmentResearch).map(note => {
                 const equipment=note.equipmentResearch;
                 return `<article class="review-note"><span class="eyebrow">ACCEPTED EQUIPMENT RESEARCH · ${escape(note.location || '')}</span><p>Label identifiers checked by inspector: ${escape(equipment.manufacturer || 'Brand unspecified')} · Model ${escape(equipment.model)} · Serial ${escape(equipment.serial || 'not recorded')}</p>${equipment.findings.map(finding=>`<p>${escape(finding.text)}</p>${finding.sources.map(source=>{let safe=false;try{const u=new URL(source.url);safe=u.protocol==='https:'&&!u.username&&!u.password;}catch{}return safe?`<p>Source: <a href="${escape(source.url)}" target="_blank" rel="noopener noreferrer">${escape(source.title)}</a> · ${escape(source.url)}</p>`:'';}).join('')}`).join('')}<small>Researched ${escape(equipment.retrievedAt)} · Accepted ${escape(equipment.acceptedAt)}</small></article>`;
@@ -30,17 +31,37 @@ function renderInspectionReview() {
             ${section === 'Interview' && record.notes.insuredInterview?.damageNotes ? `<article class="review-note"><h3>Insured discussion</h3><p>${escape(record.notes.insuredInterview.damageNotes)}</p></article>` : ''}
             ${!sectionPhotos.length && !sectionNotes.length && !sectionAbsences.length ? '<p class="muted">Nothing recorded in this section yet.</p>' : ''}</section>`;
     }).join('');
+    const deleted=Object.entries(record.deletedItems || {});
+    if(deleted.length) document.getElementById('reviewContent').insertAdjacentHTML('beforeend',`<details class="review-trash review-manage"><summary>Deleted items (${deleted.length}) · Undo deletions</summary><p>Removed from this report. Originals are retained on this device so you can restore them.</p>${deleted.map(([token,entry])=>`<div><p>${escape(entry.kind==='photos'?entry.item.label:entry.item.details || entry.item.location || 'Observation')}</p><button type="button" class="review-delete" data-restore-item="${escape(token)}">Restore ${entry.kind==='photos'?'photo':'observation'}</button></div>`).join('')}</details>`);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     renderInspectionReview();
+    const status=document.createElement('p');status.id='reviewDeleteStatus';status.className='review-manage';status.setAttribute('role','status');status.tabIndex=-1;
+    document.querySelector('.review-actions').after(status);
     window.addEventListener('inspection-record-changed', renderInspectionReview);
     const dialog = document.getElementById('reviewPhotoDialog');
     document.getElementById('reviewPhotoClose').onclick = () => dialog.close();
     document.getElementById('reviewContent').addEventListener('click', async event => {
+        const remove=event.target.closest('[data-delete-id]'), restore=event.target.closest('[data-restore-item]');
+        if(remove || restore) {
+            try {
+                if(restore) {InspectionStore.restoreReviewItem(restore.dataset.restoreItem);status.textContent='Restored to the report.';}
+                else {
+                    const kind=remove.dataset.deleteKind,id=remove.dataset.deleteId;
+                    const item=InspectionStore.get()[kind]?.[id];if(!item) return;
+                    const message=kind==='photos'?`Delete photo "${item.label}" from this report? Linked observations and their findings will remain. You can restore the photo under Deleted items.`:'Delete this observation and its attached AI findings/research from the report? Its photo will remain. You can restore the observation under Deleted items.';
+                    if(!confirm(message)) return;
+                    InspectionStore.deleteReviewItem(kind,id);
+                    status.textContent=`${kind==='photos'?'Photo':'Observation'} deleted from the report. Restore it under “Deleted items” at the bottom of this page.`;
+                }
+            } catch(error) {status.textContent=error.message || 'The change could not be saved.';}
+            status.focus();return;
+        }
         const button = event.target.closest('[data-open-photo]'); if (!button) return;
         const id = button.dataset.openPhoto;
         const photo = InspectionStore.get().photos[id];
+        if(!photo) return;
         let original; try { original = await InspectionStore.getPhoto(id); } catch { /* Show available thumbnail. */ }
         document.getElementById('reviewFullPhoto').src = original || photo.thumbnail;
         document.getElementById('reviewFullPhoto').alt = photo.label;

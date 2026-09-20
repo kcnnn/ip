@@ -293,6 +293,13 @@
         });
         refreshPhotos();
         loadNote(InspectionStore.get().notes.fieldDraft || {});
+        window.addEventListener('inspection-item-deleted', event => {
+            if (event.detail.kind === 'observations' && field('id').value === event.detail.id) { loadNote(); }
+            if (event.detail.kind === 'photos' && field('photoId').value === event.detail.id) {
+                loadNote({...readForm(),photoId:'',aiReview:null,photoTitle:null,equipmentResearch:null});
+                update();
+            }
+        });
         import('./equipment-research.js').then(({mountEquipmentResearch}) => mountEquipmentResearch(form, readForm, research => {
             if (filling || capturing || listening) throw new Error('Finish photo analysis or dictation before adding equipment details.');
             if (!form.reportValidity()) throw new Error('Complete the observation location below, then add the selected details again.');
