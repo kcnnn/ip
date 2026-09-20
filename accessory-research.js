@@ -73,4 +73,10 @@ export function mountAccessoryResearch(form,readState,accept) {
     form.addEventListener('inspection-note-prepared',visible);
     form.addEventListener('reset',()=>{clear();panel.open=false;queueMicrotask(()=>{selected=stamp();visible();});});
     visible();
+    window.InspectionField.openAccessoryResearch=()=>{
+        clear();panel.hidden=false;panel.open=true;
+        panel.scrollIntoView({behavior:'smooth',block:'start'});
+        $('accessoryRead').click();
+    };
+    window.dispatchEvent(new Event('accessory-research-ready'));
 }

@@ -110,6 +110,7 @@ function updateChecklist() {
             <div class="checklist-content">
                 <div class="checklist-text">${photo.type.name} Photo</div>
                 <div class="checklist-type">${photo.type.description}</div>
+                ${photo.photoData ? `<button type="button" class="action-btn secondary accessory-search-action" onclick="identifyAccessory(${index})">Identify &amp; search</button>` : ''}
             </div>
             <div class="checklist-actions">
                 <button class="action-icon" onclick="editAccessory(${index})" title="Edit">
@@ -137,6 +138,33 @@ function selectAccessoryType(type) {
     // Update instructions
     const typeInfo = accessoryTypes[type];
     photoInstructions.textContent = `Take a clear photo of the ${typeInfo.name.toLowerCase()}. ${typeInfo.description}.`;
+}
+
+async function identifyAccessory(index = currentAccessoryIndex) {
+    const photo=capturedPhotos[index];
+    if(!photo?.photoData){alert('Take or upload a photo of this accessory first.');return;}
+    const recordId=InspectionStore.get().id;
+    const photoId=photo.recordId || `Accessories:${photo.id}`;
+    const draft=InspectionStore.get().notes.fieldDraft;
+    if(draft && !draft.id && (draft.details || draft.photoId) && draft.photoId!==photoId && !confirm('Open this accessory for research? The unfinished editor draft will be replaced; saved photos and observations stay.'))return;
+    try {
+        await InspectionStore.flush();
+        if(!InspectionStore.get().photos[photoId])throw new Error('This photo has not been saved. Capture it again before researching.');
+        if(!window.InspectionField?.openAccessoryResearch)await new Promise((resolve,reject)=>{
+            const ready=()=>{clearTimeout(timer);resolve();};
+            const timer=setTimeout(()=>{window.removeEventListener('accessory-research-ready',ready);reject(new Error('Accessory search could not load. Refresh this page and retry.'));},10000);
+            window.addEventListener('accessory-research-ready',ready,{once:true});
+        });
+        if(recordId!==InspectionStore.get().id)throw new Error('The inspection changed. Reopen the accessory before searching.');
+        const saved=Object.values(InspectionStore.get().observations).find(n=>n.photoId===photoId);
+        InspectionField.editNote(saved || (draft?.photoId===photoId?draft:{section:'Accessories',photoId,component:photo.type?.name || '',details:`${photo.type?.name || 'Roof accessory'} reference photo.`}));
+        InspectionField.openAccessoryResearch();
+    }catch(error){alert(error.message || 'Accessory search could not open. Your photo is kept.');}
+}
+
+function appendAccessorySearchButton(container) {
+    const button=document.createElement('button');button.type='button';button.className='action-btn secondary accessory-search-action';button.textContent='Identify & search this accessory';
+    const index=currentAccessoryIndex;button.onclick=()=>identifyAccessory(index);container.append(button);
 }
 
 function addNewAccessory() {
@@ -468,6 +496,7 @@ function displayAnalysisUnavailable(message = 'AI analysis is unavailable.') {
     const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'action-btn secondary'; retry.textContent = 'Retry analysis'; retry.onclick = () => { aiLoading.style.display = 'block'; aiResults.style.display = 'none'; analyzePhotoWithAI(); };
     const proceed = document.createElement('button'); proceed.type = 'button'; proceed.className = 'action-btn primary'; proceed.textContent = 'Continue without AI analysis'; proceed.onclick = proceedToNextAccessory;
     actions.append(settings, retry, proceed); container.append(heading, detail, explanation, actions); aiResults.append(container);
+    appendAccessorySearchButton(container);
     const badge = photoStatus.querySelector('.status-badge'); badge.textContent = 'Not analyzed'; badge.className = 'status-badge';
 }
 
@@ -531,6 +560,7 @@ function displayAIResults(results) {
     html += '</div>';
     
     aiResults.innerHTML = html;
+    appendAccessorySearchButton(aiResults);
     
     // Update status
     const statusBadge = photoStatus.querySelector('.status-badge');
@@ -694,6 +724,9 @@ function proceedWithoutAPI() {
 // Add CSS for AI analysis results
 const style = document.createElement('style');
 style.textContent = `
+    .accessory-search-action { margin-top: 12px; min-height: 44px; white-space: normal; max-width: 100%; }
+    .checklist-content { min-width: 0; }
+    @media (max-width: 600px) { .checklist-item { flex-wrap: wrap; gap: 12px; } .checklist-content { flex: 1 1 160px; } }
     .ai-analysis-content {
         padding: 1rem 0;
     }
