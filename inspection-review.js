@@ -73,8 +73,39 @@ function groupReviewCards(record) {
         if(photoCard){photoCard.append(card);photoCard.classList.add('review-unified');}
     }
     for(const [id,card] of photoCards) {
-        if(!Object.values(record.observations).some(note=>note.photoId===id)) {
+        if(!Object.values(record.observations).some(note=>note.photoId===id || Object.values(note.brittleTest?.photos || {}).flat().includes(id))) {
             const add=document.createElement('button');add.type='button';add.className='review-delete review-manage';add.dataset.addReviewPhotoNote=id;add.textContent='Add note';card.append(add);
+        }
+    }
+    // Group only explicitly linked test photos, never nearby timestamps or titles.
+    for(const note of Object.values(record.observations)) {
+        const ids=[...new Set(['before','after'].flatMap(phase=>note.brittleTest?.photos?.[phase] || []))];
+        const cards=ids.map(id=>photoCards.get(id)).filter(Boolean);
+        if(!cards.length)continue;
+        let group=cards.map(card=>card.closest('.review-brittle-group')).find(Boolean);
+        if(!group) {
+            group=document.createElement('article');group.className='review-brittle-group';
+            const heading=document.createElement('h3');heading.textContent=`Brittle test${note.location ? ' · '+note.location : ''}`;
+            const photos=document.createElement('div');photos.className='review-brittle-photos';
+            cards[0].before(group);group.append(heading,photos);
+        }
+        for(const card of cards) {
+            const prior=card.closest('.review-brittle-group');
+            if(prior && prior!==group) {
+                [...prior.querySelector('.review-brittle-photos').children].forEach(child=>group.querySelector('.review-brittle-photos').append(child));
+                [...prior.children].filter(child=>child.classList.contains('review-note')).forEach(child=>group.append(child));prior.remove();
+            }
+            [...card.children].filter(child=>child.classList.contains('review-note')).forEach(child=>group.append(child));
+            const id=card.querySelector('[data-delete-kind="photos"]').dataset.deleteId;
+            const phase=note.brittleTest.photos.before?.includes(id) ? 'Before test' : 'After test';
+            card.querySelector('h3').textContent=phase;
+            card.classList.remove('review-unified');
+            group.querySelector('.review-brittle-photos').append(card);
+        }
+        const observation=noteCards.get(note.id);if(observation)group.append(observation);
+        if(observation) {
+            observation.querySelectorAll('button[data-open-photo]').forEach(button=>{if(record.photos[button.dataset.openPhoto])button.parentElement.remove();});
+            observation.querySelectorAll('small').forEach(label=>{if(label.textContent.startsWith('Linked photo:'))label.textContent='Linked photos: before / after test photos shown above.';});
         }
     }
 }
