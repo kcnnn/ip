@@ -1,0 +1,51 @@
+const assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+(async()=>{
+ const browser=await chromium.launch({channel:'chrome',headless:true});
+ try {
+  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:8000/inspection-workspace.html');
+  await page.locator('[name=details]').fill('Box vent on rear slope. PRIVATE NOTE');
+  await page.locator('#fieldAccessoryResearch summary').click();
+  await page.locator('#accessoryRead').click();assert.match(await page.locator('#accessoryStatus').innerText(),/photo first/);
+  const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=100;return c.toDataURL().split(',')[1];});
+  await page.locator('#fieldUploadInput').setInputFiles({name:'vent.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
+  await page.waitForFunction(()=>document.getElementById('fieldPhotoStatus').textContent.startsWith('Photo ready'));
+  await page.locator('#fieldEditDetails summary').click();await page.locator('[name=section]').selectOption('Accessories');await page.locator('[name=location]').fill('Rear slope');
+  await page.evaluate(()=>localStorage.setItem('claude_api_key','synthetic-key'));
+  let search,fail=false;
+  await page.route('https://api.anthropic.com/**',route=>{
+   const payload=route.request().postDataJSON();
+   const data=payload.tools?(search=payload,fail?{stop_reason:'end_turn',content:[{type:'text',text:'Uncited claim'}]}:{stop_reason:'end_turn',content:[{type:'web_search_tool_result',content:[{type:'web_search_result',url:'https://manufacturer.example/vent',title:'Vent manufacturer'}]},{type:'text',text:'POSSIBLE MATCH: Example V100. Similar cap profile; material and dimensions need confirmation. Not a confirmed replacement.',citations:[{type:'web_search_result_location',url:'https://manufacturer.example/vent',title:'Vent manufacturer'}]}]}):{content:[{type:'text',text:JSON.stringify({description:'Gray box vent with rounded cap. Material uncertain.',markings:'',limitations:'Side view and measured cap/base dimensions needed.'})}]};
+   return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+  });
+  await page.locator('#accessoryRead').click();await page.locator('#accessoryFeatures').waitFor({state:'visible'});
+  await page.locator('#accessoryMeasurements').fill('Cap width 14 inches');
+  await page.locator('#accessorySearch').click();await page.locator('#accessoryAccept').waitFor();
+  assert.doesNotMatch(JSON.stringify(search),/PRIVATE NOTE|base64/);assert.match(JSON.stringify(search),/Cap width 14 inches/);
+  assert.equal(await page.locator('#accessoryMatch').inputValue(),'possible');
+  await page.locator('#accessoryMeasurements').fill('Cap width 15 inches');
+  assert.equal(await page.locator('#accessoryAccept').count(),0);
+  await page.locator('#accessorySearch').click();await page.locator('#accessoryAccept').waitFor();
+  await page.locator('#fieldAccessoryResearch').screenshot({path:'/tmp/apex-accessory-mobile.png'});
+  assert.equal(await page.evaluate(()=>Object.keys(InspectionStore.get().observations).length),0);
+  await page.locator('#accessoryAccept').click();assert.match(await page.locator('#accessoryStatus').innerText(),/Select at least one/);
+  await page.locator('[data-accessory-finding="0"]').check();await page.locator('#accessoryMatch').selectOption('confirmed');
+  await page.locator('#accessoryAccept').click();assert.match(await page.locator('#accessoryStatus').innerText(),/distinguishing evidence/);
+  await page.locator('#accessoryMatch').selectOption('possible');await page.locator('#accessoryAccept').click();
+  assert.match(await page.locator('#accessoryStatus').innerText(),/saved separately/);
+  const note=await page.evaluate(()=>Object.values(InspectionStore.get().observations)[0]);assert.equal(note.accessoryResearch.matchStatus,'possible');assert.equal(note.condition,'');
+  await page.goto('http://127.0.0.1:8000/inspection-review.html');
+  assert.match(await page.locator('#reviewContent').innerText(),/ROOF ACCESSORY RESEARCH/);
+  assert.equal(await page.locator('.review-unified a[href="https://manufacturer.example/vent"]').count(),1);
+  const texts=await page.evaluate(()=>[buildClaimNotes(InspectionStore.get(),InspectionField.sections,InspectionField.narrative,{format:'concise'}),buildClaimNotes(InspectionStore.get(),InspectionField.sections,InspectionField.narrative,{format:'concise',research:false})]);
+  assert.match(texts[0],/Possible match — not confirmed/);assert.match(texts[0],/replacement compatibility/);assert.doesNotMatch(texts[1],/Example V100/);
+  await page.goto('http://127.0.0.1:8000/inspection-workspace.html');await page.evaluate(n=>InspectionField.editNote(n),note);
+  await page.locator('#fieldAccessoryResearch summary').click();await page.locator('#accessoryRead').click();await page.locator('#accessoryFeatures').waitFor({state:'visible'});
+  fail=true;await page.locator('#accessorySearch').click();await page.waitForFunction(()=>document.getElementById('accessoryStatus').textContent.includes('no sources'));
+  assert.equal(await page.locator('#accessoryAccept').count(),0);
+  await page.locator('#fieldNoteForm [type=submit]').click();assert.equal(await page.evaluate(()=>Object.values(InspectionStore.get().observations)[0].accessoryResearch.matchStatus),'possible');
+  assert.deepEqual(errors,[]);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  console.log('PASS accessory search, source gating, privacy, confirmation guards, report/claim notes, edit persistence, failures and mobile.');
+ } finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

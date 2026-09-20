@@ -131,7 +131,7 @@
             field('component').value = choices.includes(selected) || preserveSaved ? selected : '';
             field('location').placeholder = field('section').value === 'Elevations' ? 'e.g. Front wall, right of entry door' : 'e.g. Back slope, east corner';
         }
-        let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null, photoTitle = null;
+        let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null, accessoryResearch = null, photoTitle = null;
         let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false, elevationKey = null;
         const elevationName = key => `${key.charAt(0).toUpperCase()}${key.slice(1)} Elevation`;
         const renderReview = () => {
@@ -160,6 +160,7 @@
             details: field('details').value, photoId: field('photoId').value, dictated, aiReview, elevationKey,
             photoTitle: photoTitle?.transcript === field('details').value && photoTitle?.photoId === field('photoId').value ? photoTitle : null,
             equipmentResearch: equipmentResearch?.photoId === field('photoId').value && equipmentResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? equipmentResearch : null,
+            accessoryResearch: accessoryResearch?.photoId === field('photoId').value && accessoryResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? accessoryResearch : null,
             parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null
         });
         const refreshPhotos = () => {
@@ -281,6 +282,7 @@
             document.getElementById('fieldElevationContext').textContent = elevationKey ? `${elevationName(elevationKey)} · Detail photo. Analyze prepares your note and separate AI findings. Review them, then add to the report.` : '';
             document.getElementById('fieldElevationActions').hidden = !elevationKey;
             equipmentResearch = note.equipmentResearch || null;
+            accessoryResearch = note.accessoryResearch || null;
             photoTitle = note.photoTitle || null;
             aiReview = note.aiReview || null; renderReview();
             refreshPhotos();
@@ -334,6 +336,17 @@
         import('./jev-assistant.js').then(({mountJevAssistant}) => mountJevAssistant(form, readForm)).catch(() => {
             // The optional integration must never block capture or note saving.
         });
+        import('./accessory-research.js').then(({mountAccessoryResearch})=>mountAccessoryResearch(form,readForm,research=>{
+            if(filling || capturing || listening)throw new Error('Finish dictation or photo analysis before saving research.');
+            if(!form.reportValidity())throw new Error('Add the observation location before saving research.');
+            const note=readForm();
+            if(research.photoId!==note.photoId || research.revision!==InspectionStore.get().photos[note.photoId]?.revision)throw new Error('The photo changed. Research the current photo first.');
+            if(!!note.quantity!==!!note.unit)throw new Error('Enter both measurement and unit, or leave both empty.');
+            note.accessoryResearch=research;
+            const id=InspectionStore.saveObservation(note);accessoryResearch=research;field('id').value=id;
+            form.dispatchEvent(new CustomEvent('inspection-observation-saved',{detail:{...note,id}}));
+            document.getElementById('fieldSaveStatus').textContent='Added to report with accessory research and source links.';
+        })).catch(()=>{document.getElementById('fieldSaveStatus').textContent='Accessory search could not load. Refresh to retry; photo capture still works.';});
         for (const kind of ['Camera', 'Upload']) {
             const input = document.getElementById(`field${kind}Input`);
             document.getElementById(`field${kind}`).addEventListener('click', () => input.click());

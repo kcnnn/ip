@@ -31,8 +31,7 @@ export function validateBackup(bundle) {
         for(const key of ['id','location','details','component','condition','severity','unit','updatedAt','photoId']) if(note[key]!=null && typeof note[key]!=='string') throw new Error(`Observation ${key} is invalid.`);
         if(note.damageTypes && (!Array.isArray(note.damageTypes) || note.damageTypes.some(s=>typeof s!=='string'))) throw new Error('Damage selections are invalid.');
         if(note.aiReview && (typeof note.aiReview.status!=='string' || typeof note.aiReview.summary!=='string' || !Array.isArray(note.aiReview.checks) || note.aiReview.checks.some(s=>typeof s!=='string'))) throw new Error('Photo review is invalid.');
-        if(note.equipmentResearch) {
-            const e=note.equipmentResearch;
+        for(const e of [note.equipmentResearch,note.accessoryResearch].filter(Boolean)) {
             if(!Array.isArray(e.findings) || e.findings.some(f=>!object(f)||typeof f.text!=='string'||!Array.isArray(f.sources)||f.sources.some(s=>!object(s)||typeof s.url!=='string'||typeof s.title!=='string'))) throw new Error('Equipment research is invalid.');
         }
     }

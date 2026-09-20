@@ -1,4 +1,8 @@
 /* A deterministic summary of saved evidence, not a new AI assessment. */
+function accessoryClaimLines(r) {
+    const status={possible:'Possible match — not confirmed',confirmed:'Model confirmed by inspector',unidentified:'Unidentified — research inconclusive'}[r.matchStatus] || 'Unidentified';
+    return [`Roof accessory research: ${status}${r.model?` · ${r.model}`:''}.`,r.evidence || 'No additional identification evidence recorded.','Identification does not establish replacement compatibility.',...r.findings.flatMap(f=>[f.text,...f.sources.map(s=>`Source: ${s.title} — ${s.url}`)])];
+}
 function buildDetailedClaimNotes(record, sections, narrative) {
     const photos = Object.values(record.photos || {});
     const notes = Object.values(record.observations || {});
@@ -25,6 +29,7 @@ function buildDetailedClaimNotes(record, sections, narrative) {
         sectionAbsences.forEach(item => lines.push(`${item.label}: ${item.note || 'Not present'}.`));
         sectionNotes.forEach(note => {
             lines.push(`Inspector observation: ${narrative(note)}`);
+            if(note.accessoryResearch)lines.push(...accessoryClaimLines(note.accessoryResearch));
             if (note.equipmentResearch) {
                 const equipment=note.equipmentResearch;
                 lines.push(`Accepted equipment research: ${equipment.manufacturer || 'Brand unspecified'}; model ${equipment.model}; serial ${equipment.serial || 'not recorded'}.`, `Sources researched ${equipment.retrievedAt}; accepted ${equipment.acceptedAt}.`);
@@ -43,7 +48,7 @@ function buildDetailedClaimNotes(record, sections, narrative) {
 
 function buildClaimNotes(record, sections, narrative, options = {}) {
     if(options.format !== 'concise') {
-        const filtered={...record,observations:Object.fromEntries(Object.entries(record.observations || {}).map(([id,n])=>[id,{...n,aiReview:options.ai===false?null:n.aiReview,equipmentResearch:options.research===false?null:n.equipmentResearch}]))};
+        const filtered={...record,observations:Object.fromEntries(Object.entries(record.observations || {}).map(([id,n])=>[id,{...n,aiReview:options.ai===false?null:n.aiReview,equipmentResearch:options.research===false?null:n.equipmentResearch,accessoryResearch:options.research===false?null:n.accessoryResearch}]))};
         return buildDetailedClaimNotes(filtered,options.gaps===false?sections.map(s=>[s[0],s[1],[]]):sections,narrative);
     }
     const photos=Object.values(record.photos || {}), notes=Object.values(record.observations || {}), absences=Object.values(record.absences || {});
@@ -78,6 +83,7 @@ function buildClaimNotes(record, sections, narrative, options = {}) {
             for(const f of e.findings || []) research.push(f.text,...f.sources.map(s=>`Source: ${s.title} — ${s.url}`));
         }
         if(options.ai && note.aiReview) ai.push(`${place}: ${note.aiReview.status.replaceAll('_',' ')} — ${note.aiReview.summary}`,...(note.aiReview.checks || []).map(c=>`AI review detail: ${c}`));
+        if(options.research!==false && note.accessoryResearch) research.push(place,...accessoryClaimLines(note.accessoryResearch));
     }
     for(const absent of absences) add(absent.section || 'Other area',`Not present: ${absent.label}${absent.note?` — ${absent.note}`:''}.`);
     if(!notes.length) lines.push('No inspector findings have been saved. Photos alone do not establish damage or absence of damage.');
@@ -85,7 +91,7 @@ function buildClaimNotes(record, sections, narrative, options = {}) {
     const interview=record.notes?.insuredInterview?.damageNotes;if(interview)reported.push(`Insured discussion (reported): ${interview}`);
     if(reported.length)lines.push('','REPORTED INFORMATION — NOT INDEPENDENTLY VERIFIED',...reported);
     if(limitations.length)lines.push('','AREAS RECORDED AS NOT INSPECTED',...limitations);
-    if(research.length)lines.push('','ACCEPTED EQUIPMENT RESEARCH — SOURCED REFERENCE INFORMATION',...research);
+    if(research.length)lines.push('','ACCEPTED RESEARCH — SOURCED REFERENCE INFORMATION',...research);
     if(ai.length)lines.push('','AI PHOTO REVIEW — SEPARATE FROM INSPECTOR FINDINGS',...ai);
     if(options.gaps!==false) {
         const missing=[];
@@ -106,6 +112,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     panel.innerHTML = `<h2>Claim notes · ready to paste</h2><p>A concise summary by elevation and roof location. Reported information, uninspected areas and sourced research stay separate from inspector findings. Edit the wording without changing your original observations.</p><div class="claim-note-options"><label for="claimNotesFormat">Format<select id="claimNotesFormat"><option value="concise">Concise claim narrative</option><option value="detailed">Detailed inspection record</option></select></label><label><input type="checkbox" id="claimNotesResearch" checked> Include accepted equipment research and sources</label><label><input type="checkbox" id="claimNotesAI"> Include separate AI photo reviews</label><label><input type="checkbox" id="claimNotesGaps" checked> Include documentation gaps</label></div><p id="claimNotesStale" class="review-missing" hidden></p><label for="claimNotesText">Editable claim note</label><textarea id="claimNotesText" rows="18" spellcheck="true"></textarea><p id="claimNotesCount" class="muted"></p><div class="review-actions"><button type="button" id="claimNotesCopy">Copy text</button><button type="button" id="claimNotesDownload">Download .txt</button><button type="button" id="claimNotesSave">Save edited note</button><button type="button" id="claimNotesRefresh">Refresh from record</button></div><p id="claimNotesStatus" role="status"></p>`;
     document.getElementById('reviewContent').before(panel);
     const text = document.getElementById('claimNotesText');
+    document.getElementById('claimNotesResearch').parentElement.lastChild.textContent=' Include accepted equipment / accessory research and sources';
     const status = document.getElementById('claimNotesStatus');
     let generated = '', dirty = false, openedId='', source='', previousOptions;
     const byId=id=>document.getElementById(id);

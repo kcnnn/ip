@@ -27,6 +27,10 @@ function renderInspectionReview() {
                 const equipment=note.equipmentResearch;
                 return `<article class="review-note"><span class="eyebrow">ACCEPTED EQUIPMENT RESEARCH · ${escape(note.location || '')}</span><p>Label identifiers checked by inspector: ${escape(equipment.manufacturer || 'Brand unspecified')} · Model ${escape(equipment.model)} · Serial ${escape(equipment.serial || 'not recorded')}</p>${equipment.findings.map(finding=>`<p>${escape(finding.text)}</p>${finding.sources.map(source=>{let safe=false;try{const u=new URL(source.url);safe=u.protocol==='https:'&&!u.username&&!u.password;}catch{}return safe?`<p>Source: <a href="${escape(source.url)}" target="_blank" rel="noopener noreferrer">${escape(source.title)}</a> · ${escape(source.url)}</p>`:'';}).join('')}`).join('')}<small>Researched ${escape(equipment.retrievedAt)} · Accepted ${escape(equipment.acceptedAt)}</small></article>`;
             }).join('')}
+            ${sectionNotes.filter(note=>note.accessoryResearch).map(note=>{
+                const r=note.accessoryResearch,labels={possible:'Possible match — not confirmed',confirmed:'Model confirmed by inspector',unidentified:'Unidentified — research inconclusive'};
+                return `<article class="review-note"><span class="eyebrow">ROOF ACCESSORY RESEARCH</span><p>${escape(labels[r.matchStatus] || labels.unidentified)}${r.model?` · ${escape(r.model)}`:''}</p><p>${escape(r.evidence || 'No additional identification evidence recorded.')}</p><p>Identification does not establish replacement compatibility.</p>${r.findings.map(f=>`<p>${escape(f.text)}</p>${f.sources.map(s=>{let safe=false;try{const u=new URL(s.url);safe=u.protocol==='https:'&&!u.username&&!u.password;}catch{}return safe?`<p>Source: <a href="${escape(s.url)}" target="_blank" rel="noopener noreferrer">${escape(s.title)}</a></p>`:'';}).join('')}`).join('')}<small>Researched ${escape(r.retrievedAt)} · Accepted ${escape(r.acceptedAt)}</small></article>`;
+            }).join('')}
             ${sectionNotes.filter(note => note.aiReview).map(note => `<article class="review-note"><span class="eyebrow">AI PHOTO REVIEW · ${escape(note.location || '')} · ${escape(note.component || '')}</span><p>${escape(note.aiReview.status.replaceAll('_', ' '))}: ${escape(note.aiReview.summary)}</p><ul>${note.aiReview.checks.map(item => `<li>${escape(item)}</li>`).join('')}</ul><small>Linked photo: ${escape(record.photos[note.photoId]?.label || 'No longer in record')}</small></article>`).join('')}
             ${section === 'Interview' && record.notes.insuredInterview?.damageNotes ? `<article class="review-note"><h3>Insured discussion</h3><p>${escape(record.notes.insuredInterview.damageNotes)}</p></article>` : ''}
             ${!sectionPhotos.length && !sectionNotes.length && !sectionAbsences.length ? '<p class="muted">Nothing recorded in this section yet.</p>' : ''}</section>`;
@@ -48,6 +52,8 @@ function groupReviewCards(record) {
         const equipment=[...section.querySelectorAll('.review-note')].filter(el=>el.querySelector('.eyebrow')?.textContent.startsWith('ACCEPTED EQUIPMENT RESEARCH'));
         const reviews=[...section.querySelectorAll('.review-note')].filter(el=>el.querySelector('.eyebrow')?.textContent.startsWith('AI PHOTO REVIEW'));
         notes.filter(n=>n.equipmentResearch).forEach((note,i)=>{if(equipment[i])noteCards.get(note.id)?.append(equipment[i]);});
+        const accessories=[...section.querySelectorAll('.review-note')].filter(el=>el.querySelector('.eyebrow')?.textContent==='ROOF ACCESSORY RESEARCH');
+        notes.filter(n=>n.accessoryResearch).forEach((note,i)=>{if(accessories[i])noteCards.get(note.id)?.append(accessories[i]);});
         notes.filter(n=>n.aiReview).forEach((note,i)=>{if(reviews[i])noteCards.get(note.id)?.append(reviews[i]);});
     });
     for(const note of Object.values(record.observations)) {
