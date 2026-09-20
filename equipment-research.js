@@ -60,9 +60,12 @@ Use the exact model even if the brand is unknown. Find primary manufacturer prod
 }
 
 export function mountEquipmentResearch(form, readState, accept) {
-    const panel=document.createElement('section');panel.className='field-dictation-first';
+    const panel=document.createElement('details');panel.className='field-dictation-first';panel.id='fieldEquipmentResearch';
     panel.innerHTML=`<h3>Equipment details, with sources.</h3><p class="field-help">For an HVAC, water-heater or other equipment label: read the photo, check the model, then research manufacturer documentation. Uses your configured photo AI and web search. Only manufacturer/model are used for research—not your serial number, address or claim notes.</p><button type="button" class="field-button" id="equipmentIdentify">Identify & research equipment</button><div id="equipmentIdentity" hidden><p class="field-help">Check these readings against the photo. A missing brand does not prevent searching by model.</p><div class="field-grid"><label>Manufacturer<input id="equipmentManufacturer" maxlength="150"></label><label>Exact model<input id="equipmentModel" maxlength="150"></label><label>Serial number<input id="equipmentSerial" maxlength="150"></label></div><p id="equipmentLimitations" class="field-help"></p><button type="button" class="field-button" id="equipmentSearch">Find manufacturer information</button></div><p id="equipmentStatus" role="status"></p><div id="equipmentResults"></div>`;
     form.querySelector('.field-extraction-heading').before(panel);
+    const summary=document.createElement('summary');summary.textContent='Research this equipment · optional';panel.prepend(summary);
+    const updateVisibility=()=>{const note=readState();panel.hidden=!/\b(hvac|water[ -]?heater|condenser|furnace|air conditioner|heat pump|equipment|rating plate|serial|model number|electrical panel|appliance)\b/i.test(`${note.details || ''} ${note.aiReview?.summary || ''}`);};
+    updateVisibility();form.addEventListener('input',updateVisibility);form.addEventListener('inspection-note-prepared',updateVisibility);
     const $=id=>panel.querySelector('#'+id);
     let generation=0, controller, label=null, findings=[], searched=null;
     const cancel=document.createElement('button');cancel.type='button';cancel.className='field-button';cancel.textContent='Cancel research';cancel.hidden=true;
@@ -117,5 +120,5 @@ export function mountEquipmentResearch(form, readState, accept) {
     });
     panel.addEventListener('input',event=>{if(['equipmentManufacturer','equipmentModel','equipmentSerial'].includes(event.target.id)){searched=null;$('equipmentResults').replaceChildren();$('equipmentStatus').textContent='Label details changed. Search again to update the findings.';}});
     form.addEventListener('input',()=>{if(selectedPhoto!==photoStamp()){clear();$('equipmentIdentify').disabled=false;$('equipmentSearch').disabled=false;}});
-    form.addEventListener('reset',()=>{clear();$('equipmentIdentify').disabled=false;$('equipmentSearch').disabled=false;cancel.hidden=true;});
+    form.addEventListener('reset',()=>{clear();$('equipmentIdentify').disabled=false;$('equipmentSearch').disabled=false;cancel.hidden=true;panel.open=false;queueMicrotask(updateVisibility);});
 }

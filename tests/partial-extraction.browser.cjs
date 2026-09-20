@@ -12,7 +12,7 @@ const {chromium}=require('playwright');
   const f=(value,evidence)=>({value,evidence});
   let photoReview={status:'needs_detail',summary:'Rating plate documented. Test reading.'};
   await page.route('https://api.anthropic.com/**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({content:[{type:'text',text:JSON.stringify({multipleObservations:false,fields:{location:f('Garage','garage'),component:f('Water heater','water heater'),photoTitle:f('Water heater rating plate','water heater rating plate'),condition:f('No visible damage','no visible damage')},photoReview})}]})}));
-  await page.locator('#fieldFill').click();await page.waitForFunction(()=>document.getElementById('fieldFillStatus').textContent.startsWith('Details filled'));
+  await page.locator('#fieldFill').click();await page.waitForFunction(()=>document.getElementById('fieldFillStatus').textContent.startsWith('Note prepared'));
   assert.match(await page.locator('#fieldFillStatus').innerText(),/left blank/);
   assert.equal(await page.locator('[name=location]').inputValue(),'Garage');assert.equal(await page.locator('[name=condition]').inputValue(),'');
   assert.match(await page.locator('#fieldPhotoReview').innerText(),/Rating plate documented/);

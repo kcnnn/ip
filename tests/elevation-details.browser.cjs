@@ -22,7 +22,8 @@ const { chromium } = require('playwright');
     await page.waitForFunction(()=>document.getElementById('fieldPhotoStatus').textContent.startsWith('Photo ready'));
     await page.locator('[name=details]').fill('The downspout has a dent.');
     await page.locator('#fieldFill').click();
-    await page.waitForFunction(()=>document.getElementById('fieldFillStatus').textContent.startsWith('Saved to'));
+    await page.waitForFunction(()=>document.getElementById('fieldFillStatus').textContent.startsWith('Note prepared'));
+    await page.locator('#fieldNoteForm [type=submit]').click();
     assert.equal(await page.locator('[name=section]').inputValue(),'Elevations');
    }
    const counts=await page.evaluate(key=>({photos:Object.values(InspectionStore.get().photos).filter(p=>p.elevationKey===key).length,notes:Object.values(InspectionStore.get().observations).filter(n=>n.elevationKey===key).length}),key);

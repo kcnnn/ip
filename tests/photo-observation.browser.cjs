@@ -15,7 +15,7 @@ const { chromium } = require('playwright');
   let sent;
   await page.route('https://api.anthropic.com/**',async route=>{sent=route.request().postDataJSON();await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({content:[{type:'text',text:JSON.stringify(result)}]})});});
   await page.locator('#fieldFill').click();
-  await page.waitForFunction(()=>document.getElementById('fieldFillStatus').textContent.startsWith('Details filled'));
+  await page.waitForFunction(()=>document.getElementById('fieldFillStatus').textContent.startsWith('Note prepared'));
   assert.equal(sent.messages[0].content[0].type,'image');
   assert.ok(sent.messages[0].content[0].source.data.length>100);
   assert.equal(sent.temperature,undefined);

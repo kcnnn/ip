@@ -69,11 +69,13 @@
                 <p class="field-help">For example: “Front elevation, window screen. Moderate wear and deterioration. Two screens affected.”</p>
                 <div class="field-voice"><button type="button" id="fieldDictate" class="field-button field-primary">Start dictation</button><span id="fieldVoiceStatus" role="status"></span></div>
                 <label>Your observation<textarea name="details" rows="4" maxlength="12000" placeholder="Dictate or type what you see. Your original words stay here."></textarea></label>
-                <div class="field-voice"><button type="button" id="fieldFill" class="field-button field-primary">Analyze photo &amp; note</button><span id="fieldFillStatus" role="status"></span></div>
+                <div class="field-voice"><button type="button" id="fieldFill" class="field-button field-primary">Analyze &amp; prepare note</button><span id="fieldFillStatus" role="status"></span></div>
                 <p class="field-help" id="fieldVoiceHelp">Dictation uses your browser’s speech service. Analyze sends the selected photo and your note to your configured AI provider. Without a photo, only your words are organized. Review the result, then add it to your report.</p>
             </section>
             <div class="field-extraction-heading"><span class="field-eyebrow">03 / REVIEW &amp; ADD TO REPORT</span><p class="field-help">Your words become consistent fields. AI photo findings are kept separately so you can see what agrees and what needs attention.</p></div>
             <div id="fieldPhotoReview" class="field-preview" hidden role="status"></div>
+            <p id="fieldMissingDetail" class="field-help" hidden>Where was this observed? <button type="button" class="field-text-button" id="fieldAddLocation">Add location</button></p>
+            <details id="fieldEditDetails"><summary>Edit details <span class="field-help">Location, component, damage and measurements</span></summary>
             <div class="field-form-grid">
                 <label>Section<select name="section">${options(sections.map(s => s[0]))}</select></label>
                 <label>Location / slope<input name="location" maxlength="120" placeholder="e.g. Back slope, east corner" required></label>
@@ -86,7 +88,8 @@
                 <label>Measurement or count<input name="quantity" type="number" min="0" step="any" placeholder="e.g. 6"></label>
                 <label>Unit<select name="unit"><option value="">Not measured</option>${options(['inches', 'feet', 'square feet', 'marked hits', 'items', 'mm', 'cm'])}</select></label>
             </div>
-            <div class="field-preview"><span class="field-eyebrow">CONSISTENT NOTE PREVIEW</span><p id="fieldNarrative"></p></div>
+            </details>
+            <div class="field-preview"><span class="field-eyebrow">PREPARED INSPECTION NOTE</span><p id="fieldNarrative"></p></div>
             <div class="field-actions"><button type="submit" class="field-button field-primary">Add to report</button><button type="button" id="fieldNewNote" class="field-button">New / clear draft</button><span id="fieldSaveStatus" role="status"></span></div>
             <div id="fieldElevationActions" class="field-actions" hidden><button type="button" id="fieldAnotherDetail" class="field-button">Add another detail photo</button><button type="button" id="fieldReturnElevation" class="field-button">Back to elevation</button></div>
         </form>`;
@@ -137,7 +140,7 @@
             const id = field('photoId').value;
             const img = document.getElementById('fieldPhotoPreview');
             img.hidden = true;
-            document.getElementById('fieldFill').textContent = elevationKey ? 'Analyze & save detail' : id ? 'Analyze photo & note' : 'Fill fields from note';
+            document.getElementById('fieldFill').textContent = 'Analyze & prepare note';
             const photo = id ? await InspectionStore.getPhoto(id).catch(() => null) : null;
             if (generation !== photoGeneration) return;
             if (photo) { img.src = photo; img.hidden = false; }
@@ -172,6 +175,7 @@
                 field('severity').value = 'Not assessed';
             }
             document.getElementById('fieldNarrative').textContent = narrative(readForm());
+            if(field('location').value.trim()) document.getElementById('fieldMissingDetail').hidden=true;
             if (save) {
                 try { InspectionStore.note('fieldDraft', readForm()); document.getElementById('fieldSaveStatus').textContent = 'Draft saved on this device'; }
                 catch { document.getElementById('fieldSaveStatus').textContent = 'Draft not saved'; }
@@ -185,7 +189,7 @@
             if (!text) { status.textContent = 'Dictate or type an observation first.'; return; }
             if (elevationKey && !field('photoId').value) { status.textContent = 'Take or upload a close-up photo first.'; return; }
             if (manualFields) {
-                if (automatic) { status.textContent = 'Your existing selections were kept. Click Fill fields from note to replace them with this dictation.'; return; }
+                if (automatic) { status.textContent = 'Your existing selections were kept. Click Analyze & prepare note to update them from your dictation.'; return; }
                 if (!confirm('Replace the current detail selections using this note? Your transcript and photo link will be kept.')) return;
             }
             const generation = ++fillGeneration;
@@ -227,12 +231,10 @@
                 manualFields = false;
                 update();
                 const missing = ['location'].filter(key => !field(key).value);
-                status.textContent = `Details filled from your note. Review before saving.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}${omissions}`;
-                if (elevationKey && !missing.length) {
-                    const id = InspectionStore.saveObservation(readForm()); field('id').value = id;
-                    status.textContent = `Saved to ${elevationName(elevationKey)}.${aiReview ? ' Review the AI findings below;' : ''} You can edit this note or add another detail photo.${omissions}`;
-                    document.getElementById('fieldSaveStatus').textContent = aiReview ? 'Photo, dictation and AI review added to the report.' : 'Photo and dictation added to the report. No AI photo assessment was recorded.';
-                }
+                status.textContent = `Note prepared. Review it below, then add it to the report.${omissions}`;
+                document.getElementById('fieldMissingDetail').hidden = !missing.length;
+                document.getElementById('fieldEditDetails').open = false;
+                form.dispatchEvent(new CustomEvent('inspection-note-prepared',{detail:{photoId,transcript:text}}));
             } catch (error) {
                 if (generation === fillGeneration) status.textContent = error.message || 'Auto-fill unavailable. Your note is kept.';
             } finally {
@@ -257,12 +259,14 @@
             form.querySelector('[type="submit"]').disabled = false;
             document.getElementById('fieldDictate').textContent = 'Start dictation';
             form.reset(); dictated = !!note.dictated;
+            document.getElementById('fieldEditDetails').open = false;
+            document.getElementById('fieldMissingDetail').hidden = true;
             // Hidden input values also change their reset default; clear explicitly.
             field('id').value = note.id || '';
             elevationKey = ['front', 'right', 'rear', 'left'].includes(note.elevationKey) ? note.elevationKey : null;
             field('section').disabled = !!elevationKey;
             document.getElementById('fieldElevationContext').hidden = !elevationKey;
-            document.getElementById('fieldElevationContext').textContent = elevationKey ? `${elevationName(elevationKey)} · Detail photo. Analyze saves your photo, original note and separate AI findings together. Check any disagreements before relying on the result.` : '';
+            document.getElementById('fieldElevationContext').textContent = elevationKey ? `${elevationName(elevationKey)} · Detail photo. Analyze prepares your note and separate AI findings. Review them, then add to the report.` : '';
             document.getElementById('fieldElevationActions').hidden = !elevationKey;
             equipmentResearch = note.equipmentResearch || null;
             photoTitle = note.photoTitle || null;
@@ -352,13 +356,18 @@
         }
         form.addEventListener('input', event => {
             if (!event.target.name) return;
-            if (['details', 'photoId'].includes(event.target.name)) { aiReview = null; renderReview(); }
+            if (['details', 'photoId'].includes(event.target.name)) {
+                aiReview = null; renderReview();
+                document.getElementById('fieldFillStatus').textContent='Photo or note changed. Analyze again to update the prepared details.';
+            }
             if (event.target.name === 'photoId') previewPhoto();
             if (!['details', 'section', 'photoId'].includes(event.target.name)) manualFields = true;
             if (event.target === field('section')) refreshComponents(field('component').value);
             update();
         });
         document.getElementById('fieldFill').addEventListener('click', () => fillFromNote());
+        document.getElementById('fieldAddLocation').onclick=()=>{document.getElementById('fieldEditDetails').open=true;field('location').focus();};
+        form.addEventListener('invalid',event=>{if(document.getElementById('fieldEditDetails').contains(event.target)) document.getElementById('fieldEditDetails').open=true;},true);
         form.addEventListener('submit', event => {
             event.preventDefault();
             if (filling || capturing || listening) return;

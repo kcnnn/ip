@@ -1,0 +1,8 @@
+[
+  {"id":"water-heater-reference","photo":"water-heater.png","note":"water heater rating plate in garage","location":"garage","condition":"","forbiddenDamage":["Hail / impact"]},
+  {"id":"hvac-reference","photo":"hvac-label.png","note":"front elevation hvac serial number label","location":"front","condition":"","forbiddenDamage":["Hail / impact"]},
+  {"id":"mechanical-not-hail","photo":"door.png","note":"Rear elevation entry door has a slight dent. It is mechanical damage, not hail.","location":"rear","condition":"Observed damage","damage":"Mechanical damage","forbiddenDamage":["Hail / impact"]},
+  {"id":"gutter-size","photo":"gutter.png","note":"Front elevation gutter measures five inches.","location":"front","quantity":"5","unit":"inches","forbiddenDamage":["Hail / impact"]},
+  {"id":"chalk-tally","photo":"test-square.jpg","note":"Back slope test square. Four corners marked. Chalk says H equals ten plus hits.","location":"back","noExactCount":true,"forbiddenDamage":[]},
+  {"id":"overview-no-assessment","photo":"front-overview.jpg","note":"Front elevation overview photo for the file.","location":"front","condition":"","forbiddenDamage":["Hail / impact"]}
+]
