@@ -11,7 +11,7 @@ body { margin: 0; background:#f7f7f6; color:#272a2d; font-family:Arial,sans-seri
 .review-note .review-delete { margin-right:8px; }
 .review-brittle-group { grid-column:1 / -1; min-width:0; background:#fff; border:1px solid #dedede; border-radius:16px; padding:20px; }
 .review-brittle-group > h3 { margin:0 0 20px; font-size:24px; }
-.review-brittle-photos { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.review-brittle-photos { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:20px; }
 .review-brittle-photos .review-photo { padding:0; border:0; border-radius:0; }
 .review-brittle-group > .review-note { border:0; border-top:1px solid #e2e4e5; padding:20px 0 0; }
 @media(max-width:580px) { .review-brittle-group { padding:16px; }.review-brittle-photos { grid-template-columns:1fr; } }

@@ -56,7 +56,7 @@ function readInspectionRecord() {
             const generated=note?.photoTitle;
             const title=generated?.photoId===id && generated?.transcript===note.details && typeof generated.value==='string' ? generated.value.trim().slice(0,100) : String(note?.details || '').trim().replace(/\s+/g,' ').slice(0,100);
             const prefix=photo.elevationKey ? `${photo.elevationKey.charAt(0).toUpperCase()+photo.elevationKey.slice(1)} Elevation` : '';
-            const testPrefix = ['before','after'].includes(photo.brittlePhase) ? `Brittle test · ${photo.brittlePhase === 'before' ? 'Before test' : 'After test'}` : '';
+            const testPrefix = ['before','during','after'].includes(photo.brittlePhase) ? `Brittle test · ${photo.brittlePhase === 'before' ? 'Before test' : photo.brittlePhase === 'during' ? 'During lift' : 'After test'}` : '';
             photo.label=[prefix,testPrefix,title || (testPrefix ? '' : 'Detail photo')].filter(Boolean).join(' · ');
         }
         return record;

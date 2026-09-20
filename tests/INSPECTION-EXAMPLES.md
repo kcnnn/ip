@@ -9,6 +9,7 @@ To run a live check, place appropriate private photos in a directory outside Git
 These checks do not certify factual equipment matching, visual measurements or damage causes. Review the actual photo and AI response when investigating a failing case. No live run is claimed without credentials and the matching private photo set.
 
 ## Blind real-photo checks
+For three-stage brittle tests, use an after-release primary photo and two comparisons labeled `before` and `during`. Keep older before/after cases as backward-compatibility checks. Confirm which image actually shows release; do not relabel a historical lifted view as released or infer a missing phase.
 
 Before releasing photo-review changes, run the private suite and review every REVIEW_REQUIRED result against its source photos. Use `fixtures/photo-accuracy.template.json` as a checklist: blind measurement, normal joints, manual test lift, a verified real-crack negative control, and exact label reading. Replace PRIVATE paths and label answers outside Git. Do not mark the suite complete when a case/photo is missing. A mock test verifies wiring, not vision accuracy.
 

@@ -60,7 +60,7 @@
                 <input type="file" id="fieldCameraInput" accept="image/*,.heic,.heif" capture="environment" hidden>
                 <input type="file" id="fieldUploadInput" accept="image/*,.heic,.heif" hidden>
                 <label>Photo for this observation<select name="photoId"><option value="">No photo — text-only note</option></select></label>
-                <label>Photo purpose<select name="photoPurpose"><option value="auto">Detect from note / section</option><option value="overview">Overview / reference</option><option value="measurement">Measurement</option><option value="label">Equipment label</option><option value="damage">Damage close-up</option><option value="brittle">Brittle test / before and after</option><option value="accessory">Accessory identification</option></select></label>
+                <label>Photo purpose<select name="photoPurpose"><option value="auto">Detect from note / section</option><option value="overview">Overview / reference</option><option value="measurement">Measurement</option><option value="label">Equipment label</option><option value="damage">Damage close-up</option><option value="brittle">Brittle test / before, during, after</option><option value="accessory">Accessory identification</option></select></label>
                 <img id="fieldPhotoPreview" alt="Photo linked to this observation" hidden>
                 <p id="fieldPhotoStatus" role="status" class="field-help"></p>
             </section>
@@ -134,12 +134,12 @@
         }
         let recognition, listening = false, dictated = false, voiceSession = 0, equipmentResearch = null, accessoryResearch = null, photoTitle = null, brittleTest = null, brittlePhase = 'before';
         form.addEventListener('brittle-photo-phase', event => {
-            if (['before','after'].includes(event.detail) && !capturing && !filling) brittlePhase = event.detail;
+            if (['before','during','after'].includes(event.detail) && !capturing && !filling) brittlePhase = event.detail;
         });
         form.addEventListener('brittle-photo-unlink',event=>{
             if(capturing || filling || listening || !brittleTest?.photos)return;
             const id=event.detail;
-            brittleTest={...brittleTest,photos:Object.fromEntries(['before','after'].map(phase=>[phase,(brittleTest.photos[phase]||[]).filter(p=>p!==id)]))};
+            brittleTest={...brittleTest,photos:Object.fromEntries(['before','during','after'].map(phase=>[phase,(brittleTest.photos[phase]||[]).filter(p=>p!==id)]))};
             if(field('photoId').value===id)field('photoId').value=Object.values(brittleTest.photos).flat().at(-1)||'';
             aiReview=null;renderReview();update();previewPhoto();
         });
@@ -232,7 +232,7 @@
                 const photo = photoId ? await InspectionStore.getPhoto(photoId) : null;
                 if (photoId && !photo) throw new Error('Original photo unavailable. Upload it again; your note is kept.');
                 const record=InspectionStore.get();
-                const pairIds=brittleTest && field('section').value==='Shingles' ? [...new Set(['before','after'].flatMap(phase=>brittleTest.photos?.[phase] || []))] : [];
+                const pairIds=brittleTest && field('section').value==='Shingles' ? [...new Set(['before','during','after'].flatMap(phase=>brittleTest.photos?.[phase] || []))] : [];
                 if(pairIds.length>8) throw new Error('This note has more than 8 test photos. Split it into smaller test observations before AI review. Nothing was changed.');
                 const reviewedPhotos=[...new Set([photoId,...pairIds].filter(Boolean))].map(id=>({id,revision:record.photos[id]?.revision}));
                 const comparisons=[];

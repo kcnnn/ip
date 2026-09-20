@@ -58,11 +58,11 @@ function groupReviewCards(record) {
     });
     for(const note of Object.values(record.observations)) {
         const card=noteCards.get(note.id);if(!card)continue;
-        for(const phase of ['before','after']) {
+        for(const phase of ['before','during','after']) {
             for(const id of note.brittleTest?.photos?.[phase] || []) {
                 const line=document.createElement('p');
                 const button=document.createElement('button');button.type='button';button.className='review-delete';
-                button.textContent=`${phase==='before'?'Before':'After'} test photo${record.photos[id]?'':' — removed'}`;
+                button.textContent=`${phase==='before'?'Before':phase==='during'?'During':'After'} test photo${record.photos[id]?'':' — removed'}`;
                 if(record.photos[id]) button.dataset.openPhoto=id;else button.disabled=true;
                 line.append(button);card.append(line);
             }
@@ -79,7 +79,7 @@ function groupReviewCards(record) {
     }
     // Group only explicitly linked test photos, never nearby timestamps or titles.
     for(const note of Object.values(record.observations)) {
-        const ids=[...new Set(['before','after'].flatMap(phase=>note.brittleTest?.photos?.[phase] || []))];
+        const ids=[...new Set(['before','during','after'].flatMap(phase=>note.brittleTest?.photos?.[phase] || []))];
         const cards=ids.map(id=>photoCards.get(id)).filter(Boolean);
         if(!cards.length)continue;
         let group=cards.map(card=>card.closest('.review-brittle-group')).find(Boolean);
@@ -97,7 +97,7 @@ function groupReviewCards(record) {
             }
             [...card.children].filter(child=>child.classList.contains('review-note')).forEach(child=>group.append(child));
             const id=card.querySelector('[data-delete-kind="photos"]').dataset.deleteId;
-            const phase=note.brittleTest.photos.before?.includes(id) ? 'Before test' : 'After test';
+            const phase=note.brittleTest.photos.before?.includes(id) ? 'Before test' : note.brittleTest.photos.during?.includes(id) ? 'During lift' : 'After test';
             card.querySelector('h3').textContent=phase;
             card.classList.remove('review-unified');
             group.querySelector('.review-brittle-photos').append(card);
@@ -105,7 +105,7 @@ function groupReviewCards(record) {
         const observation=noteCards.get(note.id);if(observation)group.append(observation);
         if(observation) {
             observation.querySelectorAll('button[data-open-photo]').forEach(button=>{if(record.photos[button.dataset.openPhoto])button.parentElement.remove();});
-            observation.querySelectorAll('small').forEach(label=>{if(label.textContent.startsWith('Linked photo:'))label.textContent='Linked photos: before / after test photos shown above.';});
+            observation.querySelectorAll('small').forEach(label=>{if(label.textContent.startsWith('Linked photo:'))label.textContent='Linked photos: test photos shown above.';});
         }
     }
 }

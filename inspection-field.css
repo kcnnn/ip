@@ -14,7 +14,7 @@
 .brittle-page .field-intro { padding-bottom:12px; }
 .brittle-page #brittleCapture .field-multi-toggle,.brittle-page #brittleCapture .field-multi-toggle + p { display:none; }
 .brittle-page #brittleCapture { margin-top:24px; }
-.brittle-photo-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.brittle-photo-pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:16px; }
 .brittle-photo-slot { padding:18px; border:1px solid #e0e2df; border-radius:14px; background:#fff; }
 .brittle-photo-slot h4 { margin:0 0 10px; font-size:18px; }
 .brittle-photo-slot p { font-size:14px; color:#63686c; }

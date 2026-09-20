@@ -63,6 +63,11 @@ test('paired request sends both labeled images and purpose-specific guidance',as
     const content=h.request().payload.messages[0].content;
     assert.equal(content.filter(c=>c.type==='image').length,2);
     const text=content.map(c=>c.text||'').join('\n');assert.match(text,/Additional before test photo/);assert.match(text,/PAIRED REVIEW/);assert.match(text,/BRITTLE TEST:/);
+    await h.run('Test note',components,'Roof overview','after-image',false,{purpose:'brittle',brittlePhase:'after',comparisons:[{data:'before-image',phase:'before'},{data:'lift-image',phase:'during'}]});
+    const three=h.request().payload.messages[0].content;
+    assert.equal(three.filter(c=>c.type==='image').length,3);
+    assert.ok(three.some(c=>c.text==='Additional during test photo:'));
+    assert.match(three.map(c=>c.text||'').join('\n'),/after-release view documents residual visible cracking or creasing/);
     for(const [purpose,marker] of [['overview','OVERVIEW / REFERENCE:'],['measurement','MEASUREMENT:'],['label','EQUIPMENT LABEL:'],['damage','DAMAGE CLOSE-UP:'],['accessory','ACCESSORY IDENTIFICATION:']]) {
         await h.run('Photo',components,'Roof overview','image',false,{purpose});
         assert.ok(h.request().payload.messages[0].content.some(c=>c.text?.startsWith(marker)));
