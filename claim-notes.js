@@ -25,6 +25,11 @@ function buildClaimNotes(record, sections, narrative) {
         sectionAbsences.forEach(item => lines.push(`${item.label}: ${item.note || 'Not present'}.`));
         sectionNotes.forEach(note => {
             lines.push(`Inspector observation: ${narrative(note)}`);
+            if (note.equipmentResearch) {
+                const equipment=note.equipmentResearch;
+                lines.push(`Accepted equipment research: ${equipment.manufacturer || 'Brand unspecified'}; model ${equipment.model}; serial ${equipment.serial || 'not recorded'}.`, `Sources researched ${equipment.retrievedAt}; accepted ${equipment.acceptedAt}.`);
+                equipment.findings.forEach(finding=>lines.push(finding.text,...finding.sources.map(source=>`Source: ${source.title} — ${source.url}`)));
+            }
             if (note.aiReview) lines.push(`AI photo review (${note.aiReview.status.replaceAll('_', ' ')}): ${note.aiReview.summary}`, ...(note.aiReview.checks || []).map(item => `AI review detail: ${item}`));
         });
         if (interview) lines.push(`Insured discussion (reported): ${interview}`);

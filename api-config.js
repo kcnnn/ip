@@ -72,8 +72,9 @@ function getAITextContent(responseData) {
 
 // Send requests directly from the browser using the key configured for this
 // browser profile.
-async function sendAnthropicRequest({ apiKey, workspaceId, payload }) {
+async function sendAnthropicRequest({ apiKey, workspaceId, payload, signal }) {
     return fetch(API_CONFIG.BASE_URL, {
+        signal,
         method: 'POST',
         headers: {
             'x-api-key': apiKey,

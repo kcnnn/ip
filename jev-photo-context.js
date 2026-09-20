@@ -1,10 +1,10 @@
 // Vision reads the photo; Jev receives only this bounded, attributed text.
-export async function readJevPhoto(photo, signal) {
+export async function readEquipmentLabel(photo, signal) {
     if (!isAPIKeyConfigured()) throw new Error('Configure your photo-analysis API key before asking Jev about a photo.');
     const resized = await resizeImageForAPI(photo, 2000, 2000);
     if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
     const {mediaType, base64Data} = parseDataUrl(resized);
-    const response = await sendAnthropicRequest({apiKey:getAPIKey(), workspaceId:getWorkspaceId(), payload:{
+    const response = await sendAnthropicRequest({apiKey:getAPIKey(), workspaceId:getWorkspaceId(), signal, payload:{
         model:API_CONFIG.MODEL, max_tokens:2000,
         messages:[{role:'user',content:[
             {type:'image',source:{type:'base64',media_type:mediaType,data:base64Data}},
@@ -16,5 +16,9 @@ export async function readJevPhoto(photo, signal) {
     let value;
     try {value=JSON.parse(raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));} catch {throw new Error('Photo reading was incomplete. Retry before asking Jev.');}
     if (!value || typeof value.summary!=='string' || !value.summary.trim() || value.summary.length>1500 || typeof value.limitations!=='string' || value.limitations.length>500 || ['manufacturer','model','serial'].some(key=>value[key]!==null && (typeof value[key]!=='string' || value[key].length>150))) throw new Error('Photo reading was incomplete. Retry before asking Jev.');
+    return value;
+}
+export async function readJevPhoto(photo, signal) {
+    const value=await readEquipmentLabel(photo,signal);
     return `AI photo reading (not inspector-confirmed): ${value.summary}\nManufacturer: ${value.manufacturer || 'not readable'}\nModel: ${value.model || 'not readable'}\nSerial: ${value.serial || 'not readable'}\nLimitations: ${value.limitations || 'None reported by the photo reader; this is not verification.'}`;
 }

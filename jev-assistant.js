@@ -4,6 +4,8 @@ export function mountJevAssistant(form, readState) {
     panel.className='field-dictation-first';
     panel.innerHTML=`<summary>Suggested next step · TypeSafe Jev</summary><p class="field-help">Read the selected photo with your configured photo AI, then send its written findings and your note to TypeSafe for a suggested next step. Label readings can include manufacturer, model and serial number. Jev receives text, not the photo; it does not verify damage or search the web.</p><label>APEX Jev access code<input type="password" id="jevAccess" autocomplete="off" placeholder="Access code from your administrator"></label><p class="field-help">Not your TypeSafe API key. The code stays only in this open page.</p><button type="button" class="field-button" id="jevAsk">Suggest next step</button><p id="jevPhotoReading" style="white-space:pre-wrap"></p><p id="jevStatus" role="status"></p><p class="field-help">Check label readings against your photo. Suggestions are not automatically added to the report. Automated manufacturer-document research is not connected.</p>`;
     form.querySelector('.field-extraction-heading').before(panel);
+    panel.querySelector('summary').textContent='Advanced · Jev next-step suggestion';
+    panel.querySelector('p:last-child').textContent='Optional decision support only. Use Identify & research equipment above for manufacturer sources and accepted report details.';
     const button=panel.querySelector('#jevAsk'), status=panel.querySelector('#jevStatus');
     let busy=false;
     const snapshot=()=>{

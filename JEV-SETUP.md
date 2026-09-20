@@ -1,6 +1,22 @@
-# TypeSafe Jev on Vercel — first integration
+# Equipment research and optional TypeSafe Jev
 
-The optional **Suggested next step · TypeSafe Jev** panel first reads any selected photo with the configured photo AI, including readable manufacturer, model and serial fields. It shows that reading separately for checking against the photo, then sends the written reading, note, component and section to a server-side TypeSafe Choice request. The photo is sent to the photo AI, not TypeSafe. This does not change findings, browse websites or retrieve manufacturer documentation. A valid photo-analysis API key is needed in addition to the Jev configuration below.
+## Equipment research
+
+Use **Identify & research equipment** in the field notebook. Select a label photo, check/correct the extracted manufacturer/model/serial, then select **Find manufacturer information**. This uses the existing Claude photo-analysis connection plus its native `web_search_20250305` tool (maximum four searches). No additional TypeSafe code is needed for this direct search path. Web search must be allowed in the Claude API organization; API failures are shown without fake fallback research.
+
+Only manufacturer/model are sent in the research request. The photo stays in the vision request; the serial, property address and claim notes are not included in the research request. Responses without real search-result blocks and native citations cannot be accepted as findings. Partial responses also fail closed. Manufacturer-authored sources and explicit model/suffix matching are requested, but citations alone do not prove the match: findings remain candidates until the inspector opens sources and confirms the match. No equipment age is inferred from serials.
+
+Choose the individual cited findings to include and confirm the model match, then **Add selected details to report**. Accepted research is saved separately from dictated notes and condition/damage fields, linked to the selected photo revision, and included in the inspection review/PDF and text-only claim notes with sources and timestamps. Nothing is automatically accepted. A new photo does not inherit another photo's accepted equipment research.
+
+Provider keys retain the app's existing configuration. Research uses Claude's web search directly, not a Jev browser worker; Jev is optional under **Advanced · Jev next-step suggestion**. No browser worker, permit research, carrier portal integration, or code-compliance determination is deployed.
+
+Verification: `tests/equipment-research.browser.cjs` covers synthetic label extraction, search payload, no serial in research, native citations, explicit acceptance, report and text output, reload preservation, no-source failure, URL validation and mobile width. These are mocked provider tests; live search availability and source quality require testing with the configured account after deployment.
+
+Official web-search API: https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool
+
+## Optional Jev decision support
+
+The optional **Advanced · Jev next-step suggestion** panel first reads any selected photo with the configured photo AI, including readable manufacturer, model and serial fields. It shows that reading separately for checking against the photo, then sends the written reading, note, component and section to a server-side TypeSafe Choice request. The photo is sent to the photo AI, not TypeSafe. This advanced panel does not change findings or retrieve documentation; use the equipment workflow above for that. A valid photo-analysis API key is needed in addition to the Jev configuration below.
 
 ## Configure
 
@@ -22,6 +38,6 @@ Suggestions with choice probability or confidence below 0.7 are labeled tentativ
 
 ## Verification and next phase
 
-Automated tests use mocked provider responses; a real credentialed test is still required after configuration. Check a missing-key response, unauthorized access, then an authorized photo request. Equipment work next requires a sourced retrieval service, match verification and explicit acceptance into the report. No browser automation service has been provisioned.
+Automated tests use mocked provider responses; a real credentialed test is still required after configuration. Check a missing-key response, unauthorized access, then an authorized photo request. The separate equipment workflow now handles cited retrieval and acceptance. No browser automation service has been provisioned.
 
 Official request schema: https://docs.typesafe.ai/introduction/quickstart.md
