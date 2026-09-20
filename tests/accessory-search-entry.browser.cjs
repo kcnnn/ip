@@ -9,6 +9,15 @@ const assert=require('node:assert/strict');const {chromium}=require('playwright'
   window.isAPIKeyConfigured=()=>true;window.getAPIKey=()=> 'synthetic-key';
   window.sendAnthropicRequest=async()=>({ok:true,json:async()=>({content:[{type:'text',text:JSON.stringify({description:'Gray box vent',markings:'',limitations:'Material uncertain; measure dimensions.'})}]})});
  });
+ await p.getByRole('button',{name:'Search internet by photo',exact:true}).click();
+ assert.equal(await p.locator('#accessoryFeatures').isVisible(),false);
+ assert.equal(await p.locator('#accessoryVisualSearch').isVisible(),true);
+ assert.equal(await p.locator('#accessoryVisualGoogle').getAttribute('href'),'https://www.google.com/');
+ assert.equal(await p.locator('#accessoryVisualGoogle').getAttribute('rel'),'noopener noreferrer');
+ const downloadEvent=p.waitForEvent('download');await p.locator('#accessoryVisualDownload').click();const download=await downloadEvent;
+ assert.equal(download.suggestedFilename(),'roof-accessory.png');
+ let bytes=0;for await(const part of await download.createReadStream())bytes+=part.length;assert.ok(bytes>0);
+ assert.match(await p.locator('#accessoryVisualStatus').innerText(),/Nothing has been sent/);
  await p.getByRole('button',{name:'Identify & search',exact:true}).click();
  await p.locator('#accessoryFeatures').waitFor({state:'visible'});
  assert.equal(await p.locator('[name=photoId]').inputValue(),'Accessories:123');

@@ -1,4 +1,5 @@
 import {researchCitedSources,sourceURL} from './equipment-research.js';
+import {mountVisualSearch} from './accessory-visual-search.js';
 
 export async function describeAccessory(photo,signal) {
     if(!isAPIKeyConfigured())throw new Error('Configure your photo-analysis API key first.');
@@ -27,6 +28,8 @@ export function mountAccessoryResearch(form,readState,accept) {
     panel.innerHTML=`<summary>Find matching roof accessory · optional</summary><h3>Find a candidate—not a guess.</h3><p class="field-help">For box vents, pipe boots, caps and other roof accessories. Read the photo, check its description, then search manufacturer sources. Appearance alone cannot confirm a model or replacement suitability. Your photo goes to your configured photo AI; only the description, markings and measurements below go into web research.</p><button type="button" class="field-button" id="accessoryRead">Read accessory photo</button><div id="accessoryFeatures" hidden><label>Visible features / material uncertainty<textarea id="accessoryDescription" maxlength="1500" rows="3"></textarea></label><label>Readable brand / model markings<input id="accessoryMarkings" maxlength="1500"></label><label>Measured dimensions (include units; optional)<input id="accessoryMeasurements" maxlength="300" placeholder="e.g. Cap width 14 inches; height not measured"></label><p id="accessoryLimitations" class="field-help"></p><button type="button" class="field-button" id="accessorySearch">Find matching roof accessory</button></div><p id="accessoryStatus" role="status"></p><button type="button" class="field-button" id="accessoryCancel" hidden>Cancel search</button><div id="accessoryResults"></div>`;
     form.querySelector('.field-extraction-heading').before(panel);
     const $=id=>panel.querySelector('#'+id);
+    const openVisualSearch=mountVisualSearch(panel,readState);
+    $('accessorySearch').textContent='Search descriptions & manufacturer sources';
     let controller,generation=0,reading=null,searched=null;
     const stamp=()=>{const n=readState(),r=InspectionStore.get();return JSON.stringify([r.id,n.id,n.photoId,r.photos[n.photoId]?.revision]);};
     let selected=stamp();
@@ -73,10 +76,10 @@ export function mountAccessoryResearch(form,readState,accept) {
     form.addEventListener('inspection-note-prepared',visible);
     form.addEventListener('reset',()=>{clear();panel.open=false;queueMicrotask(()=>{selected=stamp();visible();});});
     visible();
-    window.InspectionField.openAccessoryResearch=()=>{
+    window.InspectionField.openAccessoryResearch=({visual=false}={})=>{
         clear();panel.hidden=false;panel.open=true;
         panel.scrollIntoView({behavior:'smooth',block:'start'});
-        $('accessoryRead').click();
+        if(visual)openVisualSearch();else $('accessoryRead').click();
     };
     window.dispatchEvent(new Event('accessory-research-ready'));
 }

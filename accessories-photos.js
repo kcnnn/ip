@@ -111,6 +111,7 @@ function updateChecklist() {
                 <div class="checklist-text">${photo.type.name} Photo</div>
                 <div class="checklist-type">${photo.type.description}</div>
                 ${photo.photoData ? `<button type="button" class="action-btn secondary accessory-search-action" onclick="identifyAccessory(${index})">Identify &amp; search</button>` : ''}
+                ${photo.photoData ? `<button type="button" class="action-btn secondary accessory-search-action" onclick="identifyAccessory(${index}, true)">Search internet by photo</button>` : ''}
             </div>
             <div class="checklist-actions">
                 <button class="action-icon" onclick="editAccessory(${index})" title="Edit">
@@ -140,7 +141,7 @@ function selectAccessoryType(type) {
     photoInstructions.textContent = `Take a clear photo of the ${typeInfo.name.toLowerCase()}. ${typeInfo.description}.`;
 }
 
-async function identifyAccessory(index = currentAccessoryIndex) {
+async function identifyAccessory(index = currentAccessoryIndex, visual = false) {
     const photo=capturedPhotos[index];
     if(!photo?.photoData){alert('Take or upload a photo of this accessory first.');return;}
     const recordId=InspectionStore.get().id;
@@ -158,13 +159,14 @@ async function identifyAccessory(index = currentAccessoryIndex) {
         if(recordId!==InspectionStore.get().id)throw new Error('The inspection changed. Reopen the accessory before searching.');
         const saved=Object.values(InspectionStore.get().observations).find(n=>n.photoId===photoId);
         InspectionField.editNote(saved || (draft?.photoId===photoId?draft:{section:'Accessories',photoId,component:photo.type?.name || '',details:`${photo.type?.name || 'Roof accessory'} reference photo.`}));
-        InspectionField.openAccessoryResearch();
+        InspectionField.openAccessoryResearch({visual});
     }catch(error){alert(error.message || 'Accessory search could not open. Your photo is kept.');}
 }
 
 function appendAccessorySearchButton(container) {
     const button=document.createElement('button');button.type='button';button.className='action-btn secondary accessory-search-action';button.textContent='Identify & search this accessory';
     const index=currentAccessoryIndex;button.onclick=()=>identifyAccessory(index);container.append(button);
+    const visual=document.createElement('button');visual.type='button';visual.className='action-btn secondary accessory-search-action';visual.textContent='Search internet by photo';visual.onclick=()=>identifyAccessory(index,true);container.append(visual);
 }
 
 function addNewAccessory() {
