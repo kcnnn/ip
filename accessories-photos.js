@@ -325,10 +325,7 @@ async function analyzePhotoWithAI() {
     } catch (error) {
         console.error('AI Analysis Error:', error);
         
-        // Fallback to simulated analysis if API fails
-        const fallbackResults = simulateAccessoryAnalysis();
-        fallbackResults.apiError = error.message;
-        displayAIResults(fallbackResults);
+        displayAnalysisUnavailable(error.message);
     }
 }
 
@@ -437,11 +434,12 @@ Please respond in JSON format with the following structure:
 
         // Parse the JSON response
         try {
-            const analysis = JSON.parse(analysisText);
+            if(data.stop_reason && data.stop_reason !== 'end_turn') throw new Error('Incomplete response');
+            const analysis = JSON.parse(analysisText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
+            if(!analysis || !['good','poor','needs_improvement'].includes(analysis.overallQuality) || !Number.isFinite(analysis.confidence) || analysis.confidence<0 || analysis.confidence>100 || typeof analysis.shouldRetake!=='boolean' || !Array.isArray(analysis.issues) || analysis.issues.some(i=>!i || typeof i.type!=='string' || typeof i.message!=='string') || !Array.isArray(analysis.recommendations) || analysis.recommendations.some(r=>typeof r!=='string')) throw new Error('Invalid response');
             return analysis;
         } catch (parseError) {
-            // If JSON parsing fails, try to extract information from text
-            return parseTextResponse(analysisText);
+            throw new Error('AI returned an incomplete or invalid assessment. Retry; no assessment was recorded.');
         }
 
     } catch (error) {
@@ -450,90 +448,31 @@ Please respond in JSON format with the following structure:
     }
 }
 
-// Fallback function to parse text response if JSON parsing fails
-function parseTextResponse(text) {
-    const analysis = {
-        overallQuality: 'needs_improvement',
-        confidence: 70,
-        accessoryCondition: 'fair',
-        damageDetected: false,
-        damageTypes: [],
-        installationQuality: 'fair',
-        issues: [],
-        recommendations: [],
-        shouldRetake: false
-    };
-
-    // Simple text parsing to extract key information
-    const lowerText = text.toLowerCase();
-    
-    if (lowerText.includes('good') || lowerText.includes('excellent') || lowerText.includes('clear')) {
-        analysis.overallQuality = 'good';
-        analysis.confidence = 85;
-    } else if (lowerText.includes('poor') || lowerText.includes('bad') || lowerText.includes('unclear')) {
-        analysis.overallQuality = 'poor';
-        analysis.confidence = 60;
-    }
-
-    if (lowerText.includes('damage') || lowerText.includes('crack') || lowerText.includes('corrosion')) {
-        analysis.damageDetected = true;
-        analysis.accessoryCondition = 'damaged';
-    } else if (lowerText.includes('excellent condition') || lowerText.includes('good condition')) {
-        analysis.accessoryCondition = 'excellent';
-    }
-
-    if (lowerText.includes('blur') || lowerText.includes('unclear')) {
-        analysis.issues.push({
-            type: 'clarity',
-            message: 'Photo appears blurry or unclear',
-            severity: 'high'
-        });
-        analysis.shouldRetake = true;
-    }
-
-    if (lowerText.includes('retake') || lowerText.includes('take again')) {
-        analysis.shouldRetake = true;
-    }
-
-    return analysis;
-}
-
-function simulateAccessoryAnalysis() {
-    const issues = [];
-    const recommendations = [];
-    
-    // Simulate accessory analysis
-    const damageDetected = Math.random() > 0.7;
-    const accessoryCondition = damageDetected ? 
-        (Math.random() > 0.5 ? 'fair' : 'poor') : 
-        (Math.random() > 0.3 ? 'good' : 'excellent');
-    
-    if (damageDetected) {
-        issues.push({
-            type: 'damage',
-            message: 'Visible damage detected on accessory',
-            severity: 'high'
-        });
-    }
-    
-    if (Math.random() > 0.6) {
-        recommendations.push('Ensure photo captures the entire accessory for complete assessment');
-    }
-    
-    return {
-        overallQuality: Math.random() > 0.3 ? 'good' : 'needs_improvement',
-        confidence: Math.floor(Math.random() * 30) + 70,
-        accessoryCondition: accessoryCondition,
-        damageDetected: damageDetected,
-        damageTypes: damageDetected ? ['weather_damage', 'cracks'] : [],
-        installationQuality: Math.random() > 0.4 ? 'good' : 'fair',
-        issues: issues,
-        recommendations: recommendations,
-        shouldRetake: Math.random() > 0.8
-    };
+function displayAnalysisUnavailable(message = 'AI analysis is unavailable.') {
+    aiAnalysis.style.display = 'block';
+    aiLoading.style.display = 'none';
+    aiResults.style.display = 'block';
+    const photo = capturedPhotos[currentAccessoryIndex];
+    if (photo) { photo.analysis = null; photo.analysisStatus = 'not_analyzed'; }
+    aiResults.replaceChildren();
+    const container = document.createElement('div');
+    container.className = 'ai-analysis-content';
+    const heading = document.createElement('h4'); heading.textContent = 'Photo saved · Not analyzed';
+    const detail = document.createElement('p');
+    const key = typeof getAPIKey === 'function' ? getAPIKey() : '';
+    detail.textContent = String(message).split(key || '\u0000').join('[redacted]').replace(/sk-[A-Za-z0-9_-]+/g, '[redacted]').slice(0, 500);
+    const explanation = document.createElement('p');
+    explanation.textContent = 'No AI photo-quality, damage, or confidence assessment was recorded. Your photo is kept. A connection or API error does not mean the photo is bad.';
+    const actions = document.createElement('div'); actions.className = 'ai-actions';
+    const settings = document.createElement('a'); settings.href = 'api-setup.html'; settings.className = 'action-btn secondary'; settings.textContent = 'Fix Claude API settings';
+    const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'action-btn secondary'; retry.textContent = 'Retry analysis'; retry.onclick = () => { aiLoading.style.display = 'block'; aiResults.style.display = 'none'; analyzePhotoWithAI(); };
+    const proceed = document.createElement('button'); proceed.type = 'button'; proceed.className = 'action-btn primary'; proceed.textContent = 'Continue without AI analysis'; proceed.onclick = proceedToNextAccessory;
+    actions.append(settings, retry, proceed); container.append(heading, detail, explanation, actions); aiResults.append(container);
+    const badge = photoStatus.querySelector('.status-badge'); badge.textContent = 'Not analyzed'; badge.className = 'status-badge';
 }
 
 function displayAIResults(results) {
+    if(results.apiError) {displayAnalysisUnavailable(results.apiError);return;}
     aiLoading.style.display = 'none';
     aiResults.style.display = 'block';
     
@@ -542,14 +481,6 @@ function displayAIResults(results) {
     
     let html = '<div class="ai-analysis-content">';
     
-    // Show API error if present
-    if (results.apiError) {
-        html += `<div class="api-error">
-            <h4>⚠️ API Error</h4>
-            <p>${results.apiError}</p>
-            <p><small>Using fallback analysis instead.</small></p>
-        </div>`;
-    }
     
     // Overall quality
     const qualityClass = results.overallQuality === 'good' ? 'quality-good' : 'quality-warning';
@@ -757,9 +688,7 @@ function proceedWithoutAPI() {
         prompt.remove();
     }
     
-    // Continue with fallback analysis
-    const fallbackResults = simulateAccessoryAnalysis();
-    displayAIResults(fallbackResults);
+    displayAnalysisUnavailable('AI analysis was skipped. Configure a Claude/Anthropic key to analyze this photo later.');
 }
 
 // Add CSS for AI analysis results
