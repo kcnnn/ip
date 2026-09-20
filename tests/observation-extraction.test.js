@@ -3,6 +3,19 @@ const assert = require('node:assert/strict');
 const extraction = require('../observation-extraction.js');
 const components = { Elevations: ['Window screen', 'Window', 'Door'], 'Roof edge': ['Gutter'], 'Roof overview': ['Shingles'] };
 const field = (value, evidence) => ({ value, evidence });
+test('manual lift for a passed brittle test is not wind damage',()=>{
+    const text='Rear slope. I manually lifted the shingle. Passed the brittle test with no damage.';
+    const result={multipleObservations:false,fields:{condition:field('Observed damage','lifted the shingle'),damageTypes:field(['Wind / lifted shingle'],'lifted the shingle'),severity:field('Moderate','lifted the shingle')}};
+    const output=extraction.validate(result,text,components,'Roof overview');
+    assert.equal(output.condition,'No visible damage');assert.equal(output.damageTypes,undefined);assert.equal(output.severity,undefined);
+    for(const text of ['Did not pass the brittle test. Cracking occurred.','Brittle test passed but pre-existing wind damage is present.','Brittle test not performed.','Might have passed the brittle test.']) {
+        const out=extraction.validate({multipleObservations:false,fields:{}},text,components,'Roof overview');
+        assert.notEqual(out.condition,'No visible damage',text);
+    }
+    const damaged='Brittle test passed but pre-existing wind damage is present.';
+    const out=extraction.validate({multipleObservations:false,fields:{condition:field('Observed damage','wind damage'),damageTypes:field(['Wind / lifted shingle'],'wind damage')}},damaged,components,'Roof overview');
+    assert.equal(out.condition,'Observed damage');assert.deepEqual(out.damageTypes,['Wind / lifted shingle']);
+});
 test('multiple observations retain all transcript passages and isolate evidence',()=>{
     const transcript='Front window screen is worn. Rear door has mechanical damage, not hail.';
     const result={observations:[

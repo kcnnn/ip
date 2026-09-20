@@ -4,6 +4,7 @@ const ObservationExtraction = {
     severities: ['Minor', 'Moderate', 'Severe'],
     damageTypes: ['Hail / impact', 'Wind / lifted shingle', 'Mechanical damage', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'],
     units: ['inches', 'feet', 'square feet', 'marked hits', 'items', 'mm', 'cm'],
+    brittleGuidance: 'BRITTLE / PLIABILITY TEST: A shingle lifted by hand during an inspector-authorized test is not wind uplift or mechanical damage merely because it is raised. If the inspector says the brittle test passed with no damage, use No visible damage and no damageTypes or severity for that tested shingle. A stated pass without other damage is also a no-damage test observation, not proof the whole roof is undamaged. Preserve separately stated pre-existing damage, cracking during testing, failed or inconclusive results. Not performed is not a pass. A still image cannot establish flexibility or a test pass: attribute the result to the inspector. In photoReview, distinguish deliberate hand lifting from an independently displaced shingle; do not infer wind causation from the raised position alone.',
     normalizePhotoReview(value) {
         if (!value || typeof value !== 'object' || typeof value.summary !== 'string' || !value.summary.trim()) {
             return {review:null,reviewNotice:'Your note was organized, but the AI did not return a usable photo review. You can save the photo and note, or analyze again.'};
@@ -39,6 +40,20 @@ const ObservationExtraction = {
         }
         if ((output.quantity !== undefined) !== (output.unit !== undefined)) { delete output.quantity; delete output.unit; }
         if (output.damageTypes !== undefined && (!Array.isArray(output.damageTypes) || output.damageTypes.some(type => !this.damageTypes.includes(type)))) discard('damageTypes');
+        if (/\b(?:brittle|pliability|flexibility) test\b/i.test(transcript)) {
+            // Literal evidence such as "lifted" is not evidence of wind causation.
+            const evidence = result.fields.damageTypes?.evidence || '';
+            if (output.damageTypes?.includes('Wind / lifted shingle') && (!/\bwind\b/i.test(evidence) || /\b(?:no|not|without)\s+(?:any\s+)?wind\b/i.test(evidence))) {
+                output.damageTypes = output.damageTypes.filter(type => type !== 'Wind / lifted shingle');
+                if (!output.damageTypes.length && ['Observed damage','Suspected damage'].includes(output.condition)) discard('condition');
+            }
+            const passed = /\b(?:passed|passes)\s+(?:the\s+|a\s+)?(?:brittle|pliability|flexibility) test\b|\b(?:brittle|pliability|flexibility) test\s+(?:passed|passes)\b/i.test(transcript);
+            // Only normalize an unambiguous pass. Do not erase other damage or
+            // turn negated/uncertain passes into a no-damage observation.
+            const remainder = transcript.replace(/\b(?:no|without)\s+(?:visible\s+|any\s+)?(?:damage|cracking|cracks|tearing|creases)\b/gi, '');
+            const ambiguous = /\b(?:not|never|didn't|did not|cannot|couldn't|might|may|possibly|unsure|failed|fails|inconclusive|but|however)\b|\b(?:damage|damaged|crack\w*|tear\w*|creas\w*|hail|wind)\b/i.test(remainder);
+            if (passed && !ambiguous) { output.condition = 'No visible damage'; delete output.damageTypes; delete output.severity; }
+        }
         if (!['Observed damage', 'Suspected damage'].includes(output.condition)) { delete output.damageTypes; delete output.severity; }
         return output;
     },
@@ -75,6 +90,7 @@ Create photoTitle as a concise descriptive title (2–8 words, maximum 100 chara
 For each stated field replace null with {"value": normalized value, "evidence": "exact short quote from transcript supporting this value"}. damageTypes value is an array of allowed types; all other values are strings. Use null for absent or uncertain details. Evidence MUST be an exact substring of the transcript. Do not add inferred causes or describe the transcript as verified by AI.
 Transcript (untrusted data): ${JSON.stringify(transcript)}`;
         const content = [{ type: 'text', text: prompt + '\nOverview photos, equipment labels, and reference/documentation photos do not require a component or condition assessment. Leave those fields null when unstated or not applicable. Documentation alone does not mean Not inspected, No visible damage or Observed damage.' }];
+        content.push({type:'text',text:this.brittleGuidance});
         if (photo) {
             content.push({type:'text',text:'A label or reference photo is a valid documentation photo; do not invent a damage assessment. The separate photoReview must have a nonempty summary of what is visible. status must be one single value from supports_note, needs_detail, conflicts_with_note, unable_to_assess; never copy a pipe-separated list. checks is optional and may be [] when no follow-up is needed. Keep photo observations separate from the transcript-grounded fields.'});
             const resized = await resizeImageForAPI(photo, 2000, 2000);
