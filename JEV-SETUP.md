@@ -14,6 +14,8 @@ Verification: `tests/equipment-research.browser.cjs` covers synthetic label extr
 
 Official web-search API: https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool
 
+Research now continues `pause_turn` responses with preserved assistant/tool state. A `max_tokens` response retries the current request once with a larger budget (8,000 → 16,000); truncated output is not accepted. Maximum four API requests per click, four searches per request, and a three-minute overall timeout. Continuations/retries may incur additional provider charges. Progress messages distinguish continuation from failure. Tests: `tests/research-continuation.browser.cjs`.
+
 ## Optional Jev decision support
 
 The optional **Advanced · Jev next-step suggestion** panel first reads any selected photo with the configured photo AI, including readable manufacturer, model and serial fields. It shows that reading separately for checking against the photo, then sends the written reading, note, component and section to a server-side TypeSafe Choice request. The photo is sent to the photo AI, not TypeSafe. This advanced panel does not change findings or retrieve documentation; use the equipment workflow above for that. A valid photo-analysis API key is needed in addition to the Jev configuration below.
