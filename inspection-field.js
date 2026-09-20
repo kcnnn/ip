@@ -96,6 +96,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        import('./inspection-backup.js').then(({mountBackupControls})=>mountBackupControls()).catch(()=>{});
         const workspace = document.getElementById('fieldWorkspace');
         if (!workspace) {
             const tools = document.createElement('aside');

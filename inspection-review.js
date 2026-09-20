@@ -31,8 +31,37 @@ function renderInspectionReview() {
             ${section === 'Interview' && record.notes.insuredInterview?.damageNotes ? `<article class="review-note"><h3>Insured discussion</h3><p>${escape(record.notes.insuredInterview.damageNotes)}</p></article>` : ''}
             ${!sectionPhotos.length && !sectionNotes.length && !sectionAbsences.length ? '<p class="muted">Nothing recorded in this section yet.</p>' : ''}</section>`;
     }).join('');
+    groupReviewCards(record);
     const deleted=Object.entries(record.deletedItems || {});
     if(deleted.length) document.getElementById('reviewContent').insertAdjacentHTML('beforeend',`<details class="review-trash review-manage"><summary>Deleted items (${deleted.length}) · Undo deletions</summary><p>Removed from this report. Originals are retained on this device so you can restore them.</p>${deleted.map(([token,entry])=>`<div><p>${escape(entry.kind==='photos'?entry.item.label:entry.item.details || entry.item.location || 'Observation')}</p><button type="button" class="review-delete" data-restore-item="${escape(token)}">Restore ${entry.kind==='photos'?'photo':'observation'}</button></div>`).join('')}</details>`);
+}
+
+function groupReviewCards(record) {
+    const root=document.getElementById('reviewContent'), photoCards=new Map(), noteCards=new Map();
+    root.querySelectorAll('[data-delete-kind="photos"]').forEach(button=>photoCards.set(button.dataset.deleteId,button.closest('.review-photo')));
+    root.querySelectorAll('[data-delete-kind="observations"]').forEach(button=>noteCards.set(button.dataset.deleteId,button.closest('.review-note')));
+    // Match the rendered section lists before moving them, so each separate
+    // AI/research record stays attached to its own observation, not just a title.
+    [...root.querySelectorAll('.review-section')].forEach((section,index)=>{
+        const name=InspectionField.sections[index][0];
+        const notes=Object.values(record.observations).filter(n=>n.section===name);
+        const equipment=[...section.querySelectorAll('.review-note')].filter(el=>el.querySelector('.eyebrow')?.textContent.startsWith('ACCEPTED EQUIPMENT RESEARCH'));
+        const reviews=[...section.querySelectorAll('.review-note')].filter(el=>el.querySelector('.eyebrow')?.textContent.startsWith('AI PHOTO REVIEW'));
+        notes.filter(n=>n.equipmentResearch).forEach((note,i)=>{if(equipment[i])noteCards.get(note.id)?.append(equipment[i]);});
+        notes.filter(n=>n.aiReview).forEach((note,i)=>{if(reviews[i])noteCards.get(note.id)?.append(reviews[i]);});
+    });
+    for(const note of Object.values(record.observations)) {
+        const card=noteCards.get(note.id);if(!card)continue;
+        const edit=document.createElement('button');edit.type='button';edit.className='review-delete review-manage';edit.dataset.editReviewNote=note.id;edit.textContent='Edit note';
+        card.querySelector('[data-delete-kind="observations"]').before(edit);
+        const photoCard=photoCards.get(note.photoId);
+        if(photoCard){photoCard.append(card);photoCard.classList.add('review-unified');}
+    }
+    for(const [id,card] of photoCards) {
+        if(!Object.values(record.observations).some(note=>note.photoId===id)) {
+            const add=document.createElement('button');add.type='button';add.className='review-delete review-manage';add.dataset.addReviewPhotoNote=id;add.textContent='Add note';card.append(add);
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -43,6 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dialog = document.getElementById('reviewPhotoDialog');
     document.getElementById('reviewPhotoClose').onclick = () => dialog.close();
     document.getElementById('reviewContent').addEventListener('click', async event => {
+        const edit=event.target.closest('[data-edit-review-note]'), add=event.target.closest('[data-add-review-photo-note]');
+        if(edit || add) {
+            const record=InspectionStore.get();
+            if(edit) {const note=record.observations[edit.dataset.editReviewNote];if(note)InspectionField.editNote(note);}
+            else {const id=add.dataset.addReviewPhotoNote,photo=record.photos[id];if(photo)InspectionField.editNote({section:photo.section,photoId:id,elevationKey:photo.elevationKey,location:photo.elevationKey?`${photo.elevationKey} elevation`:''});}
+            return;
+        }
         const remove=event.target.closest('[data-delete-id]'), restore=event.target.closest('[data-restore-item]');
         if(remove || restore) {
             try {

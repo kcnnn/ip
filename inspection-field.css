@@ -136,6 +136,9 @@
 #fieldPhotoPreview { display: block; width: 100%; max-height: 420px; object-fit: contain; background: #eee; border-radius: 16px; margin-top: 18px; }
 #fieldPhotoPreview[hidden], #fieldPhotoReview[hidden] { display: none; }
 #fieldEquipmentResearch[hidden] { display:none; }
+.field-backup-controls { margin:20px 0; padding:16px; border:1px solid #dcdfe1; border-radius:12px; background:white; font:14px/1.6 Arial,sans-serif; }
+.field-backup-controls summary { cursor:pointer; font-weight:700; }.field-backup-controls button { min-height:44px; padding:10px 14px; margin:6px 4px 6px 0; background:white; border:1px solid #bbc0c5; border-radius:8px; font-weight:600; cursor:pointer; }
+.field-backup-controls [hidden] { display:none; } @media print { .field-backup-controls { display:none; } }
 #fieldPhotoReview { border-left: 4px solid #65786b; margin-bottom: 24px; }
 #fieldPhotoReview li { margin-bottom: 8px; }
 .field-photo-first input[hidden] { display: none; }

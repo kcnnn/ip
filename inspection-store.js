@@ -83,6 +83,29 @@ window.InspectionStore = {
         writeInspectionRecord({ startedAt: new Date().toISOString(), photos: {}, absences: {}, notes: {} });
     },
     get: readInspectionRecord,
+    readStoredAsset: key => originalTransaction(key),
+    async activateRestoredRecord(record, assets, expected) {
+        if (pendingInspectionSaves.size || JSON.stringify(readInspectionRecord()) !== expected) throw new Error('The inspection changed during restore. Try again after saving finishes.');
+        const previous=readInspectionRecord(), recoveryKey=`recovery:${inspectionId()}`;
+        const db=await inspectionOriginals();
+        await new Promise((resolve,reject)=>{
+            const tx=db.transaction('photos','readwrite'), store=tx.objectStore('photos');
+            store.put(JSON.stringify(previous),recoveryKey);
+            for(const [key,value] of assets) store.put(value,key);
+            tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error || new Error('Restore storage failed.'));
+        });
+        if (pendingInspectionSaves.size || JSON.stringify(readInspectionRecord()) !== expected) throw new Error('The inspection changed during restore. Your current inspection was kept.');
+        record.restoreRecoveryKey=recoveryKey;
+        writeInspectionRecord(record);
+        window.dispatchEvent(new Event('inspection-restored'));
+    },
+    async undoRestore() {
+        const current=readInspectionRecord();
+        if(!current.restoreRecoveryKey) throw new Error('No previous inspection is available.');
+        const previous=JSON.parse(await originalTransaction(current.restoreRecoveryKey));
+        if(!previous?.id) throw new Error('Previous inspection could not be read.');
+        await this.activateRestoredRecord(previous,[],JSON.stringify(current));
+    },
     recordPhoto(section, label, dataUrl, details = {}) {
         const record = readInspectionRecord();
         const id = details.id || `${section}:${label}`;
