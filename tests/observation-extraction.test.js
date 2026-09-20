@@ -62,3 +62,12 @@ test('ambiguous numbers or unpaired units are not made into measurements', () =>
     assert.throws(() => extraction.validate({multipleObservations:false,fields:{quantity:field('10+','10+')}}, '10+ hits', components, 'Elevations'));
     assert.deepEqual(extraction.validate({multipleObservations:false,fields:{quantity:field('5','five')}}, 'five', components, 'Elevations'), {});
 });
+test('accepts explicitly dictated mechanical damage and exposes matching UI selection', () => {
+    const result = extraction.validate({multipleObservations:false,fields:{
+        condition:field('Observed damage','mechanical damage'),
+        damageTypes:field(['Mechanical damage'],'mechanical damage')
+    }}, 'Door has mechanical damage, not hail.', components, 'Elevations');
+    assert.deepEqual(result.damageTypes,['Mechanical damage']);
+    const ui=fs.readFileSync(require.resolve('../inspection-field.js'),'utf8');
+    assert.match(ui, /'Mechanical damage'/);
+});

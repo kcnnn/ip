@@ -2,7 +2,7 @@
 const ObservationExtraction = {
     conditions: ['Not inspected', 'Observed damage', 'Suspected damage', 'No visible damage', 'Not present', 'Measurement recorded'],
     severities: ['Minor', 'Moderate', 'Severe'],
-    damageTypes: ['Hail / impact', 'Wind / lifted shingle', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'],
+    damageTypes: ['Hail / impact', 'Wind / lifted shingle', 'Mechanical damage', 'Missing material', 'Cracking', 'Dent / deformation', 'Granule loss', 'Wear / deterioration', 'Leak / staining', 'Other'],
     units: ['inches', 'feet', 'square feet', 'marked hits', 'items', 'mm', 'cm'],
     validate(result, transcript, components, contextSection) {
         if (!result || typeof result !== 'object' || !result.fields || typeof result.multipleObservations !== 'boolean') throw new Error('The field response was incomplete. Your note is unchanged.');
@@ -36,6 +36,7 @@ Current section context: ${contextSection}
 Conditions: ${JSON.stringify(this.conditions)}
 Severities: ${JSON.stringify(this.severities)}
 Damage types: ${JSON.stringify(this.damageTypes)}
+Use Mechanical damage when the inspector explicitly describes mechanical damage. A dent alone does not establish a mechanical cause. "Mechanical damage, not hail" must not select Hail / impact.
 Units: ${JSON.stringify(this.units)}
 Return JSON only: {"multipleObservations":false,"fields":{"section":null,"location":null,"component":null,"condition":null,"severity":null,"quantity":null,"unit":null,"damageTypes":null}}.
 For each stated field replace null with {"value": normalized value, "evidence": "exact short quote from transcript supporting this value"}. damageTypes value is an array of allowed types; all other values are strings. Use null for absent or uncertain details. Evidence MUST be an exact substring of the transcript. Do not add inferred causes or describe the transcript as verified by AI.
