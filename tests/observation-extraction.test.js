@@ -3,6 +3,20 @@ const assert = require('node:assert/strict');
 const extraction = require('../observation-extraction.js');
 const components = { Elevations: ['Window screen', 'Window', 'Door'], 'Roof edge': ['Gutter'], 'Roof overview': ['Shingles'] };
 const field = (value, evidence) => ({ value, evidence });
+test('multiple observations retain all transcript passages and isolate evidence',()=>{
+    const transcript='Front window screen is worn. Rear door has mechanical damage, not hail.';
+    const result={observations:[
+        {quotes:['Front window screen is worn.'],fields:{location:field('Front','Front'),component:field('Window screen','window screen'),condition:field('Observed damage','is worn'),quantity:field('2','Rear door')}},
+        {quotes:['Rear door has mechanical damage, not hail.'],fields:{location:field('Rear','Rear'),component:field('Door','door'),condition:field('Observed damage','has mechanical damage'),damageTypes:field(['Mechanical damage'],'mechanical damage, not hail')}}
+    ]};
+    const notes=extraction.validateMany(result,transcript,components,'Elevations');
+    assert.equal(notes.length,2);assert.equal(notes[0].quantity,undefined);
+    assert.deepEqual(notes[1].damageTypes,['Mechanical damage']);
+    assert.equal(notes[0].details,'Front window screen is worn.');
+    assert.throws(()=>extraction.validateMany({observations:[result.observations[0]]},transcript,components,'Elevations'),/left part/);
+    assert.throws(()=>extraction.validateMany({observations:[{quotes:['Invented text'],fields:{}}]},transcript,components,'Elevations'),/traced/);
+    assert.throws(()=>extraction.validateMany({observations:[]},transcript,components,'Elevations'),/incomplete/);
+});
 const vm = require('node:vm');
 const fs = require('node:fs');
 function requestHarness(response) {

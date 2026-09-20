@@ -49,6 +49,13 @@
 .field-form fieldset:disabled { opacity:.5; }
 .field-voice,.field-actions { justify-content:flex-start; font-size:13px; }
 .field-preview { border-left:3px solid #dc171d; padding:16px 20px; background:#f7f7f6; }
+.multi-observation-queue { border:1px solid #ddd; border-radius:12px; padding:20px; margin:24px 0; }
+.multi-observation-queue .field-button { white-space:normal; text-align:left; overflow-wrap:anywhere; }
+.multi-observation-queue [aria-current=step] { border-color:#cf1720; background:#fff1f1; }
+.multi-observation-queue details { margin:18px 0; overflow-wrap:anywhere; }
+#fieldMultiMode { width:18px; height:18px; accent-color:#cf1720; vertical-align:middle; margin-right:8px; }
+.field-form .field-multi-toggle { display:flex; align-items:center; gap:8px; min-height:44px; }
+.field-multi-toggle input { flex-shrink:0; }
 .field-preview p { line-height:1.7; font-size:14px; margin:8px 0 0; white-space:pre-wrap; }
 .field-saved-note { display:flex; gap:20px; align-items:flex-start; justify-content:space-between; padding:24px; background:white; border:1px solid #dcdfe1; border-radius:10px; margin-bottom:12px; }
 .field-saved-note p { font-size:14px; line-height:1.65; white-space:pre-wrap; overflow-wrap:anywhere; }

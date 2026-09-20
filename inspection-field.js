@@ -7,6 +7,7 @@
         ['Roof overview', 'roof-overview.html', ['Front Overview', 'Right Overview', 'Rear Overview', 'Left Overview']],
         ['Accessories', 'roof-accessories.html', []],
         ['Hail documentation', 'hail-test-square.html', ['Test Square Full View', 'Hail Hit Closeup 1', 'Hail Hit Closeup 2', 'Hail Hit Closeup 3']],
+        ['Miscellaneous', 'miscellaneous.html', []],
         ['Interview', 'insured-interview.html', []]
     ];
     const componentsBySection = {
@@ -16,7 +17,8 @@
         'Roof overview': ['Shingles', 'Roof covering', 'Ridge', 'Valley', 'Flashing', 'Vent', 'Chimney', 'Other'],
         'Accessories': ['Vent', 'Pipe boot', 'Rain cap', 'Rain diverter', 'Satellite dish', 'Chimney', 'Skylight', 'Flashing', 'Other'],
         'Hail documentation': ['Shingles', 'Roof covering', 'Ridge shingles / caps', 'Metal roof panel', 'Flashing', 'Vent', 'Other'],
-        'Interview': ['General property', 'Roof', 'Exterior wall', 'Gutter', 'Downspout', 'Window', 'Door', 'Interior', 'Other']
+        'Interview': ['General property', 'Roof', 'Exterior wall', 'Gutter', 'Downspout', 'Window', 'Door', 'Interior', 'Other'],
+        'Miscellaneous': ['General property', 'Equipment', 'Personal property', 'Interior', 'Other']
     };
     const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const options = values => values.map(value => `<option>${escape(value)}</option>`).join('');
@@ -44,7 +46,7 @@
         const hasInterview = section === 'Interview' && !!record.notes?.insuredInterview;
         return hasPhoto || hasNote || hasAbsence || hasInterview ? 'In progress' : 'Not started';
     };
-    window.InspectionField = { sections, escape, narrative, currentSection, sectionProgress };
+    window.InspectionField = { sections, escape, narrative, currentSection, sectionProgress, componentsBySection };
 
     function formMarkup() {
         return `<form id="fieldNoteForm" class="field-form">
@@ -69,6 +71,8 @@
                 <p class="field-help">For example: “Front elevation, window screen. Moderate wear and deterioration. Two screens affected.”</p>
                 <div class="field-voice"><button type="button" id="fieldDictate" class="field-button field-primary">Start dictation</button><span id="fieldVoiceStatus" role="status"></span></div>
                 <label>Your observation<textarea name="details" rows="4" maxlength="12000" placeholder="Dictate or type what you see. Your original words stay here."></textarea></label>
+                <label class="field-multi-toggle"><input type="checkbox" id="fieldMultiMode"> Split this dictation into multiple observations</label>
+                <p class="field-help">Cover several items naturally: “Front elevation, two worn window screens. Rear elevation, door has a mechanical dent, not hail.” Review each note separately. In split mode, photos are linked individually after organization; the selected photo is not analyzed.</p>
                 <div class="field-voice"><button type="button" id="fieldFill" class="field-button field-primary">Analyze &amp; prepare note</button><span id="fieldFillStatus" role="status"></span></div>
                 <p class="field-help" id="fieldVoiceHelp">Dictation uses your browser’s speech service. Analyze sends the selected photo and your note to your configured AI provider. Without a photo, only your words are organized. Review the result, then add it to your report.</p>
             </section>
@@ -168,6 +172,7 @@
             }
         };
         const update = (save = true) => {
+            field('location').required = field('section').value !== 'Miscellaneous';
             const hasDamage = ['Observed damage', 'Suspected damage'].includes(field('condition').value);
             document.getElementById('fieldDamageChoices').disabled = !hasDamage;
             field('severity').disabled = !hasDamage;
@@ -184,6 +189,12 @@
         };
         async function fillFromNote(automatic = false) {
             if (filling || listening || capturing) return;
+            if(document.getElementById('fieldMultiMode').checked) {
+                if(automatic) return;
+                if(window.InspectionField.splitDictation) await window.InspectionField.splitDictation();
+                else document.getElementById('fieldFillStatus').textContent='Multi-observation tools are loading. Try again in a moment.';
+                return;
+            }
             if (automatic && field('photoId').value) return;
             const status = document.getElementById('fieldFillStatus');
             const text = field('details').value.trim();
@@ -231,7 +242,7 @@
                 form.querySelectorAll('[name="damageType"]').forEach(input => { input.checked = (extracted.damageTypes || []).includes(input.value); });
                 manualFields = false;
                 update();
-                const missing = ['location'].filter(key => !field(key).value);
+                const missing = ['location'].filter(key => field(key).required && !field(key).value);
                 status.textContent = `Note prepared. Review it below, then add it to the report.${omissions}`;
                 document.getElementById('fieldMissingDetail').hidden = !missing.length;
                 document.getElementById('fieldEditDetails').open = false;
@@ -384,12 +395,14 @@
             try {
                 const id = InspectionStore.saveObservation(note); field('id').value = id;
                 document.getElementById('fieldSaveStatus').textContent = 'Added to report. Your photo, note and any AI review are linked.';
+                form.dispatchEvent(new CustomEvent('inspection-observation-saved',{detail:{...note,id}}));
             } catch { document.getElementById('fieldSaveStatus').textContent = 'Observation not saved'; }
         });
         document.getElementById('fieldNewNote').addEventListener('click', () => {
             if (!confirm('Clear this draft and start another note? Saved observations will stay in the record.')) return;
             loadNote(); update();
         });
+        import('./multi-observation.js').then(({mountMultiObservation})=>mountMultiObservation(form,readForm,()=>filling || listening || capturing)).catch(()=>{document.getElementById('fieldMultiMode').disabled=true;});
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
         const dictate = document.getElementById('fieldDictate');
         const voice = document.getElementById('fieldVoiceStatus');
