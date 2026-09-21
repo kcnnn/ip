@@ -8,13 +8,17 @@ window.HailSlopes={
     next(){const list=this.list(),index=list.findIndex(s=>s.id===this.active()?.id);if(index>=0&&index<list.length-1)this.go(list[index+1].id);else location.href='inspection-review.html';}
 };
 document.addEventListener('DOMContentLoaded',()=>{
-    const panel=document.createElement('section');panel.className='field-section-card';panel.id='hailSlopePanel';panel.style.marginBottom='24px';
+    // Existing unassigned photos remain their own square; never guess their slope.
+    if(!HailSlopes.list().length&&!HailSlopes.legacy())InspectionStore.note('hailSlopes',[{id:crypto.randomUUID(),name:'Slope 1'}]);
+    const panel=document.createElement('div');panel.id='hailSlopePanel';panel.style.marginBottom='24px';
     document.querySelector('.main-content').prepend(panel);
     const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const render=()=>{
-        const list=HailSlopes.list(),active=HailSlopes.active(),record=InspectionStore.get();
-        panel.innerHTML=`<h2>One test square per roof slope</h2><p>Start with 2 slopes for a simple gable or 4 for a simple hip. Rename each to its actual location; add slopes for dormers, additions or complex roofs.</p>${!list.length?'<div class="field-actions"><button class="field-button" data-layout="2">Gable · 2 slopes</button><button class="field-button" data-layout="4">Hip · 4 slopes</button></div>':''}<label>Current roof slope<select id="hailSlopeSelect"><option value="">Choose slope…</option>${list.map(s=>`<option value="${esc(s.id)}" ${s.id===active?.id?'selected':''}>${esc(s.name)}</option>`).join('')}${HailSlopes.legacy()?`<option value="legacy" ${active?.id==='legacy'?'selected':''}>Unassigned existing test square</option>`:''}</select></label><div class="field-actions"><button class="field-button" id="hailAddSlope">Add slope</button>${active&&active.id!=='legacy'?'<button class="field-button" id="hailRenameSlope">Rename slope</button>':''}</div><p>${active?'Current: '+esc(active.name):'Choose a roof layout or add a slope to begin.'}</p><ul>${list.map(s=>{const photos=Object.values(record.photos).filter(p=>p.hailSlopeId===s.id&&p.storageStatus!=='failed');return `<li>${esc(s.name)} — ${photos.some(p=>p.hailStep==='Test Square Full View')?'Full view captured':'Full view needed'} · ${photos.length} photos</li>`;}).join('')}</ul>${HailSlopes.legacy()?'<p>Older photos remain in the unassigned group; they have not been guessed onto a slope.</p>':''}`;
-        panel.querySelector('#hailSlopeSelect').onchange=e=>{if(e.target.value)HailSlopes.go(e.target.value);};
+        const list=HailSlopes.list(),active=HailSlopes.active();
+        const multiple=list.length+Number(HailSlopes.legacy())>1;
+        panel.innerHTML=`<div class="field-actions"><button class="field-button" id="hailAddSlope">Add slope</button></div>${multiple?`<label>Current slope<select id="hailSlopeSelect">${list.map(s=>`<option value="${esc(s.id)}" ${s.id===active?.id?'selected':''}>${esc(s.name)}</option>`).join('')}${HailSlopes.legacy()?`<option value="legacy" ${active?.id==='legacy'?'selected':''}>Unassigned existing test square</option>`:''}</select></label>${active&&active.id!=='legacy'?'<button class="field-button" id="hailRenameSlope">Rename slope</button>':''}`:''}`;
+        const select=panel.querySelector('#hailSlopeSelect');
+        if(select)select.onchange=e=>{if(e.target.value)HailSlopes.go(e.target.value);};
         if(active?.id==='legacy'&&list.length){const button=document.createElement('button');button.className='field-button';button.id='hailAssignLegacy';button.textContent='Assign existing photos to a slope';panel.append(button);}
     };
     const add=(names)=>{const list=HailSlopes.list(),added=names.map(name=>({id:crypto.randomUUID(),name}));InspectionStore.note('hailSlopes',[...list,...added]);HailSlopes.go(added[0].id);};
@@ -25,7 +29,11 @@ document.addEventListener('DOMContentLoaded',()=>{
             if(!slope){alert('No matching slope. Add or rename a slope first.');return;}
             try{InspectionStore.assignLegacyHailSlope(slope.id);HailSlopes.go(slope.id);}catch(error){alert(error.message);}return;
         }
-        const layout=event.target.closest('[data-layout]');if(layout){add(Array.from({length:Number(layout.dataset.layout)},(_,i)=>`Slope ${i+1}`));return;}
+        if(event.target.id==='hailAddSlope'){
+            let number=HailSlopes.list().length+1;
+            while(HailSlopes.list().some(s=>s.name.toLowerCase()===`slope ${number}`))number++;
+            add([`Slope ${number}`]);return;
+        }
         if(event.target.id==='hailAddSlope'||event.target.id==='hailRenameSlope'){
             const current=HailSlopes.active(),name=prompt('Name this roof slope (e.g. Front main roof, Rear addition):',event.target.id==='hailRenameSlope'?current.name:'');
             if(!name?.trim())return;const clean=name.trim().slice(0,100);

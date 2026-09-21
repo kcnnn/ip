@@ -319,7 +319,7 @@ async function analyzeHailDamageWithChatGPT(imageData, step) {
     let prompt = '';
     
     if (step === 'test-square') {
-        prompt = `Analyze this hail damage test square photo for roof inspection purposes. Please evaluate:
+        prompt = `Review visible features in this test square photo for roof inspection purposes. Please evaluate:
 
 1. Test Square Quality:
    - Are all four marked corners of the 10'x10' test square visible in the photo?
@@ -332,11 +332,11 @@ async function analyzeHailDamageWithChatGPT(imageData, step) {
    - Is the lighting adequate for hail damage inspection?
    - Is the roof surface clearly visible?
 
-3. Hail Damage Assessment:
-   - Are there visible hail hits within the test square?
+3. Visible Features (not a damage determination):
+   - Are there visible localized indentations or areas of granule loss within the test square?
    - Can you identify circular or oval indentations?
    - Are there signs of granule loss around impact points?
-   - Any bruising or soft spots visible?
+   - Describe visible surface changes only; softness or bruising cannot be established from a still photo.
 
 First read any legible inspector chalk annotations. Treat slope labels such as "B" (back slope), "F" (front slope), "L" (left), and "R" (right) as context labels — never as damage marks. Treat an annotation such as "H=10+" or "H 10+" as the inspector's documented lower-bound count, meaning "at least 10 hail hits," not an exact count and not a chalk circle. When that notation is clearly legible, preserve it verbatim in "inspectorHailNotation", set "countBasis" to "inspector_notation", and set "circledHailHitCount" to its numeric lower bound. Do not replace that documented lower bound with an invented exact total.
 
@@ -382,7 +382,7 @@ Please respond in JSON format with the following structure:
 Respond with ONLY the raw JSON object. Do not use a markdown code fence or include any explanatory text before or after the JSON.`;
     } else {
         // Closeup photo analysis
-        prompt = `Analyze this hail hit closeup photo for roof inspection purposes. Please evaluate:
+        prompt = `Review visible features in this close-up photo for roof inspection purposes. Please evaluate:
 
 1. Hail Hit Visibility:
    - Is a chalk-marked candidate hit visible?
@@ -394,13 +394,13 @@ Respond with ONLY the raw JSON object. Do not use a markdown code fence or inclu
    - Is the lighting adequate for damage assessment?
    - Is the hail hit properly framed?
 
-3. Hail Damage Assessment:
-   - Is this a genuine hail hit or other damage?
-   - What is the severity of the damage?
+3. Visible Features (not a damage determination):
+   - What visible features, if any, are potentially consistent with hail damage? Consider other possible explanations without determining cause.
+   - Describe the visible extent of surface changes, not damage severity or cause.
    - Are there signs of granule loss?
-   - Any bruising or soft spots visible?
+   - Describe visible surface changes only; softness or bruising cannot be established from a still photo.
 
-First inspect specifically for chalk. On gray shingles, white chalk can be faint, powdery, partial, or an incomplete arc—not necessarily a bright, fully closed circle. A clearly intentional partial white chalk loop or arc around a localized candidate impact counts as a visible marking. Do not confuse ordinary granule variation, seams, shadows, or texture with a chalk mark. Only report a visible or genuine hail hit when a distinct candidate impact is marked in chalk and the mark points to reviewable impact evidence. If no chalk mark or candidate hit is visible, set "chalkMarkingVisible", "hailHitVisible", and "hailHitGenuine" to false and "damageSeverity" to "none".
+First inspect specifically for chalk. On gray shingles, white chalk can be faint, powdery, partial, or an incomplete arc—not necessarily a bright, fully closed circle. A clearly intentional partial white chalk loop or arc around a localized candidate impact counts as a visible marking. Do not confuse ordinary granule variation, seams, shadows, or texture with a chalk mark. The legacy fields hailHitVisible and hailHitGenuine describe candidate features only, never confirmed hail damage. Only set them true when a distinct candidate impact is marked in chalk and the mark points to reviewable impact evidence. If no chalk mark or candidate hit is visible, set "chalkMarkingVisible", "hailHitVisible", and "hailHitGenuine" to false and "damageSeverity" to "none".
 
 4. Damage Characteristics:
    - Circular or oval indentation?
@@ -441,6 +441,7 @@ Please respond in JSON format with the following structure:
     }
 
     try {
+        prompt += '\nMANDATORY INTERPRETATION: This is visual documentation, not a diagnosis or final damage determination. Describe observable shape, texture, granule distribution and markings. Chalk circles and annotations are inspector markings, not proof of hail. Where visible evidence warrants it, say "potentially consistent with hail damage" or "potential hail damage"; never confirm hail causation or rule out damage from a photo. All free-text issues and recommendations must follow this rule. The inspector decides cause and damage. Legacy boolean field names hailDamageDetected and hailHitGenuine mean candidate features requiring inspector review, NOT confirmed causation. Confidence is photo/observation confidence, not certainty of hail causation. Do not assess softness, tactile bruising or hidden damage from a still image.';
         console.log('API_CONFIG.MODEL:', API_CONFIG.MODEL);
         console.log('API Key configured:', isAPIKeyConfigured());
         console.log('API Key length:', apiKey ? apiKey.length : 'No key');
@@ -686,7 +687,7 @@ function displayAIResults(results) {
     aiLoading.style.display = 'none';
     aiResults.style.display = 'block';
     
-    let html = '<div class="ai-analysis-content">';
+    let html = '<div class="ai-analysis-content"><p>AI visual observations only. Potential hail damage is not a confirmed finding. The inspector makes the final damage and cause determination.</p>';
     
     // Show API error if present
     if (results.apiError) {
@@ -724,7 +725,7 @@ function displayAIResults(results) {
         </div>`;
     } else if (results.analysisUnavailable && results.hailHitVisible !== undefined) {
         html += `<div class="test-square-analysis test-square-poor">
-            <h4>Closeup Damage Review</h4>
+            <h4>Close-up visual review</h4>
             <p>Unable to verify a marked hail hit from this upload.</p>
             <p>Retake the photo with the candidate hit circled in chalk.</p>
         </div>`;
@@ -735,23 +736,21 @@ function displayAIResults(results) {
             <p>Test Square Quality: ${results.testSquareQuality.charAt(0).toUpperCase() + results.testSquareQuality.slice(1)}</p>
             ${typeof results.fourCornersVisible === 'boolean' ? `<p>Four marked test-square corners visible: ${results.fourCornersVisible ? 'Yes' : 'No'}</p>` : ''}
             <p>Automated observation</p>
-            <p>Hail Damage Detected: ${results.hailDamageDetected ? 'Yes' : 'No'}</p>
+            <p>${results.hailDamageDetected ? 'Potential hail damage: marked features are potentially consistent with hail damage; inspector review required.' : 'No clear candidate features identified in this photo. This does not rule out damage.'}</p>
             <p>${results.countBasis === 'inspector_notation'
-                ? `Inspector hail notation: ${results.inspectorHailNotation} (at least ${results.circledHailHitCount} hits)`
-                : `Circled hail hits in test square: ${results.circledHailHitCount}`}</p>
+                ? `Inspector hail notation: ${results.inspectorHailNotation} (at least ${results.circledHailHitCount} inspector-reported marks)`
+                : `Circled candidate marks in test square: ${results.circledHailHitCount}`}</p>
             <p>Count confidence: ${results.countConfidence.charAt(0).toUpperCase() + results.countConfidence.slice(1)} — verify against the photo.</p>
             ${results.countAuditIncomplete ? '<p>Count audit is incomplete; review the photo before recording the count.</p>' : ''}
-            ${results.damageSeverity ? `<p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>` : ''}
         </div>`;
     } else if (results.hailHitVisible !== undefined) {
         const markedHailHit = results.chalkMarkingVisible && results.hailHitVisible && results.hailHitGenuine;
         html += `<div class="test-square-analysis ${markedHailHit ? 'test-square-good' : 'test-square-poor'}">
-            <h4>Closeup Damage Review</h4>
+            <h4>Close-up visual review</h4>
             <p>Automated observation</p>
             <p>Chalk marking visible: ${results.chalkMarkingVisible ? 'Yes' : 'No'}</p>
-            <p>Marked hail hit visible: ${markedHailHit ? 'Yes' : 'No'}</p>
-            <p>${markedHailHit ? 'A marked candidate hit is visible for review.' : 'No circled hail hit or confirmed hail damage is visible in this photo.'}</p>
-            <p>Damage Severity: ${results.damageSeverity.charAt(0).toUpperCase() + results.damageSeverity.slice(1)}</p>
+            <p>Marked candidate feature visible: ${markedHailHit ? 'Yes' : 'No'}</p>
+            <p>${markedHailHit ? 'Potential hail damage: visible features are potentially consistent with hail damage; inspector review required.' : 'No clear marked candidate feature identified. This does not rule out damage.'}</p>
         </div>`;
     }
     
@@ -759,12 +758,12 @@ function displayAIResults(results) {
     
     // Issues
     if (results.issues && results.issues.length > 0) {
-        html += '<div class="issues-section"><h4>Issues Found:</h4><ul>';
+        html += '<div class="issues-section"><h4>Visible features and photo limitations:</h4><ul>';
         results.issues.forEach(issue => {
             const severityClass = issue.severity === 'high' ? 'issue-error' : 
                                  issue.severity === 'medium' ? 'issue-warning' : 'issue-info';
             html += `<li class="${severityClass}">
-                <strong>${issue.type.charAt(0).toUpperCase() + issue.type.slice(1).replace('_', ' ')}:</strong> ${issue.message}
+                <strong>${['hail_damage','hail_hit','damage'].includes(issue.type) ? 'Potential hail damage / visible feature' : issue.type.charAt(0).toUpperCase() + issue.type.slice(1).replace('_', ' ')}:</strong> ${issue.message}
             </li>`;
         });
         html += '</ul></div>';

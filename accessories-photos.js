@@ -599,7 +599,7 @@ function proceedToNextAccessory() {
 function allAccessoriesCompleted() {
     // Enable next button
     nextBtn.disabled = false;
-    nextBtn.innerHTML = '<span class="btn-text">Continue to Hail Test Square</span><span class="btn-icon">→</span>';
+    nextBtn.innerHTML = '<span class="btn-text">Continue to Test square</span><span class="btn-icon">→</span>';
     
     // Show completion message
     alert(`All roof accessories documented! Total accessories: ${capturedPhotos.length}. Ready to proceed to hail test square inspection.`);

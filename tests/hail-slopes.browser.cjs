@@ -2,11 +2,18 @@ const assert=require('node:assert/strict');const {chromium}=require('playwright'
 (async()=>{const b=await chromium.launch({channel:'chrome',headless:true});try{
  const p=await b.newPage({viewport:{width:390,height:844}});const errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.goto('http://127.0.0.1:8000/hail-test-square.html');
- await p.getByRole('button',{name:'Gable · 2 slopes'}).click();await p.waitForURL('**/hail-test-square.html?slope=*');
- const slopes=await p.evaluate(()=>HailSlopes.list());assert.equal(slopes.length,2);
+ assert.equal(await p.evaluate(()=>HailSlopes.list().length),1);
+ assert.equal(await p.locator('[data-layout]').count(),0);
+ assert.equal(await p.locator('#hailSlopeSelect').count(),0);
+ assert.equal((await p.locator('#hailSlopePanel').innerText()).trim(),'Add slope');
+ assert.equal(await p.locator('.checklist-item').count(),4);
+ await p.reload();assert.equal(await p.evaluate(()=>HailSlopes.list().length),1);
+ const slopes=await p.evaluate(()=>HailSlopes.list());
  await p.waitForFunction(()=>!document.getElementById('captureBtn').disabled);
  await p.evaluate(async()=>{const c=document.createElement('canvas');c.width=50;c.height=50;displayPhotoPreview(c.toDataURL());await InspectionStore.flush();});
- await p.locator('#hailSlopeSelect').selectOption(slopes[1].id);await p.waitForURL('**/hail-test-square.html?slope='+slopes[1].id);
+ await p.getByRole('button',{name:'Add slope',exact:true}).click();await p.waitForURL('**/hail-test-square.html?slope=*');
+ slopes.push((await p.evaluate(()=>HailSlopes.list()))[1]);assert.equal(await p.evaluate(()=>HailSlopes.list().length),2);
+ assert.equal(await p.evaluate(()=>HailSlopes.active().id),slopes[1].id);
  await p.waitForFunction(()=>!document.getElementById('captureBtn').disabled);assert.equal(await p.evaluate(()=>testSquarePhoto),null);
  await p.evaluate(async()=>{const c=document.createElement('canvas');c.width=60;c.height=60;displayPhotoPreview(c.toDataURL());await InspectionStore.flush();});
  assert.equal(await p.evaluate(()=>Object.keys(InspectionStore.get().photos).length),2);
@@ -16,7 +23,7 @@ const assert=require('node:assert/strict');const {chromium}=require('playwright'
  assert.ok(await p.getByRole('link',{name:/Slope 1 · Test Square Full View/,includeHidden:true}).count());
  await p.goto('http://127.0.0.1:8000/inspection-review.html');assert.match(await p.locator('#reviewContent').innerText(),/Slope 2 · Test Square Full View/);
  await p.evaluate(()=>InspectionStore.startNew());await p.goto('http://127.0.0.1:8000/hail-test-square.html');
- await p.getByRole('button',{name:'Hip · 4 slopes'}).click();await p.waitForURL('**/hail-test-square.html?slope=*');assert.equal(await p.evaluate(()=>HailSlopes.list().length),4);
+ assert.equal(await p.evaluate(()=>HailSlopes.list().length),1);
  const legacy=await p.evaluate(async()=>{
   const c=document.createElement('canvas');c.width=50;c.height=50;
   await InspectionStore.recordPhoto('Hail documentation','Test Square Full View',c.toDataURL());
@@ -28,5 +35,5 @@ const assert=require('node:assert/strict');const {chromium}=require('playwright'
  assert.equal(legacy.original,legacy.saved);assert.equal(legacy.label,'Rear addition · Test Square Full View');assert.equal(legacy.id,'Hail documentation:Test Square Full View');
  await p.reload();await p.waitForFunction(()=>!!testSquarePhoto);
  await p.locator('#hailSlopePanel').screenshot({path:'/tmp/hail-slopes-mobile.png'});
- assert.deepEqual(errors,[]);console.log('PASS gable/hip counts, slope-isolated capture/restore, workspace and report');
+ assert.deepEqual(errors,[]);console.log('PASS one default square, one-click additional slope, isolated capture/restore, workspace and report');
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1);});
