@@ -46,6 +46,20 @@ const {chromium}=require('playwright');
   assert.equal(await page.getByRole('button',{name:'Add selected details to report'}).count(),0);
   const guards=await page.evaluate(async()=>{const m=await import('./equipment-research.js');let rejected=0;for(const data of [{stop_reason:'max_tokens'},{content:[{type:'web_search_tool_result',content:[{type:'web_search_result'}]},{type:'text',text:'Fake',citations:[{type:'web_search_result_location',url:'javascript:alert(1)'}]}]}]){try{m.parseResearch(data);}catch{rejected++;}}return [rejected,m.sourceURL('javascript:alert(1)'),m.sourceURL('https://user:pass@example.com')];});
   assert.deepEqual(guards,[2,null,null]);assert.deepEqual(errors,[]);
+  const relevance=await page.evaluate(async()=>{
+   const {relevantEquipmentFindings}=await import('./equipment-research.js');
+   const good={text:'PRO+G75-76N RU water heater capacity: 75 gal.',sources:[{url:'https://manufacturer.example/manual',title:'Installation manual'}]};
+   const wiki={url:'https://en.wikipedia.org/wiki/Edwin_Ruud',title:'Edwin Ruud'};
+   return relevantEquipmentFindings([
+    {text:'The founder and President of Ruud Manufacturing Company.',sources:[wiki]},
+    {text:'In 1959 the water heater business was purchased by Rheem.',sources:[wiki]},
+    {...good,sources:[wiki]},
+    {...good,sources:[...good.sources,wiki]},
+    {...good,text:'Different model XYZ water heater capacity: 75 gal.'},
+    good
+   ],'PRO+G75-76N RU');
+  });
+  assert.equal(relevance.length,1);assert.match(relevance[0].text,/75 gal/);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   console.log('PASS label reading, real search payload, citations, explicit acceptance, reports, reload, failure guards, mobile and privacy.');
  } finally {await browser.close();}

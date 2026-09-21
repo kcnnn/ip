@@ -6,7 +6,7 @@ const {chromium}=require('playwright');
   const page=await browser.newPage();await page.goto('http://127.0.0.1:8000/inspection-workspace.html');
   await page.evaluate(()=>localStorage.setItem('claude_api_key','synthetic'));
   const source={type:'web_search_tool_result',content:[{type:'web_search_result',url:'https://manufacturer.example/manual'}]};
-  const cited={type:'text',text:'Exact model documentation.',citations:[{type:'web_search_result_location',url:'https://manufacturer.example/manual',title:'Manual'}]};
+  const cited={type:'text',text:'TEST model installation manual.',citations:[{type:'web_search_result_location',url:'https://manufacturer.example/manual',title:'Manual'}]};
   const pause={stop_reason:'pause_turn',content:[{type:'thinking',thinking:'Synthetic',signature:'preserve-signature'},source]};
   let queue=[],sent=[];
   await page.route('https://api.anthropic.com/**',route=>{sent.push(route.request().postDataJSON());return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(queue.shift())});});
