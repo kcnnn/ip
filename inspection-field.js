@@ -10,8 +10,10 @@
         ['Miscellaneous', 'miscellaneous.html', []],
         ['Interview', 'insured-interview.html', []]
     ];
+    const hailDefinition=sections.find(s=>s[0]==='Hail documentation'),legacyHailSteps=hailDefinition[2];
+    Object.defineProperty(hailDefinition,2,{get:()=>{const steps=window.InspectionStore?.hailSteps?.();return steps?.length ? steps.map(s=>s.label) : legacyHailSteps;}});
     const componentsBySection = {
-        'Elevations': ['Siding', 'Window', 'Window screen', 'Door', 'Overhead door', 'Downspout', 'Trim', 'Fascia', 'Soffit', 'Brick / masonry', 'Stucco', 'Exterior light', 'Exterior vent', 'Other'],
+        'Elevations': ['Siding', 'Window', 'Window screen', 'Door', 'Overhead door', 'Downspout', 'Trim', 'Fascia', 'Soffit', 'Brick / masonry', 'Stucco', 'Exterior light', 'Exterior vent', 'HVAC equipment', 'Fence', 'Gate', 'Deck / porch', 'Patio / walkway', 'Detached structure', 'Landscaping', 'Other'],
         'Roof edge': ['Gutter', 'Downspout', 'Drip edge', 'Underlayment', 'Fascia', 'Soffit', 'Flashing', 'Shingles', 'Other'],
         'Shingles': ['Shingles', 'Ridge shingles / caps', 'Ridge vent', 'Underlayment', 'Flashing', 'Other'],
         'Roof overview': ['Shingles', 'Roof covering', 'Shingles', 'Valley', 'Flashing', 'Vent', 'Chimney', 'Other'],
@@ -313,6 +315,7 @@
             aiReview = note.aiReview || null; renderReview();
             refreshPhotos();
             field('section').value = elevationKey ? 'Elevations' : note.section || currentSection();
+            if(!note.location && !note.id && field('section').value==='Hail documentation' && window.HailSlopes?.active()?.id!=='legacy')field('location').value=window.HailSlopes?.active()?.name || '';
             refreshComponents(note.component || '', true);
             field('photoPurpose').value=note.photoPurpose || (brittleTest ? 'brittle' : 'auto');
             for (const key of ['id', 'location', 'component', 'condition', 'severity', 'quantity', 'unit', 'details', 'photoId']) {
@@ -528,7 +531,7 @@
                         const present = Object.values(record.photos).find(photo => photo.section === name && photo.label === label);
                         const testRecorded = label === 'Brittle test' && Object.values(record.observations).some(note => note.section === name && note.brittleTest);
                         const absent = record.absences[`${name}:${label}`] || record.absences[`${name}:${label.toLowerCase()}`];
-                        return `<a href="${label === 'Brittle test' ? 'brittle-test.html' : `${url}?item=${index}`}">${escape(label)}<span>${present?.storageStatus === 'failed' ? 'Save failed' : present ? 'Captured' : testRecorded ? 'Recorded' : label === 'Brittle test' ? 'Not recorded' : absent ? 'Not present' : 'No photo'}</span></a>`;
+                        return `<a href="${name==='Hail documentation' && InspectionStore.hailSteps().length ? InspectionStore.hailSteps()[index].url : label === 'Brittle test' ? 'brittle-test.html' : `${url}?item=${index}`}">${escape(label)}<span>${present?.storageStatus === 'failed' ? 'Save failed' : present ? 'Captured' : testRecorded ? 'Recorded' : label === 'Brittle test' ? 'Not recorded' : absent ? 'Not present' : 'No photo'}</span></a>`;
                     }).join('')}</div><button class="field-text-button" data-note-section="${escape(name)}">+ Add observation</button></details></article>`;
                 }).join('');
                 const notes = Object.values(record.observations).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));

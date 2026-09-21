@@ -10,11 +10,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     status.textContent = 'Restoring saved photos…'; toolbar.append(status);
     const controls = [...document.querySelectorAll('#captureBtn,#confirmBtn,#retakeBtn,#fileInput')];
     controls.forEach(control => { control.disabled = true; });
-    const values = await Promise.all(Object.entries(record.photos).filter(([, photo]) => photo.section === section).map(async ([id, photo]) => {
+    const values = await Promise.all(Object.entries(record.photos).filter(([, photo]) => photo.section === section && (section!=='Hail documentation' || (photo.hailSlopeId || 'legacy')===(window.HailSlopes?.active()?.id || 'legacy'))).map(async ([id, photo]) => {
         try { return { id, photo, data: await InspectionStore.getPhoto(id) }; }
         catch { return { id, photo, data: null }; }
     }));
-    let items = definition[2];
+    let items = section==='Hail documentation' ? ['Test Square Full View','Hail Hit Closeup 1','Hail Hit Closeup 2','Hail Hit Closeup 3'] : definition[2];
     let selected = Number(new URLSearchParams(location.search).get('item') || 0);
     if (!Number.isInteger(selected) || selected < 0 || selected >= items.length) selected = 0;
     let activeData = null;
@@ -36,8 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         case 'Hail documentation':
             values.forEach(({ photo, data }) => {
                 if (!data) return;
-                if (photo.label === items[0]) testSquarePhoto = data;
-                else { const index = items.indexOf(photo.label) - 1; if (index >= 0) closeupPhotos[index] = data; }
+                if ((photo.hailStep || photo.label) === items[0]) testSquarePhoto = data;
+                else { const index = items.indexOf(photo.hailStep || photo.label) - 1; if (index >= 0) closeupPhotos[index] = data; }
             });
             currentStep = selected ? `closeup-${selected}` : 'test-square';
             activeData = selected ? closeupPhotos[selected - 1] : testSquarePhoto;
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     select.addEventListener('change', async () => {
         const saves = await InspectionStore.flush();
         if (saves.some(value => value === false)) return;
-        location.href = section === 'Shingles' && select.value === '2' ? 'brittle-test.html' : `${definition[1]}?item=${select.value}`;
+        location.href = section==='Hail documentation' ? `hail-test-square.html?slope=${encodeURIComponent(window.HailSlopes?.active()?.id || 'legacy')}&item=${select.value}` : section === 'Shingles' && select.value === '2' ? 'brittle-test.html' : `${definition[1]}?item=${select.value}`;
     });
     // Existing next/back controls still work; keep the new jump selector in sync.
     const title = document.querySelector('#elevationTitle,#inspectionTitle,#photoTitle');

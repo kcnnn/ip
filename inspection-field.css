@@ -1,5 +1,9 @@
 .field-page { margin:0; background:#f5f5f3; color:#242629; font-family:Arial,Helvetica,sans-serif; }
 .field-shell { max-width:1180px; margin:auto; padding:30px 32px 60px; }
+#hailSlopePanel { gap:14px; }
+#hailSlopePanel h2 { margin:0; }
+#hailSlopePanel ul { padding-left:20px; margin:0; font-size:14px; line-height:1.7; }
+#hailSlopePanel select { display:block; width:100%; max-width:520px; min-height:48px; padding:12px; border:1px solid #bbc0c4; border-radius:10px; background:white; font:inherit; }
 .brittle-entry { display:flex; gap:18px; align-items:center; text-align:left; padding:24px; margin:20px 0; border:1px solid #e5cccc; border-radius:18px; background:linear-gradient(120deg,#fff5f3,#fff); color:#242629; text-decoration:none; box-shadow:0 4px 16px #54222208; }
 .brittle-entry:hover { border-color:#bd141b; background:#fff5f3; }
 .brittle-entry:focus-visible { outline:3px solid #bd141b; outline-offset:4px; }

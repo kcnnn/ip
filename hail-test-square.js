@@ -165,6 +165,7 @@ function handleFileSelect(event) {
 }
 
 function displayPhotoPreview(imageData) {
+    if(!HailSlopes.active()){alert('Choose or add a roof slope before taking test-square photos.');return;}
     // Hide camera preview, show photo preview
     cameraPreview.style.display = 'none';
     photoActions.style.display = 'block';
@@ -187,7 +188,8 @@ function displayPhotoPreview(imageData) {
             closeupPhotos[2] = imageData;
             break;
     }
-    window.InspectionStore?.recordPhoto('Hail documentation', photoTitle.textContent, imageData);
+    const slope=HailSlopes.active(),step=photoTitle.textContent;
+    window.InspectionStore?.recordPhoto('Hail documentation', slope.id==='legacy'?step:`${slope.name} · ${step}`, imageData, {id:HailSlopes.photoId(step),hailSlopeId:slope.id==='legacy'?undefined:slope.id,hailStep:step});
     
     // Update UI
     updateStepDisplay();
@@ -214,7 +216,7 @@ function retakePhoto() {
             closeupPhotos[2] = undefined;
             break;
     }
-    window.InspectionStore?.removePhoto('Hail documentation', photoTitle.textContent);
+    window.InspectionStore?.removePhoto('Hail documentation', photoTitle.textContent, HailSlopes.photoId(photoTitle.textContent));
     
     // Update UI
     updateStepDisplay();
@@ -840,10 +842,10 @@ function proceedToNextStep() {
 function allStepsCompleted() {
     // Enable next button
     nextBtn.disabled = false;
-    nextBtn.innerHTML = '<span class="btn-text">Continue to Insured Interview</span><span class="btn-icon">→</span>';
+    nextBtn.innerHTML = '<span class="btn-text">Next slope / finish</span><span class="btn-icon">→</span>';
     
     // Show completion message
-    alert('Hail test square inspection completed! All photos documented. Ready to proceed to insured interview.');
+    alert('This slope’s test-square photo steps are complete. Continue to the next slope or review remaining slopes above.');
 }
 
 function switchCamera() {
@@ -888,7 +890,7 @@ function proceedToNext() {
     }
     
     // Navigate to insured interview
-    window.location.href = 'insured-interview.html';
+    HailSlopes.next();
 }
 
 function showAPISetupPrompt() {

@@ -43,6 +43,12 @@ function readInspectionRecord() {
         renameSection(record);
         if (record.sectionStates.Ridge && !record.sectionStates.Shingles) record.sectionStates.Shingles = record.sectionStates.Ridge;
         delete record.sectionStates.Ridge;
+        for(const photo of Object.values(record.photos || {})) {
+            if(photo.hailSlopeId && photo.hailStep) {
+                const slope=record.notes?.hailSlopes?.find(s=>s.id===photo.hailSlopeId);
+                if(slope)photo.label=`${slope.name} · ${photo.hailStep}`;
+            }
+        }
         // Presentation labels for detail photos come from saved inspection words,
         // never filenames. Keep stable IDs/original keys and sourceName intact.
         const linked = new Map();
@@ -96,6 +102,17 @@ window.InspectionStore = {
         writeInspectionRecord({ startedAt: new Date().toISOString(), photos: {}, absences: {}, notes: {} });
     },
     get: readInspectionRecord,
+    hailSteps() {
+        const record=readInspectionRecord(),steps=['Test Square Full View','Hail Hit Closeup 1','Hail Hit Closeup 2','Hail Hit Closeup 3'];
+        return (record.notes?.hailSlopes || []).flatMap(s=>steps.map((step,index)=>({label:`${s.name} · ${step}`,url:`hail-test-square.html?slope=${encodeURIComponent(s.id)}&item=${index}`})));
+    },
+    assignLegacyHailSlope(id) {
+        const record=readInspectionRecord(),slope=record.notes.hailSlopes?.find(s=>s.id===id);
+        if(!slope)throw new Error('Choose an existing slope.');
+        if(Object.values(record.photos).some(p=>p.hailSlopeId===id))throw new Error('That slope already has photos. Choose an empty slope.');
+        for(const photo of Object.values(record.photos))if(photo.section==='Hail documentation'&&!photo.hailSlopeId){photo.hailStep=photo.hailStep||photo.label;photo.hailSlopeId=id;}
+        writeInspectionRecord(record);
+    },
     readStoredAsset: key => originalTransaction(key),
     async activateRestoredRecord(record, assets, expected) {
         if (pendingInspectionSaves.size || JSON.stringify(readInspectionRecord()) !== expected) throw new Error('The inspection changed during restore. Try again after saving finishes.');
