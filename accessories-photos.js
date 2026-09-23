@@ -265,6 +265,21 @@ function handleFileSelect(event) {
     }
 }
 
+function appendChimneyMeasurementPrompt(container, results = {}) {
+    const photo = capturedPhotos[currentAccessoryIndex];
+    if (!photo?.photoData || (photo.type?.name !== 'Chimney' && results.chimneyVisible !== true)) return;
+    const sourceId = photo.recordId || `Accessories:${photo.id}`;
+    const panel = document.createElement('div');
+    panel.className = 'chimney-measurement-followup';
+    const message = document.createElement('p');
+    message.textContent = 'Measure this chimney. Photograph the tape or ruler with the scale and measurement endpoints visible, and record each dimension and unit. Both photos will stay together under Accessories.';
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'action-btn primary';
+    button.textContent = 'Take chimney measurement photo';
+    button.onclick = () => window.InspectionField.startChimneyMeasurement(sourceId);
+    panel.append(message, button); container.append(panel);
+}
+
 function displayPhotoPreview(imageData) {
     if (!capturedPhotos[currentAccessoryIndex]) {
         if (!selectedAccessoryType) { alert('Select an accessory type first.'); return; }
@@ -285,12 +300,14 @@ function displayPhotoPreview(imageData) {
         id: accessory.recordId, accessoryId: accessory.id, accessoryType: accessory.type
     });
     
+    appendChimneyMeasurementPrompt(photoPreview);
     // Update UI
     updatePhotoDisplay();
     updateChecklist();
 }
 
 function retakePhoto() {
+    photoPreview.querySelector('.chimney-measurement-followup')?.remove();
     // Reset photo capture
     photoActions.style.display = 'none';
     cameraPreview.style.display = 'block';
@@ -412,9 +429,12 @@ Please respond in JSON format with the following structure:
   "damageDetected": boolean,
   "damageTypes": ["cracks" | "corrosion" | "loose_mounting" | "weather_damage" | "water_damage" | "missing_components" | "other"],
   "installationQuality": "excellent" | "good" | "fair" | "poor" | "unclear",
+  "chimneyVisible": boolean (true when a chimney is visible, including masonry chimneys with multiple flue caps; not a pipe vent; do not estimate dimensions),
   "satelliteVisible": boolean (true only for a visible satellite dish; do not infer HD capability from dish shape),
   "downspoutVisible": boolean (true only for a visible downspout, not merely a gutter or other pipe; do not estimate dimensions),
   "splashguardVisible": boolean (true only for an identifiable gutter splashguard, not gutter covers, leaf guards or downspout splash blocks; do not infer a whole-property count),
+  "garageDoorVisible": boolean (true only for an identifiable garage/overhead door, not a pedestrian door; do not infer repainting from an overview),
+  "garageDoorWindowsVisible": boolean (true only when windows are visibly part of the garage door, not adjacent building windows or decorative panels; do not guess count, glazing type or damage),
   "issues": [
     {
       "type": "accessory_condition" | "damage" | "installation" | "clarity" | "lighting" | "composition" | "technical",
@@ -501,6 +521,8 @@ function displayAnalysisUnavailable(message = 'AI analysis is unavailable.') {
     const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'action-btn secondary'; retry.textContent = 'Retry analysis'; retry.onclick = () => { aiLoading.style.display = 'block'; aiResults.style.display = 'none'; analyzePhotoWithAI(); };
     const proceed = document.createElement('button'); proceed.type = 'button'; proceed.className = 'action-btn primary'; proceed.textContent = 'Continue without AI analysis'; proceed.onclick = proceedToNextAccessory;
     actions.append(settings, retry, proceed); container.append(heading, detail, explanation, actions); aiResults.append(container);
+    photoPreview.querySelector('.chimney-measurement-followup')?.remove();
+    appendChimneyMeasurementPrompt(container);
     appendAccessorySearchButton(container);
     const badge = photoStatus.querySelector('.status-badge'); badge.textContent = 'Not analyzed'; badge.className = 'status-badge';
 }
@@ -565,8 +587,12 @@ function displayAIResults(results) {
     html += '</div>';
     
     aiResults.innerHTML = html;
+    photoPreview.querySelector('.chimney-measurement-followup')?.remove();
+    appendChimneyMeasurementPrompt(aiResults, results);
     if(results.downspoutVisible===true)InspectionField.appendDownspoutFollowup(aiResults);
     if(results.splashguardVisible===true && !results.apiError)InspectionField.appendSplashguardFollowup(aiResults);
+    if(results.garageDoorVisible===true && !results.apiError)InspectionField.appendGarageDoorFollowup(aiResults);
+    if(results.garageDoorWindowsVisible===true && !results.apiError)InspectionField.appendGarageWindowsFollowup(aiResults);
     if(results.satelliteVisible===true)window.InspectionField.appendSatelliteFollowup(aiResults);
     appendAccessorySearchButton(aiResults);
     

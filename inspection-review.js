@@ -77,6 +77,20 @@ function groupReviewCards(record) {
             const add=document.createElement('button');add.type='button';add.className='review-delete review-manage';add.dataset.addReviewPhotoNote=id;add.textContent='Add note';card.append(add);
         }
     }
+    // Keep each chimney and its explicitly linked measurements together.
+    for (const [id, photo] of Object.entries(record.photos)) {
+        if (!photo.parentPhotoId || record.photos[photo.parentPhotoId]?.component !== 'Chimney') continue;
+        const parent = photoCards.get(photo.parentPhotoId), child = photoCards.get(id);
+        if (!parent || !child || parent === child) continue;
+        let group = parent.closest('.review-chimney-group');
+        if (!group) {
+            group = document.createElement('article');group.className = 'review-chimney-group review-brittle-group';
+            const heading = document.createElement('h3');heading.textContent = 'Chimney and measurements';
+            const container = document.createElement('div');container.className = 'review-brittle-photos';
+            parent.before(group);group.append(heading, container);container.append(parent);
+        }
+        group.querySelector('.review-brittle-photos').append(child);
+    }
     // Group only explicitly linked test photos, never nearby timestamps or titles.
     for(const note of Object.values(record.observations)) {
         const ids=[...new Set(['before','during','after'].flatMap(phase=>note.brittleTest?.photos?.[phase] || []))];

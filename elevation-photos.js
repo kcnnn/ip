@@ -354,6 +354,8 @@ function displayAIResults(results) {
     aiResults.innerHTML = html;
     if(results.downspoutVisible===true && !results.apiError)InspectionField.appendDownspoutFollowup(aiResults,elevations[currentElevationIndex].key);
     if(results.splashguardVisible===true && !results.apiError)InspectionField.appendSplashguardFollowup(aiResults);
+    if(results.garageDoorVisible===true && !results.apiError)InspectionField.appendGarageDoorFollowup(aiResults,elevations[currentElevationIndex].key);
+    if(results.garageDoorWindowsVisible===true && !results.apiError)InspectionField.appendGarageWindowsFollowup(aiResults,elevations[currentElevationIndex].key);
     const detailButton = document.createElement('button');
     detailButton.type = 'button'; detailButton.className = 'action-btn secondary';
     detailButton.textContent = `Add detail photos · ${elevations[currentElevationIndex].name}`;

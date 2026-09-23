@@ -146,6 +146,7 @@
             if(field('photoId').value===id)field('photoId').value=Object.values(brittleTest.photos).flat().at(-1)||'';
             aiReview=null;renderReview();update();previewPhoto();
         });
+        let chimneyPhotoId = null;
         let fillGeneration = 0, filling = false, manualFields = false, aiReview = null, photoGeneration = 0, capturing = false, elevationKey = null, reviewCorrections = [];
         const elevationName = key => `${key.charAt(0).toUpperCase()}${key.slice(1)} Elevation`;
         const renderReview = () => {
@@ -164,6 +165,8 @@
             if(aiReview?.checks?.some(item=>item.startsWith('Satellite documentation:')))InspectionField.appendSatelliteFollowup?.(panel);
             if(aiReview?.checks?.some(item=>item.startsWith('Downspout measurement:')))InspectionField.appendDownspoutFollowup?.(panel,elevationKey);
             if(aiReview?.checks?.some(item=>item.startsWith('Splashguard count:')))InspectionField.appendSplashguardFollowup?.(panel);
+            if(aiReview?.checks?.some(item=>item.startsWith('Garage door finish:')))InspectionField.appendGarageDoorFollowup?.(panel,elevationKey);
+            if(aiReview?.checks?.some(item=>item.startsWith('Garage door windows:')))InspectionField.appendGarageWindowsFollowup?.(panel,elevationKey);
             for(const [prefix,kind,label] of [['Metal gauge documentation:','gauge','Take metal gauge photo'],['Seam height documentation:','seam','Take seam height photo']]) {
                 if(aiReview?.checks?.some(item=>item.startsWith(prefix))) {
                     const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent=label;
@@ -192,7 +195,7 @@
             photoTitle: photoTitle?.transcript === field('details').value && photoTitle?.photoId === field('photoId').value ? photoTitle : null,
             equipmentResearch: equipmentResearch?.photoId === field('photoId').value && equipmentResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? equipmentResearch : null,
             accessoryResearch: accessoryResearch?.photoId === field('photoId').value && accessoryResearch?.revision === InspectionStore.get().photos[field('photoId').value]?.revision ? accessoryResearch : null,
-            parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null,
+            parentPhotoId: chimneyPhotoId || (elevationKey ? `Elevations:${elevationName(elevationKey)}` : null),
             brittleTest: field('section').value === 'Shingles' ? brittleTest : null
         });
         const refreshPhotos = () => {
@@ -305,6 +308,7 @@
             }
         }
         function loadNote(note = {}) {
+            chimneyPhotoId = note.component === 'Chimney' ? note.parentPhotoId || null : null;
             reviewCorrections = note.reviewCorrections || [];
             brittleTest = note.brittleTest || (location.pathname.endsWith('brittle-test.html') && !note.id && (!note.section || note.section === 'Shingles') ? {method:'photo-and-dictation'} : null);
             fillGeneration++; filling = false;
@@ -347,6 +351,30 @@
             loadNote(note);
             const notebook = document.getElementById('fieldNotebook'); if (notebook) notebook.open = true;
             form.scrollIntoView({ behavior: 'smooth', block: 'start' }); field('details').focus({ preventScroll: true });
+        };
+        window.InspectionField.appendGarageWindowsFollowup = (panel,key) => {
+            const followup=document.createElement('div');followup.className='field-dictation-first';
+            const message=document.createElement('p');message.textContent='AI identified windows in the garage door. Confirm they are door windows, photograph them close up, and include their presence in the inspection notes. Dictate the count and condition only if you can verify them.';
+            const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take garage door window close-up';button.onclick=()=>InspectionField.startGarageDoorDetail(key,'windows');
+            followup.append(message,button);panel.append(followup);
+        };
+        window.InspectionField.appendGarageDoorFollowup = (panel,key) => {
+            const followup=document.createElement('div');followup.className='field-dictation-first';
+            const message=document.createElement('p');message.textContent='Garage door identified: take a close-up of a panel at the door edge, including the panel face and adjacent edge, to check whether it has been painted. Document visible finish differences or paint buildup; leave repainting uncertain if the photo is inconclusive. Keep clear of moving door sections.';
+            const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take garage door edge close-up';button.onclick=()=>InspectionField.startGarageDoorDetail(key);
+            followup.append(message,button);panel.append(followup);
+        };
+        window.InspectionField.startGarageDoorDetail = (key,kind='edge') => {
+            if(capturing || filling || listening)return;
+            if(kind==='windows' && !confirm('Confirm the garage door has windows. Start a close-up note stating “Garage door has windows” for your review?'))return;
+            if(!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a garage door finish note? Save your current note first if you want to keep it. Uploaded photos remain saved.'))return;
+            const side=['front','right','rear','left'].includes(key)?key:null;
+            loadNote({section:'Elevations',elevationKey:side,component:'Overhead door',photoPurpose:'overview',details:kind==='windows'?'Garage door has windows.':'',location:side?elevationName(side):field('location').value});update();
+            const notebook=document.getElementById('fieldNotebook');if(notebook)notebook.open=true;
+            form.scrollIntoView({behavior:'smooth',block:'start'});
+            document.getElementById('fieldPhotoStatus').textContent='Photograph the garage door panel face and adjacent door edge close up. Dictate evidence of painting or state uncertain. Do not scrape the finish or place hands near moving sections. Upload photo is also available.';
+            if(kind==='windows')document.getElementById('fieldPhotoStatus').textContent='Photograph the garage door windows close up. Window presence is included in your draft note; dictate verified count, arrangement and condition, then review and save the note with the photo. Upload photo is also available.';
+            document.getElementById('fieldCameraInput').click();
         };
         window.InspectionField.appendSplashguardFollowup = panel => {
             const followup=document.createElement('div');followup.className='field-dictation-first';
@@ -414,10 +442,12 @@
             document.getElementById('fieldPhotoStatus').textContent='Photograph the valley and any visible valley metal. Dictate open, closed-cut, woven, or uncertain; note if metal is concealed/not visible. Do not lift roofing to expose it. Upload photo is also available.';
             document.getElementById('fieldCameraInput').click();
         };
-        window.InspectionField.startChimneyMeasurement = () => {
+        window.InspectionField.startChimneyMeasurement = (sourcePhotoId) => {
             if(capturing || filling || listening)return;
             if(!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a chimney measurement note? Save your current note first if you want to keep it. Uploaded photos remain saved.'))return;
-            loadNote({section:'Accessories',component:'Chimney',photoPurpose:'measurement',details:'',location:field('location').value});update();
+            const sourceId = sourcePhotoId || chimneyPhotoId || field('photoId').value;
+            if (sourceId) InspectionStore.groupChimneyPhoto(sourceId);
+            loadNote({section:'Accessories',component:'Chimney',parentPhotoId:sourceId || null,photoPurpose:'measurement',details:'',location:field('location').value});update();
             const notebook=document.getElementById('fieldNotebook');if(notebook)notebook.open=true;
             form.scrollIntoView({behavior:'smooth',block:'start'});
             document.getElementById('fieldPhotoStatus').textContent='Measure the chimney. Show the scale and measurement endpoints; dictate each dimension and unit. Use Upload photo if the measurement photo is already saved.';
@@ -489,8 +519,8 @@
                     const prepared = await preparePhoto(file, message => { if (generation === fillGeneration) status.textContent = message; });
                     if (generation !== fillGeneration) return;
                     const id = `observation-photo:${Date.now()}:${Math.random().toString(36).slice(2)}`;
-                    const label = elevationKey ? `${elevationName(elevationKey)} · Detail photo` : 'Inspection detail photo';
-                    const ok = await InspectionStore.recordPhoto(field('section').value, label, prepared.dataUrl, { id, elevationKey, brittlePhase: phase, parentPhotoId: elevationKey ? `Elevations:${elevationName(elevationKey)}` : null, convertedFrom: prepared.convertedFrom, sourceName: prepared.sourceName });
+                    const label = chimneyPhotoId ? 'Chimney measurement' : elevationKey ? `${elevationName(elevationKey)} · Detail photo` : 'Inspection detail photo';
+                    const ok = await InspectionStore.recordPhoto(field('section').value, label, prepared.dataUrl, { id, elevationKey, brittlePhase: phase, parentPhotoId: chimneyPhotoId || (elevationKey ? `Elevations:${elevationName(elevationKey)}` : null), convertedFrom: prepared.convertedFrom, sourceName: prepared.sourceName });
                     if (!ok) throw new Error('Photo could not be saved. Please try again.');
                     if (generation !== fillGeneration) return;
                     if (phase) brittleTest = {...brittleTest, photos:{...brittleTest.photos, [phase]:[...(brittleTest.photos?.[phase] || []),id]}};

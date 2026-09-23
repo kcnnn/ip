@@ -62,8 +62,9 @@ function readInspectionRecord() {
             const generated=note?.photoTitle;
             const title=generated?.photoId===id && generated?.transcript===note.details && typeof generated.value==='string' ? generated.value.trim().slice(0,100) : String(note?.details || '').trim().replace(/\s+/g,' ').slice(0,100);
             const prefix=photo.elevationKey ? `${photo.elevationKey.charAt(0).toUpperCase()+photo.elevationKey.slice(1)} Elevation` : '';
+            const chimneyPrefix = photo.parentPhotoId && record.photos[photo.parentPhotoId]?.component === 'Chimney' ? 'Chimney measurement' : '';
             const testPrefix = ['before','during','after'].includes(photo.brittlePhase) ? `Brittle test · ${photo.brittlePhase === 'before' ? 'Before test' : photo.brittlePhase === 'during' ? 'During lift' : 'After test'}` : '';
-            photo.label=[prefix,testPrefix,title || (testPrefix ? '' : 'Detail photo')].filter(Boolean).join(' · ');
+            photo.label=[prefix,chimneyPrefix,testPrefix,title || (testPrefix ? '' : 'Detail photo')].filter(Boolean).join(' · ');
         }
         return record;
     } catch {
@@ -135,6 +136,18 @@ window.InspectionStore = {
         const previous=JSON.parse(await originalTransaction(current.restoreRecoveryKey));
         if(!previous?.id) throw new Error('Previous inspection could not be read.');
         await this.activateRestoredRecord(previous,[],JSON.stringify(current));
+    },
+    groupChimneyPhoto(id) {
+        const record = readInspectionRecord();
+        if (!record.photos[id]) return false;
+        record.photos[id].section = 'Accessories';
+        record.photos[id].component = 'Chimney';
+        record.photos[id].accessoryType = {icon:'🏠',name:'Chimney',description:'Chimney or flue'};
+        for (const note of Object.values(record.observations)) {
+            if (note.photoId === id) note.section = 'Accessories';
+        }
+        writeInspectionRecord(record);
+        return true;
     },
     recordPhoto(section, label, dataUrl, details = {}) {
         const record = readInspectionRecord();

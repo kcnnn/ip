@@ -196,10 +196,21 @@ function displayPhotoPreview(imageData) {
     capturedPhotos[overviewPhotos[currentPhotoIndex].key] = imageData;
     window.InspectionStore?.recordPhoto('Roof overview', overviewPhotos[currentPhotoIndex].name, imageData);
     
+    appendManualChimneyPrompt(photoPreview);
     // Update UI
     updatePhotoDisplay();
     updateChecklist();
     updateCompass();
+}
+
+function appendManualChimneyPrompt(container) {
+    const sourceId = `Roof overview:${overviewPhotos[currentPhotoIndex].name}`;
+    const panel = document.createElement('div');panel.className = 'field-dictation-first';
+    const message = document.createElement('p');message.textContent = 'Chimney in this roof photo? If AI misses it, you can still document its measurements.';
+    const button = document.createElement('button');button.type = 'button';button.className = 'field-button';
+    button.textContent = 'Chimney is visible — add measurements';
+    button.onclick = () => window.InspectionField.startChimneyMeasurement(sourceId);
+    panel.append(message, button);container.append(panel);
 }
 
 function retakePhoto() {
@@ -258,7 +269,7 @@ async function analyzePhotoWithAI() {
         }
         
         // Resize image for API efficiency
-        const resizedImageData = await resizeImageForAPI(photoData);
+        const resizedImageData = await resizeImageForAPI(photoData, 2048, 2048);
         
         // Call ChatGPT API with specialized prompts
         const analysisResults = await analyzeOverviewWithChatGPT(resizedImageData, currentPhoto);
@@ -285,6 +296,12 @@ async function analyzeOverviewWithChatGPT(imageData, photoInfo) {
     const { mediaType, base64Data } = parseDataUrl(imageData);
     
     const prompt = `Analyze this ${photoInfo.name} photo for roof inspection purposes. Please evaluate:
+
+First scan the entire inspected roof for chimneys, including distant, partially visible,
+brick/masonry, stucco, and metal-clad chimney stacks with single or multiple flue caps.
+A chimney does not need damage to count. Distinguish chimney stacks from small plumbing
+vents and objects on neighboring properties. Report chimneyVisible explicitly; if the
+view is uncertain, say so in recommendations instead of treating uncertainty as absence.
 
 1. Roof Surface Condition:
    - Overall condition of the roof surface
@@ -332,6 +349,8 @@ Please respond in JSON format with the following structure:
   "satelliteVisible": boolean (true only for a visible satellite dish; do not infer HD capability from dish shape),
   "downspoutVisible": boolean (true only for a visible downspout, not merely a gutter or other pipe; do not estimate dimensions),
   "splashguardVisible": boolean (true only for an identifiable gutter splashguard, not gutter covers, leaf guards or downspout splash blocks; do not infer a whole-property count),
+  "garageDoorVisible": boolean (true only for an identifiable garage/overhead door, not a pedestrian door; do not infer repainting from an overview),
+  "garageDoorWindowsVisible": boolean (true only when windows are visibly part of the garage door, not adjacent building windows or decorative panels; do not guess count, glazing type or damage),
   "valleyType": "open" | "closed-cut" | "woven" | "uncertain" (classify visible shingle arrangement only; exposed valley channel = open, one plane cut along the valley = closed-cut, interwoven shingles = woven; use uncertain if obscured or mixed; never infer concealed metal),
   "issues": [
     {
@@ -385,7 +404,8 @@ Please respond in JSON format with the following structure:
         
         // Parse the JSON response
         try {
-            const analysis = JSON.parse(analysisText);
+            const jsonText = analysisText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+            const analysis = JSON.parse(jsonText);
             return analysis;
         } catch (parseError) {
             // If JSON parsing fails, try to extract information from text
@@ -414,6 +434,9 @@ function parseTextResponse(text) {
 
     // Simple text parsing to extract key information
     const lowerText = text.toLowerCase();
+    // Retain explicit structured detection even when surrounding prose breaks JSON.
+    const chimneyFlag = text.match(/"chimneyVisible"\s*:\s*(true|false)\b/i);
+    if (chimneyFlag) analysis.chimneyVisible = chimneyFlag[1].toLowerCase() === 'true';
     
     if (lowerText.includes('good') || lowerText.includes('excellent') || lowerText.includes('clear')) {
         analysis.overallQuality = 'good';
@@ -547,6 +570,8 @@ function displayAIResults(results) {
     aiResults.innerHTML = html;
     if(results.downspoutVisible===true && !results.apiError)InspectionField.appendDownspoutFollowup(aiResults);
     if(results.splashguardVisible===true && !results.apiError)InspectionField.appendSplashguardFollowup(aiResults);
+    if(results.garageDoorVisible===true && !results.apiError)InspectionField.appendGarageDoorFollowup(aiResults);
+    if(results.garageDoorWindowsVisible===true && !results.apiError)InspectionField.appendGarageWindowsFollowup(aiResults);
     if(results.satelliteVisible===true && !results.apiError)window.InspectionField.appendSatelliteFollowup(aiResults);
     if(results.metalRoofVisible===true && !results.apiError) {
         const followup=document.createElement('div');followup.className='field-dictation-first';
@@ -566,11 +591,12 @@ function displayAIResults(results) {
         button.onclick=()=>window.InspectionField.startValleyDetail();
         followup.append(message,button);aiResults.append(followup);
     }
+    if(results.chimneyVisible!==true || results.apiError) appendManualChimneyPrompt(aiResults);
     if(results.chimneyVisible===true && !results.apiError) {
         const followup=document.createElement('div');followup.className='field-dictation-first';
         const message=document.createElement('p');message.textContent='Chimney identified: measure the chimney and document the dimensions. Photograph the measurement with the scale and endpoints visible, from a safe position.';
         const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take chimney measurement photo';
-        button.onclick=()=>window.InspectionField.startChimneyMeasurement();
+        button.onclick=()=>window.InspectionField.startChimneyMeasurement(`Roof overview:${overviewPhotos[currentPhotoIndex].name}`);
         followup.append(message,button);aiResults.append(followup);
     }
     

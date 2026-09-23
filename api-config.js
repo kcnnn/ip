@@ -129,6 +129,8 @@ Please respond in JSON format with the following structure:
   "confidence": number (0-100),
   "downspoutVisible": boolean,
   "splashguardVisible": boolean (true only for an identifiable gutter splashguard, not gutter covers, leaf guards or downspout splash blocks; do not infer a whole-property count),
+  "garageDoorVisible": boolean (true only for an identifiable garage/overhead door, not a pedestrian door; do not infer repainting from an overview),
+  "garageDoorWindowsVisible": boolean (true only when windows are visibly part of the garage door, not adjacent building windows or decorative panels; do not guess count, glazing type or damage),
   "issues": [
     {
       "type": "clarity" | "distance" | "lighting" | "composition" | "technical",

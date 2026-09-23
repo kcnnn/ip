@@ -309,8 +309,8 @@ Return only the JSON object. gutterSize must contain a measurement such as "5 in
 
 1. Drip Edge Detection:
    - Is there a drip edge visible in the photo?
-   - Is the drip edge properly installed?
-   - Are there any signs of missing or damaged drip edge?
+   - Report presence only; do not assess condition, damage, or installation quality.
+   - Do not include condition assessments in issues or recommendations, or use them to rate photo quality or request a retake.
 
 2. Underlayment Visibility:
    - Is the underlayment clearly visible?
@@ -335,7 +335,6 @@ Please respond in JSON format with the following structure:
   "overallQuality": "good" | "needs_improvement" | "poor",
   "confidence": number (0-100),
   "dripEdgeDetected": boolean,
-  "dripEdgeCondition": "good" | "poor" | "missing" | "unclear",
   "underlaymentVisible": boolean,
   "issues": [
     {
@@ -423,7 +422,6 @@ function parseTextResponse(text, inspectionType) {
         analysis.gutterSize = 'unreadable';
     } else if (inspectionType === 'inspection') {
         analysis.dripEdgeDetected = false;
-        analysis.dripEdgeCondition = 'unclear';
         analysis.underlaymentVisible = false;
     }
 
@@ -504,8 +502,6 @@ function simulateRoofEdgeAnalysis() {
     } else {
         // Simulate underlayment inspection analysis
         const dripEdgeDetected = Math.random() > 0.4;
-        const dripEdgeCondition = dripEdgeDetected ? 
-            (Math.random() > 0.5 ? 'good' : 'poor') : 'missing';
         
         if (!dripEdgeDetected) {
             issues.push({
@@ -523,7 +519,6 @@ function simulateRoofEdgeAnalysis() {
             overallQuality: Math.random() > 0.3 ? 'good' : 'needs_improvement',
             confidence: Math.floor(Math.random() * 30) + 70,
             dripEdgeDetected: dripEdgeDetected,
-            dripEdgeCondition: dripEdgeCondition,
             underlaymentVisible: Math.random() > 0.3,
             issues: issues,
             recommendations: recommendations,
@@ -585,7 +580,6 @@ function displayAIResults(results) {
         html += `<div class="drip-edge-detection ${dripEdgeClass}">
             <h4>🏠 Drip Edge Analysis</h4>
             <p>Drip Edge Detected: ${results.dripEdgeDetected ? 'Yes' : 'No'}</p>
-            ${results.dripEdgeCondition ? `<p>Condition: ${results.dripEdgeCondition}</p>` : ''}
             ${results.underlaymentVisible !== undefined ? `<p>Underlayment Visible: ${results.underlaymentVisible ? 'Yes' : 'No'}</p>` : ''}
         </div>`;
     }
