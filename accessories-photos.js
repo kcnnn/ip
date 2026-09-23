@@ -412,6 +412,9 @@ Please respond in JSON format with the following structure:
   "damageDetected": boolean,
   "damageTypes": ["cracks" | "corrosion" | "loose_mounting" | "weather_damage" | "water_damage" | "missing_components" | "other"],
   "installationQuality": "excellent" | "good" | "fair" | "poor" | "unclear",
+  "satelliteVisible": boolean (true only for a visible satellite dish; do not infer HD capability from dish shape),
+  "downspoutVisible": boolean (true only for a visible downspout, not merely a gutter or other pipe; do not estimate dimensions),
+  "splashguardVisible": boolean (true only for an identifiable gutter splashguard, not gutter covers, leaf guards or downspout splash blocks; do not infer a whole-property count),
   "issues": [
     {
       "type": "accessory_condition" | "damage" | "installation" | "clarity" | "lighting" | "composition" | "technical",
@@ -562,6 +565,9 @@ function displayAIResults(results) {
     html += '</div>';
     
     aiResults.innerHTML = html;
+    if(results.downspoutVisible===true)InspectionField.appendDownspoutFollowup(aiResults);
+    if(results.splashguardVisible===true && !results.apiError)InspectionField.appendSplashguardFollowup(aiResults);
+    if(results.satelliteVisible===true)window.InspectionField.appendSatelliteFollowup(aiResults);
     appendAccessorySearchButton(aiResults);
     
     // Update status

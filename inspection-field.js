@@ -14,9 +14,9 @@
     Object.defineProperty(hailDefinition,2,{get:()=>{const steps=window.InspectionStore?.hailSteps?.();return steps?.length ? steps.map(s=>s.label) : legacyHailSteps;}});
     const componentsBySection = {
         'Elevations': ['Siding', 'Window', 'Window screen', 'Door', 'Overhead door', 'Downspout', 'Trim', 'Fascia', 'Soffit', 'Brick / masonry', 'Stucco', 'Exterior light', 'Exterior vent', 'HVAC equipment', 'Fence', 'Gate', 'Deck / porch', 'Patio / walkway', 'Detached structure', 'Landscaping', 'Other'],
-        'Roof edge': ['Gutter', 'Downspout', 'Drip edge', 'Underlayment', 'Fascia', 'Soffit', 'Flashing', 'Shingles', 'Other'],
+        'Roof edge': ['Gutter', 'Gutter splashguard', 'Downspout', 'Drip edge', 'Underlayment', 'Fascia', 'Soffit', 'Flashing', 'Shingles', 'Other'],
         'Shingles': ['Shingles', 'Ridge shingles / caps', 'Ridge vent', 'Underlayment', 'Flashing', 'Other'],
-        'Roof overview': ['Shingles', 'Roof covering', 'Shingles', 'Valley', 'Flashing', 'Vent', 'Chimney', 'Other'],
+        'Roof overview': ['Shingles', 'Roof covering', 'Metal roof panel', 'Valley', 'Flashing', 'Vent', 'Chimney', 'Other'],
         'Accessories': ['Vent', 'Pipe boot', 'Rain cap', 'Rain diverter', 'Satellite dish', 'Chimney', 'Skylight', 'Flashing', 'Other'],
         'Hail documentation': ['Shingles', 'Roof covering', 'Ridge shingles / caps', 'Metal roof panel', 'Flashing', 'Vent', 'Other'],
         'Interview': ['General property', 'Roof', 'Exterior wall', 'Gutter', 'Downspout', 'Window', 'Door', 'Interior', 'Other'],
@@ -38,6 +38,7 @@
         }
         if (note.quantity && note.unit) parts.push(`Recorded measurement/count: ${note.quantity} ${note.unit}.`);
         if (note.details?.trim()) parts.push(note.details.trim());
+        if(note.component==='Gutter splashguard')parts.push('Configured estimating reference: SFG GSG — Replace only (not remove and replace). Scope and quantity require inspector confirmation.');
         return parts.join(' ');
     };
     const currentSection = () => location.pathname.endsWith('brittle-test.html') ? 'Shingles' : sections.find(section => location.pathname.endsWith(section[1]))?.[0] || 'Elevations';
@@ -152,6 +153,23 @@
             panel.hidden = !aiReview;
             const labels = { supports_note: 'Photo supports your note', needs_detail: 'More detail would help', conflicts_with_note: 'Photo and note may disagree', unable_to_assess: 'Photo could not be assessed' };
             panel.innerHTML = aiReview ? `<strong>AI photo review · ${escape(labels[aiReview.status])}</strong><p>${escape(aiReview.summary)}</p><ul>${aiReview.checks.map(item => `<li>${escape(item)}</li>`).join('')}</ul><details><summary>Correct an AI finding</summary><p>Your correction is added to the note and sent with the photo for a new review. Save only after checking the result.</p><div class="field-actions"><button type="button" class="field-button" data-review-correction="joint">Normal shingle joint</button><button type="button" class="field-button" data-review-correction="lift">Manually lifted for test</button><button type="button" class="field-button" data-review-correction="identity">Incorrect identification</button></div></details>` : '';
+            if(aiReview?.checks?.some(item=>item.startsWith('Chimney measurement required:'))) {
+                const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take chimney measurement photo';
+                button.onclick=()=>InspectionField.startChimneyMeasurement();panel.append(button);
+            }
+            if(aiReview?.checks?.some(item=>item.startsWith('Valley documentation:'))) {
+                const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take valley / metal photo';
+                button.onclick=()=>InspectionField.startValleyDetail();panel.append(button);
+            }
+            if(aiReview?.checks?.some(item=>item.startsWith('Satellite documentation:')))InspectionField.appendSatelliteFollowup?.(panel);
+            if(aiReview?.checks?.some(item=>item.startsWith('Downspout measurement:')))InspectionField.appendDownspoutFollowup?.(panel,elevationKey);
+            if(aiReview?.checks?.some(item=>item.startsWith('Splashguard count:')))InspectionField.appendSplashguardFollowup?.(panel);
+            for(const [prefix,kind,label] of [['Metal gauge documentation:','gauge','Take metal gauge photo'],['Seam height documentation:','seam','Take seam height photo']]) {
+                if(aiReview?.checks?.some(item=>item.startsWith(prefix))) {
+                    const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent=label;
+                    button.onclick=()=>InspectionField.startMetalMeasurement(kind);panel.append(button);
+                }
+            }
         };
         async function previewPhoto() {
             const generation = ++photoGeneration;
@@ -329,6 +347,81 @@
             loadNote(note);
             const notebook = document.getElementById('fieldNotebook'); if (notebook) notebook.open = true;
             form.scrollIntoView({ behavior: 'smooth', block: 'start' }); field('details').focus({ preventScroll: true });
+        };
+        window.InspectionField.appendSplashguardFollowup = panel => {
+            const followup=document.createElement('div');followup.className='field-dictation-first';
+            const message=document.createElement('p');message.textContent='Gutter splashguard identified: count the splashguards and document the count and locations. Do not assume one photo shows the entire property. Configured Xactimate reference: SFG GSG — Replace only, not remove and replace. The inspector confirms scope and quantity.';
+            const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Record splashguard count';button.onclick=()=>InspectionField.startSplashguardCount();
+            followup.append(message,button);panel.append(followup);
+        };
+        window.InspectionField.startSplashguardCount = () => {
+            if(capturing || filling || listening)return;
+            if(!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a splashguard count note? Save your current note first if you want to keep it. Uploaded photos remain saved.'))return;
+            loadNote({section:'Roof edge',component:'Gutter splashguard',photoPurpose:'overview',details:'',location:field('location').value});update();
+            const notebook=document.getElementById('fieldNotebook');if(notebook)notebook.open=true;
+            form.scrollIntoView({behavior:'smooth',block:'start'});
+            document.getElementById('fieldPhotoStatus').textContent='Count the gutter splashguards; dictate the count and locations. Add a photo if useful. SFG GSG — Replace only, not remove and replace; inspector confirms scope.';
+            field('details').focus({preventScroll:true});
+        };
+        window.InspectionField.appendDownspoutFollowup = (panel,key) => {
+            const followup=document.createElement('div');followup.className='field-dictation-first';
+            const message=document.createElement('p');message.textContent='Downspout identified: take a photo of the downspout with a tape measure. Show the scale and measurement endpoints clearly; dictate which dimension you measured and its units. Do not estimate the size from appearance.';
+            const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take downspout measurement photo';button.onclick=()=>InspectionField.startDownspoutMeasurement(key);
+            followup.append(message,button);panel.append(followup);
+        };
+        window.InspectionField.startDownspoutMeasurement = key => {
+            if(capturing || filling || listening)return;
+            if(!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a downspout measurement note? Save your current note first if you want to keep it. Uploaded photos remain saved.'))return;
+            const side=['front','right','rear','left'].includes(key)?key:null;
+            loadNote({section:'Elevations',elevationKey:side,component:'Downspout',photoPurpose:'measurement',details:'',location:side?elevationName(side):field('location').value});update();
+            const notebook=document.getElementById('fieldNotebook');if(notebook)notebook.open=true;
+            form.scrollIntoView({behavior:'smooth',block:'start'});
+            document.getElementById('fieldPhotoStatus').textContent='Photograph the downspout with a tape measure, readable scale and both endpoints visible. Dictate the dimension and units; use another photo for a second dimension if needed. Measure only from safe access. Upload photo is also available.';
+            document.getElementById('fieldCameraInput').click();
+        };
+        window.InspectionField.appendSatelliteFollowup = panel => {
+            const followup=document.createElement('div');followup.className='field-dictation-first';
+            const message=document.createElement('p');message.textContent='Satellite dish identified: take a close-up of the arm/feed assembly and readable model or HD markings. Record HD, non-HD, or unverified based on supporting identification—not dish shape alone. Calibration workflow: verified HD identification and a provided calibration invoice are required before consideration. An invoice or photo alone does not approve payment; the inspector confirms applicability.';
+            const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take satellite arm close-up';button.onclick=()=>InspectionField.startSatelliteDetail();
+            followup.append(message,button);panel.append(followup);
+        };
+        window.InspectionField.startSatelliteDetail = () => {
+            if(capturing || filling || listening)return;
+            if(!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a satellite detail note? Save your current note first if you want to keep it. Uploaded photos remain saved.'))return;
+            loadNote({section:'Accessories',component:'Satellite dish',photoPurpose:'label',details:'',location:field('location').value});update();
+            const notebook=document.getElementById('fieldNotebook');if(notebook)notebook.open=true;
+            form.scrollIntoView({behavior:'smooth',block:'start'});
+            document.getElementById('fieldPhotoStatus').textContent='Photograph the satellite arm/feed assembly and readable model/HD markings. Dictate the verified HD status or unverified, whether still in use, and whether a calibration invoice has been provided. HD identification and invoice are required for calibration consideration; no automatic payment approval. Upload photo is also available.';
+            document.getElementById('fieldCameraInput').click();
+        };
+        window.InspectionField.startMetalMeasurement = kind => {
+            if(!['gauge','seam'].includes(kind) || capturing || filling || listening)return;
+            if(!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a metal-roof measurement note? Save your current note first if you want to keep it. Uploaded photos remain saved.'))return;
+            loadNote({section:'Roof overview',component:'Metal roof panel',photoPurpose:'measurement',details:'',location:field('location').value});update();
+            const notebook=document.getElementById('fieldNotebook');if(notebook)notebook.open=true;
+            form.scrollIntoView({behavior:'smooth',block:'start'});
+            document.getElementById('fieldPhotoStatus').textContent=kind==='gauge'
+                ? 'Photograph the metal gauge/thickness instrument reading and placement at a safely accessible edge. Dictate the reading and units; do not infer gauge from appearance or convert thickness without knowing the material. Do not cut or dismantle roofing. Upload photo is also available.'
+                : 'Photograph seam height with a ruler showing the panel surface reference and seam top. Dictate the reading and units. If no raised seam exists or safe measurement is unavailable, note that instead. Upload photo is also available.';
+            document.getElementById('fieldCameraInput').click();
+        };
+        window.InspectionField.startValleyDetail = () => {
+            if(capturing || filling || listening)return;
+            if(!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a valley detail note? Save your current note first if you want to keep it. Uploaded photos remain saved.'))return;
+            loadNote({section:'Roof overview',component:'Valley',photoPurpose:'overview',details:'',location:field('location').value});update();
+            const notebook=document.getElementById('fieldNotebook');if(notebook)notebook.open=true;
+            form.scrollIntoView({behavior:'smooth',block:'start'});
+            document.getElementById('fieldPhotoStatus').textContent='Photograph the valley and any visible valley metal. Dictate open, closed-cut, woven, or uncertain; note if metal is concealed/not visible. Do not lift roofing to expose it. Upload photo is also available.';
+            document.getElementById('fieldCameraInput').click();
+        };
+        window.InspectionField.startChimneyMeasurement = () => {
+            if(capturing || filling || listening)return;
+            if(!field('id').value && (field('details').value.trim() || field('photoId').value) && !confirm('Start a chimney measurement note? Save your current note first if you want to keep it. Uploaded photos remain saved.'))return;
+            loadNote({section:'Accessories',component:'Chimney',photoPurpose:'measurement',details:'',location:field('location').value});update();
+            const notebook=document.getElementById('fieldNotebook');if(notebook)notebook.open=true;
+            form.scrollIntoView({behavior:'smooth',block:'start'});
+            document.getElementById('fieldPhotoStatus').textContent='Measure the chimney. Show the scale and measurement endpoints; dictate each dimension and unit. Use Upload photo if the measurement photo is already saved.';
+            document.getElementById('fieldCameraInput').click();
         };
         window.InspectionField.startElevationDetail = key => {
             if (!['front', 'right', 'rear', 'left'].includes(key) || capturing || filling || listening) return;

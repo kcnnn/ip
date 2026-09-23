@@ -326,6 +326,13 @@ Please respond in JSON format with the following structure:
   "damageDetected": boolean,
   "damageTypes": ["missing_shingles" | "cracks" | "lifting" | "weather_damage" | "water_damage" | "debris" | "other"],
   "coverageQuality": "excellent" | "good" | "fair" | "poor",
+  "chimneyVisible": boolean (true only when a chimney is visibly identified, not a pipe vent; do not infer from the note),
+  "valleyVisible": boolean (true only when a roof valley is visibly identified),
+  "metalRoofVisible": boolean (true only for visibly identified metal roof panels, not just metal flashing, vents or valley metal; never infer gauge or seam height from appearance),
+  "satelliteVisible": boolean (true only for a visible satellite dish; do not infer HD capability from dish shape),
+  "downspoutVisible": boolean (true only for a visible downspout, not merely a gutter or other pipe; do not estimate dimensions),
+  "splashguardVisible": boolean (true only for an identifiable gutter splashguard, not gutter covers, leaf guards or downspout splash blocks; do not infer a whole-property count),
+  "valleyType": "open" | "closed-cut" | "woven" | "uncertain" (classify visible shingle arrangement only; exposed valley channel = open, one plane cut along the valley = closed-cut, interwoven shingles = woven; use uncertain if obscured or mixed; never infer concealed metal),
   "issues": [
     {
       "type": "roof_condition" | "damage" | "coverage" | "clarity" | "lighting" | "composition" | "technical",
@@ -538,6 +545,34 @@ function displayAIResults(results) {
     html += '</div>';
     
     aiResults.innerHTML = html;
+    if(results.downspoutVisible===true && !results.apiError)InspectionField.appendDownspoutFollowup(aiResults);
+    if(results.splashguardVisible===true && !results.apiError)InspectionField.appendSplashguardFollowup(aiResults);
+    if(results.satelliteVisible===true && !results.apiError)window.InspectionField.appendSatelliteFollowup(aiResults);
+    if(results.metalRoofVisible===true && !results.apiError) {
+        const followup=document.createElement('div');followup.className='field-dictation-first';
+        const message=document.createElement('p');message.textContent='Metal roofing identified: photograph the metal gauge measurement and the seam height measurement. Show the instrument reading and placement. If either cannot be measured safely or there is no raised seam, document that instead; do not estimate from appearance.';
+        followup.append(message);
+        for(const kind of ['gauge','seam']) {
+            const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent=kind==='gauge'?'Take metal gauge photo':'Take seam height photo';
+            button.onclick=()=>window.InspectionField.startMetalMeasurement(kind);followup.append(button);
+        }
+        aiResults.append(followup);
+    }
+    if(results.valleyVisible===true && !results.apiError) {
+        const type=['open','closed-cut','woven'].includes(results.valleyType)?results.valleyType:'uncertain';
+        const followup=document.createElement('div');followup.className='field-dictation-first';
+        const message=document.createElement('p');message.textContent=`Roof valley identified. AI-suggested valley type: ${type}. Confirm and dictate the type. Photograph any visible valley metal; if covered or not visible, note that rather than assuming it is absent. Do not lift roofing to expose concealed metal.`;
+        const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take valley / metal photo';
+        button.onclick=()=>window.InspectionField.startValleyDetail();
+        followup.append(message,button);aiResults.append(followup);
+    }
+    if(results.chimneyVisible===true && !results.apiError) {
+        const followup=document.createElement('div');followup.className='field-dictation-first';
+        const message=document.createElement('p');message.textContent='Chimney identified: measure the chimney and document the dimensions. Photograph the measurement with the scale and endpoints visible, from a safe position.';
+        const button=document.createElement('button');button.type='button';button.className='field-button';button.textContent='Take chimney measurement photo';
+        button.onclick=()=>window.InspectionField.startChimneyMeasurement();
+        followup.append(message,button);aiResults.append(followup);
+    }
     
     // Update status
     const statusBadge = photoStatus.querySelector('.status-badge');

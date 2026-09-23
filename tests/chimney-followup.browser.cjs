@@ -1,0 +1,58 @@
+const assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+ const page=await browser.newPage();await page.goto('http://127.0.0.1:8000/roof-overview.html');
+ await page.evaluate(()=>{aiAnalysis.style.display='block';});
+ const show=visible=>page.evaluate(chimneyVisible=>displayAIResults({overallQuality:'good',confidence:80,roofCondition:'good',damageDetected:false,damageTypes:[],coverageQuality:'good',issues:[],recommendations:[],shouldRetake:false,chimneyVisible}),visible);
+ await show(false);assert.equal(await page.getByRole('button',{name:'Take chimney measurement photo'}).count(),0);
+ await show(true);const chooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Take chimney measurement photo'}).click();await chooser;
+ assert.equal(await page.locator('[name=section]').inputValue(),'Accessories');
+ assert.equal(await page.locator('[name=component]').inputValue(),'Chimney');
+ assert.equal(await page.locator('[name=photoPurpose]').inputValue(),'measurement');
+ assert.equal(await page.locator('[name=quantity]').inputValue(),'');
+ assert.equal(await page.locator('[name=details]').inputValue(),'');
+ for(const type of ['open','closed-cut','woven','invalid']) {
+  await page.evaluate(valleyType=>{aiAnalysis.style.display='block';displayAIResults({overallQuality:'good',confidence:80,roofCondition:'good',damageDetected:false,damageTypes:[],coverageQuality:'good',issues:[],recommendations:[],shouldRetake:false,valleyVisible:true,valleyType});},type);
+  assert.match(await page.locator('#aiResults').innerText(),new RegExp('AI-suggested valley type: '+(type==='invalid'?'uncertain':type)));
+ }
+ const valleyChooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Take valley / metal photo'}).click();await valleyChooser;
+ assert.equal(await page.locator('[name=component]').inputValue(),'Valley');
+ assert.equal(await page.locator('[name=section]').inputValue(),'Roof overview');
+ assert.equal(await page.locator('[name=details]').inputValue(),'');
+ await show(false);assert.equal(await page.getByRole('button',{name:'Take valley / metal photo'}).count(),0);
+ assert.equal(await page.getByRole('button',{name:'Take metal gauge photo'}).count(),0);
+ await page.evaluate(()=>{aiAnalysis.style.display='block';displayAIResults({overallQuality:'good',confidence:80,roofCondition:'good',damageDetected:false,damageTypes:[],coverageQuality:'good',issues:[],recommendations:[],shouldRetake:false,metalRoofVisible:true});});
+ for(const name of ['Take metal gauge photo','Take seam height photo']) {
+  const metalChooser=page.waitForEvent('filechooser');await page.getByRole('button',{name,exact:true}).click();await metalChooser;
+  assert.equal(await page.locator('[name=component]').inputValue(),'Metal roof panel');
+  assert.equal(await page.locator('[name=photoPurpose]').inputValue(),'measurement');
+  assert.equal(await page.locator('[name=quantity]').inputValue(),'');
+  assert.equal(await page.locator('[name=details]').inputValue(),'');
+  assert.match(await page.locator('#fieldPhotoStatus').innerText(),name.includes('gauge')?/instrument reading/:/seam height/i);
+ }
+ await show(false);assert.equal(await page.getByRole('button',{name:'Take satellite arm close-up'}).count(),0);
+ await page.evaluate(()=>{aiAnalysis.style.display='block';displayAIResults({overallQuality:'good',confidence:80,roofCondition:'good',damageDetected:false,damageTypes:[],coverageQuality:'good',issues:[],recommendations:[],shouldRetake:false,satelliteVisible:true});});
+ assert.match(await page.locator('#aiResults').innerText(),/verified HD identification and a provided calibration invoice are required/);
+ const satelliteChooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Take satellite arm close-up'}).click();await satelliteChooser;
+ assert.equal(await page.locator('[name=component]').inputValue(),'Satellite dish');
+ assert.equal(await page.locator('[name=photoPurpose]').inputValue(),'label');
+ assert.equal(await page.locator('[name=details]').inputValue(),'');
+ assert.match(await page.locator('#fieldPhotoStatus').innerText(),/no automatic payment approval/);
+ await show(false);assert.equal(await page.getByRole('button',{name:'Take downspout measurement photo'}).count(),0);
+ await page.evaluate(()=>{aiAnalysis.style.display='block';displayAIResults({overallQuality:'good',confidence:80,roofCondition:'good',damageDetected:false,damageTypes:[],coverageQuality:'good',issues:[],recommendations:[],shouldRetake:false,downspoutVisible:true});});
+ const downspoutChooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Take downspout measurement photo'}).click();await downspoutChooser;
+ assert.equal(await page.locator('[name=component]').inputValue(),'Downspout');
+ assert.equal(await page.locator('[name=photoPurpose]').inputValue(),'measurement');
+ assert.equal(await page.locator('[name=quantity]').inputValue(),'');
+ assert.match(await page.locator('#fieldPhotoStatus').innerText(),/tape measure/);
+ await show(false);assert.equal(await page.getByRole('button',{name:'Record splashguard count'}).count(),0);
+ await page.evaluate(()=>{aiAnalysis.style.display='block';displayAIResults({overallQuality:'good',confidence:80,roofCondition:'good',damageDetected:false,damageTypes:[],coverageQuality:'good',issues:[],recommendations:[],shouldRetake:false,splashguardVisible:true});});
+ await page.getByRole('button',{name:'Record splashguard count'}).click();
+ assert.equal(await page.locator('[name=component]').inputValue(),'Gutter splashguard');
+ assert.equal(await page.locator('[name=quantity]').inputValue(),'');
+ assert.equal(await page.locator('[name=condition]').inputValue(),'');
+ const narrative=await page.evaluate(()=>InspectionField.narrative({section:'Roof edge',component:'Gutter splashguard',quantity:3,unit:'each',details:'Three at rear.'}));
+ assert.match(narrative,/SFG GSG — Replace only \(not remove and replace\)/);
+ assert.match(narrative,/3 each/);
+ console.log('PASS roof follow-ups, camera entry, splashguard scope reference and no invented findings.');
+}finally{await browser.close();}})().catch(error=>{console.error(error);process.exit(1);});

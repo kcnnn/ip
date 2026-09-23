@@ -352,6 +352,8 @@ function displayAIResults(results) {
     html += '</div>';
     
     aiResults.innerHTML = html;
+    if(results.downspoutVisible===true && !results.apiError)InspectionField.appendDownspoutFollowup(aiResults,elevations[currentElevationIndex].key);
+    if(results.splashguardVisible===true && !results.apiError)InspectionField.appendSplashguardFollowup(aiResults);
     const detailButton = document.createElement('button');
     detailButton.type = 'button'; detailButton.className = 'action-btn secondary';
     detailButton.textContent = `Add detail photos · ${elevations[currentElevationIndex].name}`;

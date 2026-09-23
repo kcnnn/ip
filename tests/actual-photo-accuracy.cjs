@@ -37,12 +37,13 @@ const {chromium}=require('playwright');
     for(const [key,value] of Object.entries(item.expectedFields || {})) if(JSON.stringify(result.fields?.[key]??null)!==JSON.stringify(value))issues.push(`${key} field regression`);
     for(const type of item.forbiddenDamageTypes || [])if(result.fields?.damageTypes?.includes(type))issues.push(`incorrect ${type} classification`);
    }
-   const status=issues.length?'FAIL':item.kind==='label'?'OCR_PASS':'REVIEW_REQUIRED';
-   rows.push({id:item.id,sha256:item.sha256,comparisonHashes:item.comparisons.map(p=>({phase:p.phase,sha256:p.sha256})),status,issues,expected:item.expected,expectedFields:item.expectedFields,reviewCriteria:item.reviewCriteria,result});
+   const status=issues.length?'FAIL':item.kind==='label'&&Object.keys(item.expected || {}).length?'OCR_PASS':'REVIEW_REQUIRED';
+   rows.push({id:item.id,category:item.category,sha256:item.sha256,comparisonHashes:item.comparisons.map(p=>({phase:p.phase,sha256:p.sha256})),status,issues,expected:item.expected,expectedFields:item.expectedFields,reviewCriteria:item.reviewCriteria,result});
    console.log(`${status} ${item.id}${issues.length?': '+issues.join(', '):''}`);
   }
   const extractorHash=crypto.createHash('sha256').update(fs.readFileSync(path.join(repo,'observation-extraction.js'))).digest('hex');
-  fs.writeFileSync(output,JSON.stringify({testedAt:new Date().toISOString(),model,extractorHash,results:rows},null,2).split(process.env.APEX_EVAL_API_KEY).join('[redacted]'),{flag:'wx',mode:0o600});
+  const sourceHashes=Object.fromEntries(require('./photo-release-check.cjs').sources.map(file=>[file,crypto.createHash('sha256').update(fs.readFileSync(path.join(repo,file))).digest('hex')]));
+  fs.writeFileSync(output,JSON.stringify({testedAt:new Date().toISOString(),model,extractorHash,sourceHashes,results:rows},null,2).split(process.env.APEX_EVAL_API_KEY).join('[redacted]'),{flag:'wx',mode:0o600});
   console.log('Private responses saved for visual comparison. OCR passes are not general photo-accuracy certification.');
  }finally{await browser.close();}
  process.exitCode=rows.some(r=>r.status==='FAIL')?1:rows.some(r=>r.status==='REVIEW_REQUIRED')?2:0;

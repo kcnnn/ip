@@ -1,7 +1,88 @@
 [
- {"id":"gutter-blind","kind":"observation","photo":"/PRIVATE/5-gutter.png","section":"Roof edge","purpose":"measurement","note":"Gutter measurement photo.","reviewCriteria":"Compare readable scale and endpoints to measured ground truth. No answer is included in the note. Do not confuse inches with tape capacity or feet."},
- {"id":"normal-shingle-joints","kind":"observation","photo":"/PRIVATE/shingle-before.png","section":"Shingles","purpose":"brittle","brittlePhase":"before","note":"Front slope.","expectedFields":{"condition":null},"forbiddenDamageTypes":["Cracking","Wind / lifted shingle"],"reviewCriteria":"Normal straight tab joints must not trigger a crack warning or request for a damage assessment. Confirm against the real image, not keywords."},
- {"id":"manual-lift-pass","kind":"observation","photo":"/PRIVATE/shingle-after.png","section":"Shingles","purpose":"brittle","brittlePhase":"after","comparisons":[{"phase":"before","photo":"/PRIVATE/shingle-before.png"}],"note":"Front slope. I manually lifted the shingle. Passed the brittle test with no damage.","expectedFields":{"condition":"No visible damage"},"forbiddenDamageTypes":["Wind / lifted shingle","Mechanical damage"],"reviewCriteria":"Compare before and after. No invented wind damage. Attribute pass to inspector; this checks interpretation, not visual proof of flexibility."},
- {"id":"real-crack-control","kind":"observation","photo":"/PRIVATE/verified-crack.png","section":"Shingles","purpose":"damage","note":"Roof shingle close-up.","reviewCriteria":"A qualified reviewer must verify visible irregular break across the shingle. It must not be dismissed as a normal tab joint. Ground truth required."},
- {"id":"label-exact","kind":"label","photo":"/PRIVATE/verified-label.png","expected":{"model":"REPLACE_WITH_VERIFIED_MODEL","serial":"REPLACE_WITH_VERIFIED_SERIAL"},"reviewCriteria":"Verify each identifier against the original label. Do not infer a missing brand."}
+  {
+    "id": "gutter-blind",
+    "kind": "observation",
+    "photo": "/PRIVATE/5-gutter.png",
+    "section": "Roof edge",
+    "purpose": "measurement",
+    "note": "Gutter measurement photo.",
+    "reviewCriteria": "Compare readable scale and endpoints to measured ground truth. No answer is included in the note. Do not confuse inches with tape capacity or feet.",
+    "category": "uncertain-photo"
+  },
+  {
+    "id": "normal-shingle-joints",
+    "kind": "observation",
+    "photo": "/PRIVATE/shingle-before.png",
+    "section": "Shingles",
+    "purpose": "brittle",
+    "brittlePhase": "before",
+    "note": "Front slope.",
+    "expectedFields": {
+      "condition": null
+    },
+    "forbiddenDamageTypes": [
+      "Cracking",
+      "Wind / lifted shingle"
+    ],
+    "reviewCriteria": "Normal straight tab joints must not trigger a crack warning or request for a damage assessment. Confirm against the real image, not keywords.",
+    "category": "normal-joints"
+  },
+  {
+    "id": "manual-lift-pass",
+    "kind": "observation",
+    "photo": "/PRIVATE/shingle-after.png",
+    "section": "Shingles",
+    "purpose": "brittle",
+    "brittlePhase": "after",
+    "comparisons": [
+      {
+        "phase": "before",
+        "photo": "/PRIVATE/shingle-before.png"
+      }
+    ],
+    "note": "Front slope. I manually lifted the shingle. Passed the brittle test with no damage.",
+    "expectedFields": {
+      "condition": "No visible damage"
+    },
+    "forbiddenDamageTypes": [
+      "Wind / lifted shingle",
+      "Mechanical damage"
+    ],
+    "reviewCriteria": "Compare before and after. No invented wind damage. Attribute pass to inspector; this checks interpretation, not visual proof of flexibility.",
+    "category": "manual-lift"
+  },
+  {
+    "id": "real-crack-control",
+    "kind": "observation",
+    "photo": "/PRIVATE/verified-crack.png",
+    "section": "Shingles",
+    "purpose": "damage",
+    "note": "Roof shingle close-up.",
+    "reviewCriteria": "A qualified reviewer must verify visible irregular break across the shingle. It must not be dismissed as a normal tab joint. Ground truth required.",
+    "category": "real-crack"
+  },
+  {
+    "id": "label-exact",
+    "kind": "label",
+    "photo": "/PRIVATE/verified-label.png",
+    "expected": {
+      "model": "REPLACE_WITH_VERIFIED_MODEL",
+      "serial": "REPLACE_WITH_VERIFIED_SERIAL"
+    },
+    "reviewCriteria": "Verify each identifier against the original label. Do not infer a missing brand.",
+    "category": "label"
+  },
+  {
+    "id": "mechanical-not-hail",
+    "category": "mechanical-not-hail",
+    "kind": "observation",
+    "photo": "/PRIVATE/verified-mechanical-dent.png",
+    "section": "Elevations",
+    "purpose": "damage",
+    "note": "Door dent. Inspector assessment: mechanical damage, not hail.",
+    "forbiddenDamageTypes": [
+      "Hail / impact"
+    ],
+    "reviewCriteria": "Verify the original photo. Preserve the inspector's mechanical assessment without independently certifying cause from the image; do not relabel it as hail."
+  }
 ]

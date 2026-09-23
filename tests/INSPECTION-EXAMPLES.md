@@ -1,5 +1,28 @@
 # Inspection-example checks
 
+## Release gate for photo-review changes
+
+Run `node tests/photo-release-check.test.cjs` for the offline gate tests. This tests the gate, NOT photo accuracy.
+
+The private live manifest must cover categories `normal-joints`, `manual-lift`, `real-crack`, `mechanical-not-hail`, `label`, and `uncertain-photo`. The template includes these categories; replace placeholders with inspector-verified private examples. The inspector should review the original image and full response against each rubric, including false positives, missed real damage, invented identifiers, and overstated certainty. A failed response remains a failure—do not change reference answers to make it pass.
+
+After a fresh live run, create a private review JSON outside Git:
+
+```json
+{
+  "reportHash": "SHA256_OF_THE_EXACT_RESULTS_JSON_FILE",
+  "reviewer": "Reviewer name",
+  "reviewedAt": "2026-09-21",
+  "decisions": [
+    {"id": "normal-shingle-joints", "verdict": "pass", "notes": "Specific observations supporting this decision; include limitations."}
+  ]
+}
+```
+
+Use `shasum -a 256 /private/path/results.json` for the report hash. Include a decision for EVERY case; use `fail` or `needs_review` when appropriate. Never pre-fill a pass without reviewing the actual response and photo.
+
+Run `node tests/photo-release-check.cjs /private/path/results.json /private/path/review.json` before releasing photo-review changes. Exit 0 means the sampled suite has complete coverage, no automated failures, all cases explicitly reviewed, and matching current source hashes. Exit 1 blocks the check. Missing photos, missing decisions and old reports cannot pass. This is a manual release check, not an automatic Git push hook or a statistical accuracy certification. Private responses, photos, manifests and reviewer notes must not be committed. Older reports lacking category/source hashes need a new live run.
+
 The fixture manifest captures recurring user-reported cases: water-heater/HVAC reference labels, mechanical damage explicitly not hail, a five-inch gutter, a chalk 10+ tally, and an overview with no damage assessment. Expected values concern the inspector's words; they are not independent diagnoses of photos.
 
 Offline browser tests mock provider responses and verify app behavior, not model accuracy. `live-inspection-examples.cjs` separately checks actual vision/organization responses against these cases.

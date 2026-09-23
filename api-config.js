@@ -115,9 +115,9 @@ async function analyzePhotoWithChatGPT(imageData, elevationType) {
    - Overexposure or underexposure?
    - Poor angle or perspective?
 
-4. Front-elevation handoff:
-   - Only when this is a front elevation, identify whether a downspout is visibly present.
-   - When a downspout is visible, set "downspoutVisible" to true. This will cue the inspector to document gutter size in the upcoming roof-edge step.
+4. Downspout documentation:
+   - On any elevation, identify whether a downspout is visibly present, not just a gutter or unrelated pipe.
+   - When a downspout is visible, set "downspoutVisible" to true. Prompt for a downspout photo with a tape measure showing readable scale and measurement endpoints. Never infer its size from appearance.
 
 5. Recommendations:
    - What improvements could be made?
@@ -128,6 +128,7 @@ Please respond in JSON format with the following structure:
   "overallQuality": "good" | "needs_improvement" | "poor",
   "confidence": number (0-100),
   "downspoutVisible": boolean,
+  "splashguardVisible": boolean (true only for an identifiable gutter splashguard, not gutter covers, leaf guards or downspout splash blocks; do not infer a whole-property count),
   "issues": [
     {
       "type": "clarity" | "distance" | "lighting" | "composition" | "technical",
