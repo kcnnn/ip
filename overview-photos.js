@@ -196,7 +196,6 @@ function displayPhotoPreview(imageData) {
     capturedPhotos[overviewPhotos[currentPhotoIndex].key] = imageData;
     window.InspectionStore?.recordPhoto('Roof overview', overviewPhotos[currentPhotoIndex].name, imageData);
     
-    appendManualChimneyPrompt(photoPreview);
     // Update UI
     updatePhotoDisplay();
     updateChecklist();
