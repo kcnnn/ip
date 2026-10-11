@@ -1,0 +1,10 @@
+{
+  "name": "apex-browser-tests",
+  "private": true,
+  "scripts": {
+    "test:jev": "node --test jev-api.test.cjs jev-equipment-api.test.cjs",
+    "test:jev-browser": "node jev-equipment.browser.cjs"
+  },
+  "devDependencies": {"playwright": "1.64.0"},
+  "engines": {"node": ">=22"}
+}

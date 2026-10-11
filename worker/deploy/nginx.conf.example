@@ -1,0 +1,24 @@
+# Include the zones within nginx's http context. Supply your own TLS certificate.
+limit_req_zone $binary_remote_addr zone=jev_requests:10m rate=2r/m;
+limit_conn_zone $binary_remote_addr zone=jev_connections:10m;
+server {
+    listen 443 ssl;
+    server_name jev-worker.example.com;
+    ssl_certificate /etc/ssl/apex/fullchain.pem;
+    ssl_certificate_key /etc/ssl/apex/privkey.pem;
+    client_max_body_size 2k;
+    client_body_timeout 5s;
+    location = /v1/equipment {
+        limit_except POST { deny all; }
+        limit_req zone=jev_requests burst=1 nodelay;
+        limit_conn jev_connections 2;
+        proxy_pass http://127.0.0.1:8787;
+        proxy_read_timeout 130s;
+        proxy_send_timeout 5s;
+        # The Python handler checks the separate service bearer token.
+        proxy_set_header Authorization $http_authorization;
+        # Do not log request bodies, authorization headers or provider traces.
+        access_log off;
+    }
+    location / { return 404; }
+}

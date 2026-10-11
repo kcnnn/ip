@@ -11,5 +11,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/jev-equipment.js": {
+      "maxDuration": 150
+    }
+  }
 }

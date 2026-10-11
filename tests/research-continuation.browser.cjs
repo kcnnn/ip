@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true});
  try {
-  const page=await browser.newPage();await page.goto('http://127.0.0.1:8000/inspection-workspace.html');
+  const page=await browser.newPage();await page.goto((process.env.APEX_TEST_URL || 'http://127.0.0.1:8000')+'/inspection-workspace.html');
   await page.evaluate(()=>localStorage.setItem('claude_api_key','synthetic'));
   const source={type:'web_search_tool_result',content:[{type:'web_search_result',url:'https://manufacturer.example/manual'}]};
   const cited={type:'text',text:'TEST model installation manual.',citations:[{type:'web_search_result_location',url:'https://manufacturer.example/manual',title:'Manual'}]};

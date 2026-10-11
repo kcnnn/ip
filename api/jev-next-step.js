@@ -14,7 +14,7 @@ const messages = {
     capture_measurement: 'Document the relevant measurement or count, with readable units and reference points.',
     capture_closeup: 'Take a closer detail photo from a safe position.',
     clarify_note: 'Clarify the location, component or conflicting details in your note.',
-    research_equipment: 'Look up manufacturer documentation for the recorded exact model. Automated research is not connected yet.',
+    research_equipment: 'Look up manufacturer documentation for the recorded exact model. Use the equipment research panel to retrieve and review sources.',
     no_additional_step: 'No additional step suggested from this information. This is not confirmation of completeness or absence of damage.',
     uncertain: 'Jev needs more context: describe what you want to establish (for example, equipment identity, a measurement, or a visible defect) and include any unreadable label details.'
 };

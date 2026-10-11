@@ -1,0 +1,7 @@
+{
+  "rheem": {
+    "start_url": "https://www.rheem.com/",
+    "hosts": ["www.rheem.com", "rheem.com", "parts.rheem.com"],
+    "source_hosts": ["www.rheem.com", "rheem.com", "parts.rheem.com"]
+  }
+}

@@ -85,20 +85,36 @@ export async function researchCitedSources(prompt, signal, progress = () => {}) 
     throw new Error('Research is taking too many continuations. No findings were saved. Please retry later.');
 }
 
+// The browser provider shares the existing candidate review and acceptance flow.
+export async function researchEquipmentWithJev(label, access, confirmed, signal) {
+    if (!confirmed || !label.manufacturer.trim() || !label.model.trim()) throw new Error('Confirm the manufacturer and exact model against the label first.');
+    if (!access) throw new Error('Enter the APEX access code from your administrator.');
+    const response=await fetch('/api/jev-equipment',{method:'POST',signal,headers:{'Content-Type':'application/json','x-apex-jev-access':access},body:JSON.stringify({manufacturer:label.manufacturer,model:label.model,confirmed:true})});
+    if (!(response.headers.get('content-type') || '').includes('application/json')) throw new Error('Browser research requires vercel dev or the deployed server interface.');
+    const result=await response.json();
+    if (!response.ok) throw new Error(result.error || 'Browser research unavailable.');
+    if (result.provider!=='Jev Ultrafast' || result.manufacturer!==label.manufacturer || result.model!==label.model || !Array.isArray(result.findings) || !result.findings.length || result.findings.length>6 || !Number.isFinite(Date.parse(result.retrievedAt))) throw new Error('Browser research returned incomplete evidence.');
+    for (const finding of result.findings) {
+        if(typeof finding.text!=='string' || finding.text.length>1200 || typeof finding.evidence!=='string' || !finding.evidence.trim() || !finding.text.includes(finding.evidence) || !Array.isArray(finding.sources) || finding.sources.length!==1 || !finding.sources.every(s=>sourceURL(s.url) && typeof s.title==='string')) throw new Error('Browser research returned invalid source evidence.');
+    }
+    return result;
+}
+
 export function mountEquipmentResearch(form, readState, accept) {
     const panel=document.createElement('details');panel.className='field-dictation-first';panel.id='fieldEquipmentResearch';
-    panel.innerHTML=`<h3>Equipment details, with sources.</h3><p class="field-help">For an HVAC, water-heater or other equipment label: read the photo, check the model, then research manufacturer documentation. Uses your configured photo AI and web search. Only manufacturer/model are used for research—not your serial number, address or claim notes.</p><button type="button" class="field-button" id="equipmentIdentify">Identify & research equipment</button><div id="equipmentIdentity" hidden><p class="field-help">Check these readings against the photo. A missing brand does not prevent searching by model.</p><div class="field-grid"><label>Manufacturer<input id="equipmentManufacturer" maxlength="150"></label><label>Exact model<input id="equipmentModel" maxlength="150"></label><label>Serial number<input id="equipmentSerial" maxlength="150"></label></div><p id="equipmentLimitations" class="field-help"></p><button type="button" class="field-button" id="equipmentSearch">Find manufacturer information</button></div><p id="equipmentStatus" role="status"></p><div id="equipmentResults"></div>`;
+    panel.innerHTML=`<h3>Equipment details, with sources.</h3><p class="field-help">For an HVAC, water-heater or other equipment label: read the photo, check the model, then research manufacturer documentation. Uses your configured photo AI and web search. Only manufacturer/model are used for research—not your serial number, address or claim notes.</p><button type="button" class="field-button" id="equipmentIdentify">Identify & research equipment</button><div id="equipmentIdentity" hidden><p class="field-help">Check these readings against the photo. A missing brand does not prevent searching by model.</p><div class="field-grid"><label>Manufacturer<input id="equipmentManufacturer" maxlength="150"></label><label>Exact model<input id="equipmentModel" maxlength="150"></label><label>Serial number<input id="equipmentSerial" maxlength="150"></label></div><p id="equipmentLimitations" class="field-help"></p><label>Research method<select id="equipmentProvider"><option value="claude">Claude web search</option><option value="jev">Jev browser · configured manufacturers</option></select></label><div id="equipmentBrowserOptions" hidden><label>APEX access code<input type="password" id="equipmentBrowserAccess" autocomplete="off"></label><p class="field-help">Access code from your administrator, not a provider API key. Kept only in this page. Browser results are documentation excerpts that still require source review.</p><label><input type="checkbox" id="equipmentIdentityConfirmed"> I checked the manufacturer and exact model against this label.</label></div><button type="button" class="field-button" id="equipmentSearch">Find manufacturer information</button></div><p id="equipmentStatus" role="status"></p><div id="equipmentResults"></div>`;
     form.querySelector('.field-extraction-heading').before(panel);
     const summary=document.createElement('summary');summary.textContent='Research this equipment · optional';panel.prepend(summary);
     const updateVisibility=()=>{const note=readState();panel.hidden=!/\b(hvac|water[ -]?heater|condenser|furnace|air conditioner|heat pump|equipment|rating plate|serial|model number|electrical panel|appliance)\b/i.test(`${note.details || ''} ${note.aiReview?.summary || ''}`);};
     updateVisibility();form.addEventListener('input',updateVisibility);form.addEventListener('inspection-note-prepared',updateVisibility);
     const $=id=>panel.querySelector('#'+id);
+    $('equipmentProvider').onchange=()=>{$('equipmentBrowserOptions').hidden=$('equipmentProvider').value!=='jev';searched=null;$('equipmentResults').replaceChildren();controller?.abort();};
     let generation=0, controller, label=null, findings=[], searched=null;
     const cancel=document.createElement('button');cancel.type='button';cancel.className='field-button';cancel.textContent='Cancel research';cancel.hidden=true;
     $('equipmentStatus').after(cancel);cancel.onclick=()=>controller?.abort();
     const photoStamp=()=>JSON.stringify({record:InspectionStore.get().id,photo:readState().photoId,revision:InspectionStore.get().photos[readState().photoId]?.revision});
     let selectedPhoto=photoStamp();
-    function clear() {generation++;controller?.abort();label=null;findings=[];searched=null;$('equipmentIdentity').hidden=true;$('equipmentResults').replaceChildren();$('equipmentStatus').textContent='';selectedPhoto=photoStamp();}
+    function clear() {$('equipmentIdentityConfirmed').checked=false;generation++;controller?.abort();label=null;findings=[];searched=null;$('equipmentIdentity').hidden=true;$('equipmentResults').replaceChildren();$('equipmentStatus').textContent='';selectedPhoto=photoStamp();}
     function identifiers() {return {manufacturer:$('equipmentManufacturer').value.trim(),model:$('equipmentModel').value.trim(),serial:$('equipmentSerial').value.trim()};}
     async function run(action) {
         controller?.abort();controller=new AbortController();const signal=controller.signal, token=++generation, stamp=photoStamp();
@@ -115,7 +131,7 @@ export function mountEquipmentResearch(form, readState, accept) {
         $('equipmentStatus').textContent='Reading the equipment label…';$('equipmentResults').replaceChildren();searched=null;
         const photo=await InspectionStore.getPhoto(id);if(!photo) throw new Error('The selected photo is unavailable. Upload it again.');
         const value=await readEquipmentLabel(photo,signal);if(!current()) return;
-        label=value;selectedPhoto=photoStamp();
+        label=value;selectedPhoto=photoStamp();$('equipmentIdentityConfirmed').checked=false;
         for(const key of ['manufacturer','model','serial']) $('equipment'+key[0].toUpperCase()+key.slice(1)).value=value[key] || '';
         $('equipmentLimitations').textContent=value.limitations;$('equipmentIdentity').hidden=false;
         $('equipmentStatus').textContent='Check the label readings, then find manufacturer information.';
@@ -124,8 +140,10 @@ export function mountEquipmentResearch(form, readState, accept) {
         if(!label || selectedPhoto!==photoStamp()) throw new Error('Read the current photo first.');
         const ids=identifiers();$('equipmentResults').replaceChildren();searched=null;
         $('equipmentStatus').textContent='Searching manufacturer sources for this model…';
-        const result=await researchEquipment(ids,signal,message=>{if(current()) $('equipmentStatus').textContent=message;});if(!current() || JSON.stringify(ids)!==JSON.stringify(identifiers())) return;
-        findings=result;searched={...ids,photoId:readState().photoId,revision:InspectionStore.get().photos[readState().photoId]?.revision,retrievedAt:new Date().toISOString()};
+        const provider=$('equipmentProvider').value;
+        const browserResult=provider==='jev'?await researchEquipmentWithJev(ids,$('equipmentBrowserAccess').value,$('equipmentIdentityConfirmed').checked,signal):null;
+        const result=browserResult?browserResult.findings:await researchEquipment(ids,signal,message=>{if(current()) $('equipmentStatus').textContent=message;});if(!current() || provider!==$('equipmentProvider').value || JSON.stringify(ids)!==JSON.stringify(identifiers())) return;
+        findings=result;searched={...ids,provider:browserResult?.provider || 'Claude web search',photoId:readState().photoId,revision:InspectionStore.get().photos[readState().photoId]?.revision,retrievedAt:browserResult?.retrievedAt || new Date().toISOString()};
         const container=$('equipmentResults');
         const help=document.createElement('p');help.textContent='Candidate findings—not a verified match. Open the sources, check the exact model, and select only the details you want in the report.';container.append(help);
         findings.forEach((finding,index)=>{
@@ -144,7 +162,7 @@ export function mountEquipmentResearch(form, readState, accept) {
         };
         $('equipmentStatus').textContent='Sources found. Review and select the useful details below.';
     });
-    panel.addEventListener('input',event=>{if(['equipmentManufacturer','equipmentModel','equipmentSerial'].includes(event.target.id)){searched=null;$('equipmentResults').replaceChildren();$('equipmentStatus').textContent='Label details changed. Search again to update the findings.';}});
+    panel.addEventListener('input',event=>{if(['equipmentManufacturer','equipmentModel','equipmentSerial'].includes(event.target.id)){$('equipmentIdentityConfirmed').checked=false;searched=null;$('equipmentResults').replaceChildren();$('equipmentStatus').textContent='Label details changed. Search again to update the findings.';}});
     form.addEventListener('input',()=>{if(selectedPhoto!==photoStamp()){clear();$('equipmentIdentify').disabled=false;$('equipmentSearch').disabled=false;}});
-    form.addEventListener('reset',()=>{clear();$('equipmentIdentify').disabled=false;$('equipmentSearch').disabled=false;cancel.hidden=true;panel.open=false;queueMicrotask(updateVisibility);});
+    form.addEventListener('reset',()=>{$('equipmentBrowserAccess').value='';$('equipmentBrowserOptions').hidden=true;clear();$('equipmentIdentify').disabled=false;$('equipmentSearch').disabled=false;cancel.hidden=true;panel.open=false;queueMicrotask(updateVisibility);});
 }

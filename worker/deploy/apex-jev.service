@@ -1,0 +1,23 @@
+[Unit]
+Description=APEX isolated Jev equipment browser worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=apex-jev
+WorkingDirectory=/opt/apex/worker
+EnvironmentFile=/etc/apex/jev-worker.env
+ExecStart=/opt/apex/worker/.venv/bin/python -m jev_worker.server
+Restart=on-failure
+KillMode=control-group
+TimeoutStopSec=10
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+UMask=0077
+MemoryMax=2G
+TasksMax=256
+
+[Install]
+WantedBy=multi-user.target

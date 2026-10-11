@@ -4,7 +4,7 @@ const {chromium}=require('playwright');
  const browser=await chromium.launch({channel:'chrome',headless:true});
  try {
   const page=await browser.newPage({viewport:{width:390,height:844}});
-  await page.goto('http://127.0.0.1:8000/inspection-workspace.html');
+  await page.goto((process.env.APEX_TEST_URL || 'http://127.0.0.1:8000')+'/inspection-workspace.html');
   await page.getByText('Advanced · Jev next-step suggestion',{exact:true}).click();
   await page.locator('[name=details]').fill('HVAC condenser has an unreadable label.');
   await page.locator('#jevAsk').click();assert.match(await page.locator('#jevStatus').innerText(),/access code/);

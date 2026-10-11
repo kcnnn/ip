@@ -1,4 +1,19 @@
-# Equipment research and optional TypeSafe Jev
+# Jev integration audit and setup
+
+## Audit (APEX base `3059dc3`)
+
+| Existing area | Functional behavior | Configuration / gap |
+| --- | --- | --- |
+| `jev-assistant.js` + `api/jev-next-step.js` | Photo-context/text → authenticated TypeSafe Choice → bounded next-step suggestion, tentative confidence display | Requires TypeSafe key and inspector access token. No browser actions or document retrieval. A stale “research not connected” suggestion has been corrected. |
+| `jev-photo-context.js` | Existing photo AI extracts manufacturer/model/serial and limitations; clearly attributes the AI reading | Requires existing photo-provider setup. Reading is fallible and needs inspector confirmation. |
+| `equipment-research.js` | Claude native web search, real citation validation, continuation handling, model relevance filtering, candidate selection | Requires Claude key and web-search availability. Existing provider configuration stores the photo/Claude key client-side; this change preserves that architecture and introduces no new browser-visible provider keys. |
+| `inspection-field.js`, review and claim notes | Explicit acceptance, photo-revision association, persisted sources/timestamps, report/PDF/text integration | Reused by the new provider; no parallel approval or reporting system. |
+| Browser automation | Previously absent: no Python worker, browser lifecycle, service auth, domain policy or browser-derived evidence verification | Added in this branch; requires separate Chrome/Python infrastructure and credentials. Fixture integration and real Chrome smoke tests do not replace credentialed release verification. |
+
+Review of the official [Jev Agent implementation](https://github.com/browser-use/jev-ultrafast/blob/1231850a0bf1a0c0341fe408ef1668dbbfdfac46/jev_ultrafast/agent.py): synchronous context-managed `Agent(url, goal)` and `run()` generator; `done`/`blocked` states; no built-in equipment extractor, manufacturer allowlist or independent specification verifier. Its Browser Harness normally shares a Chrome profile. The new worker supplies disposable Chrome/Harness instances, a restrictive proxy, bounded runtime and independent page evidence checks. It does not run the upstream demo server.
+
+See [worker/README.md](worker/README.md) for configuration, exact limits, deployment files, test commands and the outstanding live release check.
+
 
 ## Equipment research
 
@@ -8,7 +23,7 @@ Only manufacturer/model are sent in the research request. The photo stays in the
 
 Choose the individual cited findings to include and confirm the model match, then **Add selected details to report**. Accepted research is saved separately from dictated notes and condition/damage fields, linked to the selected photo revision, and included in the inspection review/PDF and text-only claim notes with sources and timestamps. Nothing is automatically accepted. A new photo does not inherit another photo's accepted equipment research.
 
-Provider keys retain the app's existing configuration. Research uses Claude's web search directly, not a Jev browser worker; Jev is optional under **Advanced · Jev next-step suggestion**. No browser worker, permit research, carrier portal integration, or code-compliance determination is deployed.
+Provider keys retain the app's existing configuration. Claude web search remains the default. The equipment panel also offers **Jev browser** through a separately configured Python worker; see [worker setup and deployment](worker/README.md). The **Advanced · Jev next-step suggestion** remains a separate optional decision-support feature. The browser worker is implemented but not deployed. Permit research, carrier portals and code-compliance determination remain out of scope.
 
 Verification: `tests/equipment-research.browser.cjs` covers synthetic label extraction, search payload, no serial in research, native citations, explicit acceptance, report and text output, reload preservation, no-source failure, URL validation and mobile width. These are mocked provider tests; live search availability and source quality require testing with the configured account after deployment.
 
@@ -40,6 +55,6 @@ Suggestions with choice probability or confidence below 0.7 are labeled tentativ
 
 ## Verification and next phase
 
-Automated tests use mocked provider responses; a real credentialed test is still required after configuration. Check a missing-key response, unauthorized access, then an authorized photo request. The separate equipment workflow now handles cited retrieval and acceptance. No browser automation service has been provisioned.
+Automated tests use mocked provider responses; a real credentialed test is still required after configuration. Check a missing-key response, unauthorized access, then an authorized photo request. The separate equipment workflow now handles cited retrieval and acceptance. The optional browser implementation and its separate service credentials are documented in [worker/README.md](worker/README.md). No browser automation infrastructure has been provisioned or live-qualified.
 
 Official request schema: https://docs.typesafe.ai/introduction/quickstart.md
